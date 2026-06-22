@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CmsaLogo } from '../../components/ui/CmsaLogo'
 import { LangSwitcher } from '../../components/ui/LangSwitcher'
 import { mockCredentials } from '../../data/mockUsers'
 import { useLanguage } from '../../i18n/LanguageContext'
@@ -101,7 +102,9 @@ export function LoginPage() {
 
       <div className="login-page__inner">
         <header className="login-page__heading">
-          <div className="login-page__logo">CMSA</div>
+          <div className="login-page__logo-wrap">
+            <CmsaLogo variant="light" size="lg" />
+          </div>
           <h1 className="login-page__title">{copy.title}</h1>
           <p className="login-page__subtitle">{copy.subtitle}</p>
         </header>

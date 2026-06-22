@@ -107,14 +107,13 @@ src/
 
 ## Diseño
 
-Tokens de color en `src/styles/tokens.css`:
+Identidad visual alineada al manual de marca **CMSA** (Pantone Process Cyan). Tokens en `src/styles/tokens.css`.
 
-- Neutros: blanco, negro, escala de grises
-- **SUMO**: morado (`#7c3aed`)
-- **MAF**: naranja (`#ea580c`)
-- **MASTER**: negro / gris (`#1f2937`)
-- **CMSA** (validador): gris azulado + acento azul neutro
-- Glassmorphism: fondos translúcidos, blur, bordes y sombras suaves
+- **CMSA (marca principal)**: Process Cyan `#00A0D2` — botones, navegación activa, acentos, fondos suaves
+- **Logos**: `public/logos/` — fondo blanco en login/sidebar; variante fondo azul disponible vía `<CmsaLogo variant="dark" />`
+- **SUMO / MAF**: acentos secundarios solo en badge de empresa del header (usuario logueado)
+- **MASTER**: negro / gris en badge de header
+- Glassmorphism: fondos translúcidos, blur, bordes y sombras en tonos cyan
 
 ## Alcance de Fase 1
 

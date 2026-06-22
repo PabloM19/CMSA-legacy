@@ -2,48 +2,50 @@
   /* Neutrals */
   --color-white: #ffffff;
   --color-black: #0a0a0a;
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
+  --color-gray-50: #f7fafb;
+  --color-gray-100: #eef4f6;
+  --color-gray-200: #dce6ea;
+  --color-gray-300: #c5d2d8;
+  --color-gray-400: #8fa3ad;
+  --color-gray-500: #6b828c;
+  --color-gray-600: #4f636d;
+  --color-gray-700: #3a4a52;
+  --color-gray-800: #263238;
+  --color-gray-900: #1a2328;
 
-  /* Brand — SUMO (morado) */
+  /* Brand — CMSA (Pantone Process Cyan) */
+  --color-brand: #00a0d2;
+  --color-brand-light: #33b5de;
+  --color-brand-lighter: #7fd4ef;
+  --color-brand-pale: #e6f6fb;
+  --color-brand-dark: #0088b5;
+  --color-brand-deep: #006d91;
+  --color-brand-muted: rgba(0, 160, 210, 0.12);
+  --color-brand-shadow: rgba(0, 160, 210, 0.22);
+
+  /* Partner — SUMO (acento secundario por usuario) */
   --color-sumo: #7c3aed;
   --color-sumo-light: #a78bfa;
   --color-sumo-dark: #5b21b6;
   --color-sumo-muted: rgba(124, 58, 237, 0.12);
 
-  /* Brand — MAF (naranja) */
+  /* Partner — MAF (acento secundario por usuario) */
   --color-maf: #ea580c;
   --color-maf-light: #fb923c;
   --color-maf-dark: #c2410c;
   --color-maf-muted: rgba(234, 88, 12, 0.12);
 
-  /* Brand — MASTER (negro / gris) */
+  /* MASTER (negro / gris) */
   --color-master: #1f2937;
   --color-master-light: #4b5563;
   --color-master-dark: #111827;
   --color-master-muted: rgba(31, 41, 55, 0.12);
 
-  /* Brand — CMSA / Validador (gris azulado neutro) */
-  --color-cmsa: #475569;
-  --color-cmsa-light: #64748b;
-  --color-cmsa-dark: #334155;
-  --color-cmsa-muted: rgba(71, 85, 105, 0.14);
-  --color-cmsa-accent: #3b82f6;
-  --color-cmsa-accent-muted: rgba(59, 130, 246, 0.12);
-
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-bg-dark: rgba(17, 24, 39, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.35);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-shadow: 0 8px 32px rgba(0, 109, 145, 0.07);
   --glass-blur: 12px;
 
   /* Layout */

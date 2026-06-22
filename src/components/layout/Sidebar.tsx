@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
+import { CmsaLogo } from '../ui/CmsaLogo'
 import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
-import { getCompanyThemeClass } from '../../utils/companyTheme'
 import { getVisibleNavItems } from '../../utils/permissions'
 
 export function Sidebar() {
@@ -11,12 +11,11 @@ export function Sidebar() {
   if (!user) return null
 
   const navItems = getVisibleNavItems(user)
-  const themeClass = getCompanyThemeClass(user.company)
 
   return (
-    <aside className={`app-layout__sidebar ${themeClass}`}>
+    <aside className="app-layout__sidebar">
       <div className="sidebar__brand">
-        <div className="sidebar__brand-title">CMSA</div>
+        <CmsaLogo variant="light" size="sm" className="sidebar__logo" />
         <div className="sidebar__brand-subtitle">{t.common.wireframeSubtitle}</div>
       </div>
       <nav className="sidebar__nav">

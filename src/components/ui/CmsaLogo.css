@@ -1,0 +1,38 @@
+.cmsa-logo {
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.cmsa-logo--sm {
+  height: 32px;
+}
+
+.cmsa-logo--md {
+  height: 44px;
+}
+
+.cmsa-logo--lg {
+  height: 56px;
+}
+
+.login-page__logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 160, 210, 0.14);
+  box-shadow:
+    0 8px 32px var(--color-brand-shadow),
+    0 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.login-page__logo-wrap .cmsa-logo--lg {
+  height: 52px;
+}
