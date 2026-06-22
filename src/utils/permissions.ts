@@ -1,3 +1,4 @@
+import type { NavKey } from '../i18n/translations'
 import type { User } from '../types/auth'
 
 const USER_ROUTES = [
@@ -37,16 +38,16 @@ export function getDefaultRoute(user: User): string {
   return '/dashboard'
 }
 
-export const NAV_ITEMS = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/orders/new', label: 'Nueva orden' },
-  { to: '/backlog', label: 'Backlog' },
-  { to: '/validation', label: 'Validación' },
-  { to: '/plant-map', label: 'Mapa de planta' },
-  { to: '/tablet', label: 'Tablet' },
-  { to: '/mobile', label: 'Mobile' },
-  { to: '/admin', label: 'Admin' },
-] as const
+export const NAV_ITEMS: { to: string; key: NavKey }[] = [
+  { to: '/dashboard', key: 'dashboard' },
+  { to: '/orders/new', key: 'newOrder' },
+  { to: '/backlog', key: 'backlog' },
+  { to: '/validation', key: 'validation' },
+  { to: '/plant-map', key: 'plantMap' },
+  { to: '/tablet', key: 'tablet' },
+  { to: '/mobile', key: 'mobile' },
+  { to: '/admin', key: 'admin' },
+]
 
 export function getVisibleNavItems(user: User) {
   return NAV_ITEMS.filter((item) => canAccessRoute(user, item.to))

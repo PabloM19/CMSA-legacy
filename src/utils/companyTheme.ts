@@ -1,14 +1,4 @@
-import type { Company, UserRole } from '../types/auth'
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  user: 'Usuario',
-  master: 'Master',
-  validator: 'Validador',
-}
-
-export function getRoleLabel(role: UserRole): string {
-  return ROLE_LABELS[role]
-}
+import type { Company } from '../types/auth'
 
 export function getCompanyThemeClass(company: Company): string {
   const map: Record<Company, string> = {

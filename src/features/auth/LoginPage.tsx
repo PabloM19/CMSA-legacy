@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { LangSwitcher } from '../../components/ui/LangSwitcher'
 import { mockCredentials } from '../../data/mockUsers'
+import { useLanguage } from '../../i18n/LanguageContext'
 import { authenticate, getPostLoginPath } from '../../utils/auth'
 import { useAuth } from './AuthContext'
-import { t } from './login.i18n'
-import type { Lang } from './login.i18n'
 import './login.css'
 
-const LANG_STORAGE_KEY = 'cmsa-lang'
 const LOGIN_DELAY_MS = 600
 
 function UserIcon() {
@@ -51,33 +50,23 @@ function LockIcon() {
   )
 }
 
-function getStoredLang(): Lang {
-  const stored = localStorage.getItem(LANG_STORAGE_KEY)
-  return stored === 'en' ? 'en' : 'es'
-}
-
 export function LoginPage() {
   const navigate = useNavigate()
   const { isAuthenticated, login, defaultRoute } = useAuth()
-  const [lang, setLang] = useState<Lang>(getStoredLang)
+  const { t } = useLanguage()
+  const copy = t.login
+
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
 
-  const copy = t(lang)
-
   useEffect(() => {
     if (isAuthenticated) {
       navigate(defaultRoute, { replace: true })
     }
   }, [isAuthenticated, defaultRoute, navigate])
-
-  function handleLangChange(next: Lang) {
-    setLang(next)
-    localStorage.setItem(LANG_STORAGE_KEY, next)
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -100,6 +89,10 @@ export function LoginPage() {
 
   return (
     <div className="login-page">
+      <div className="login-page__lang">
+        <LangSwitcher />
+      </div>
+
       <div className="login-page__blobs" aria-hidden="true">
         <div className="login-page__blob login-page__blob--1" />
         <div className="login-page__blob login-page__blob--2" />
@@ -114,25 +107,6 @@ export function LoginPage() {
         </header>
 
         <div className="login-card">
-          <div className="login-card__lang">
-            <button
-              type="button"
-              className={`login-card__lang-btn${lang === 'es' ? ' login-card__lang-btn--active' : ''}`}
-              onClick={() => handleLangChange('es')}
-              aria-pressed={lang === 'es'}
-            >
-              ES
-            </button>
-            <button
-              type="button"
-              className={`login-card__lang-btn${lang === 'en' ? ' login-card__lang-btn--active' : ''}`}
-              onClick={() => handleLangChange('en')}
-              aria-pressed={lang === 'en'}
-            >
-              EN
-            </button>
-          </div>
-
           <form className="login-card__form" onSubmit={handleSubmit} noValidate>
             <div className="login-card__field">
               <label className="login-card__label" htmlFor="username">
@@ -215,7 +189,7 @@ export function LoginPage() {
           </div>
         </div>
 
-        <p className="login-page__footer">{copy.footer}</p>
+        <p className="login-page__footer">{t.common.wireframeFooter}</p>
       </div>
     </div>
   )

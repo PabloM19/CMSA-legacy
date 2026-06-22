@@ -42,7 +42,13 @@ npm run lint     # ESLint
 
 ## Login
 
-Pantalla centrada con glassmorphism, fondo claro y formas abstractas suaves. Incluye selector de idioma **ES / EN** (se guarda en `localStorage`).
+Pantalla centrada con glassmorphism, fondo claro y formas abstractas suaves.
+
+**Idioma**
+
+- Selector **ES / EN** fijo arriba a la derecha (login) y en el header (app autenticada)
+- Preferencia guardada en `localStorage` (`cmsa-lang`) y aplicada en toda la app
+- Traduce login, sidebar, header (rol, fecha, logout) y crece con cada pantalla nueva
 
 **Comportamiento**
 

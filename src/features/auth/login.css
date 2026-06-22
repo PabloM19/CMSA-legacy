@@ -10,6 +10,13 @@
   background: linear-gradient(160deg, #fafafa 0%, #f0f0f2 45%, #e8e8ec 100%);
 }
 
+.login-page__lang {
+  position: fixed;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: 10;
+}
+
 .login-page__blobs {
   position: absolute;
   inset: 0;
@@ -105,36 +112,6 @@
     0 4px 24px rgba(0, 0, 0, 0.06),
     0 1px 3px rgba(0, 0, 0, 0.04);
   padding: var(--space-xl);
-}
-
-.login-card__lang {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-lg);
-}
-
-.login-card__lang-btn {
-  padding: var(--space-xs) var(--space-sm);
-  border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.5);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-gray-500);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.login-card__lang-btn:hover {
-  background: var(--color-white);
-  color: var(--color-gray-700);
-}
-
-.login-card__lang-btn--active {
-  background: var(--color-white);
-  border-color: var(--color-sumo-light);
-  color: var(--color-sumo-dark);
 }
 
 .login-card__form {
