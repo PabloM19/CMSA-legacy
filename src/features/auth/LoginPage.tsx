@@ -2,12 +2,8 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { mockCredentials } from '../../data/mockUsers'
-import {
-  authenticate,
-  getPostLoginPath,
-  getSession,
-  setSession,
-} from '../../utils/auth'
+import { authenticate, getPostLoginPath } from '../../utils/auth'
+import { useAuth } from './AuthContext'
 import { t } from './login.i18n'
 import type { Lang } from './login.i18n'
 import './login.css'
@@ -62,6 +58,7 @@ function getStoredLang(): Lang {
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { isAuthenticated, login, defaultRoute } = useAuth()
   const [lang, setLang] = useState<Lang>(getStoredLang)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -72,11 +69,10 @@ export function LoginPage() {
   const copy = t(lang)
 
   useEffect(() => {
-    const session = getSession()
-    if (session) {
-      navigate(getPostLoginPath(session.user), { replace: true })
+    if (isAuthenticated) {
+      navigate(defaultRoute, { replace: true })
     }
-  }, [navigate])
+  }, [isAuthenticated, defaultRoute, navigate])
 
   function handleLangChange(next: Lang) {
     setLang(next)
@@ -94,7 +90,7 @@ export function LoginPage() {
 
     const user = authenticate(username.trim(), password)
     if (user) {
-      setSession(user)
+      login(user)
       navigate(getPostLoginPath(user), { replace: true })
     } else {
       setError(true)

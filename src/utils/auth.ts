@@ -1,5 +1,6 @@
 import { mockCredentials } from '../data/mockUsers'
 import type { AuthSession, User } from '../types/auth'
+import { getDefaultRoute } from './permissions'
 
 const AUTH_STORAGE_KEY = 'cmsa-auth'
 
@@ -33,6 +34,5 @@ export function authenticate(username: string, password: string): User | null {
 }
 
 export function getPostLoginPath(user: User): string {
-  if (user.role === 'validator') return '/validation'
-  return '/dashboard'
+  return getDefaultRoute(user)
 }

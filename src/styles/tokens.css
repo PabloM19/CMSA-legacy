@@ -25,6 +25,20 @@
   --color-maf-dark: #c2410c;
   --color-maf-muted: rgba(234, 88, 12, 0.12);
 
+  /* Brand — MASTER (negro / gris) */
+  --color-master: #1f2937;
+  --color-master-light: #4b5563;
+  --color-master-dark: #111827;
+  --color-master-muted: rgba(31, 41, 55, 0.12);
+
+  /* Brand — CMSA / Validador (gris azulado neutro) */
+  --color-cmsa: #475569;
+  --color-cmsa-light: #64748b;
+  --color-cmsa-dark: #334155;
+  --color-cmsa-muted: rgba(71, 85, 105, 0.14);
+  --color-cmsa-accent: #3b82f6;
+  --color-cmsa-accent-muted: rgba(59, 130, 246, 0.12);
+
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-bg-dark: rgba(17, 24, 39, 0.65);

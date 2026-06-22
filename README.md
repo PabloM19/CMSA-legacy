@@ -64,6 +64,26 @@ Pantalla centrada con glassmorphism, fondo claro y formas abstractas suaves. Inc
 | `usuario_master` | `master123` | MASTER | master | `/dashboard` |
 | `usuario_validador` | `val123` | CMSA | validator | `/validation` |
 
+## Sesión y rutas protegidas
+
+Autenticación mock con `AuthProvider` + hook `useAuth`. La sesión se persiste en `localStorage` (`cmsa-auth`).
+
+**Layout autenticado**
+
+- Header con nombre, empresa, rol, fecha actual y botón **Salir**
+- Color de acento según empresa: SUMO morado, MAF naranja, MASTER negro/gris, CMSA (validador) gris-azul
+- Sidebar muestra solo las rutas permitidas para el usuario activo
+
+**Permisos por rol**
+
+| Rol | Rutas accesibles |
+|-----|------------------|
+| `user` (SUMO / MAF) | `/dashboard`, `/orders/new`, `/backlog`, `/plant-map`, `/mobile` |
+| `validator` | `/validation`, `/mobile` |
+| `master` | Todas |
+
+Si no hay sesión → redirección a `/login`. Si la ruta no está permitida → redirección a la pantalla principal del rol (`/dashboard` o `/validation`).
+
 ## Estructura del proyecto
 
 ```
@@ -86,12 +106,15 @@ Tokens de color en `src/styles/tokens.css`:
 - Neutros: blanco, negro, escala de grises
 - **SUMO**: morado (`#7c3aed`)
 - **MAF**: naranja (`#ea580c`)
+- **MASTER**: negro / gris (`#1f2937`)
+- **CMSA** (validador): gris azulado + acento azul neutro
 - Glassmorphism: fondos translúcidos, blur, bordes y sombras suaves
 
 ## Alcance de Fase 1
 
 - ✅ Setup inicial, routing y layout base
 - ✅ Login con auth mock e i18n ES/EN
+- ✅ Sesión mock, rutas protegidas y permisos por rol
 - 🔲 Resto de pantallas principales (en progreso)
 - ❌ Backend, API real, Firebase
 - ❌ Recuperación de contraseña real

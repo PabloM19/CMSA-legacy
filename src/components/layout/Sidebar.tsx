@@ -1,19 +1,18 @@
 import { NavLink } from 'react-router-dom'
-
-const navItems = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/orders/new', label: 'Nueva orden' },
-  { to: '/backlog', label: 'Backlog' },
-  { to: '/validation', label: 'Validación' },
-  { to: '/plant-map', label: 'Mapa de planta' },
-  { to: '/tablet', label: 'Tablet' },
-  { to: '/mobile', label: 'Mobile' },
-  { to: '/admin', label: 'Admin' },
-]
+import { useAuth } from '../../features/auth/AuthContext'
+import { getCompanyThemeClass } from '../../utils/companyTheme'
+import { getVisibleNavItems } from '../../utils/permissions'
 
 export function Sidebar() {
+  const { user } = useAuth()
+
+  if (!user) return null
+
+  const navItems = getVisibleNavItems(user)
+  const themeClass = getCompanyThemeClass(user.company)
+
   return (
-    <aside className="app-layout__sidebar">
+    <aside className={`app-layout__sidebar ${themeClass}`}>
       <div className="sidebar__brand">
         <div className="sidebar__brand-title">CMSA</div>
         <div className="sidebar__brand-subtitle">Wireframe Fase 1</div>
