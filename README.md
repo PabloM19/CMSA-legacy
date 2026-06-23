@@ -31,8 +31,8 @@ npm run lint     # ESLint
 | Ruta | Pantalla | Estado |
 |------|----------|--------|
 | `/login` | Inicio de sesión | ✅ Implementada |
-| `/dashboard` | Panel principal | 🔲 Placeholder |
-| `/orders/new` | Nueva orden | 🔲 Placeholder |
+| `/dashboard` | Panel operativo PC | ✅ v1 mock |
+| `/orders/new` | Nueva orden | ✅ v1 mock |
 | `/backlog` | Backlog | 🔲 Placeholder |
 | `/validation` | Validación | 🔲 Placeholder |
 | `/plant-map` | Mapa de planta | 🔲 Placeholder |
@@ -121,6 +121,8 @@ Identidad visual alineada al manual de marca **CMSA** (Pantone Process Cyan). To
 - ✅ Login con auth mock e i18n ES/EN
 - ✅ Sesión mock, rutas protegidas y permisos por rol
 - 🔲 Resto de pantallas principales (en progreso)
+- ✅ Dashboard operativo PC v1 (KPIs, pedidos, producción activa, alertas, pictograma)
+- ✅ Nueva orden v1 (formulario, cálculo mock, modal confirmación, localStorage)
 - ❌ Backend, API real, Firebase
 - ❌ Recuperación de contraseña real
 
