@@ -33,7 +33,7 @@ npm run lint     # ESLint
 | `/login` | Inicio de sesión | ✅ Implementada |
 | `/dashboard` | Panel operativo PC | ✅ v1 mock |
 | `/orders/new` | Nueva orden | ✅ v1 mock |
-| `/backlog` | Backlog | 🔲 Placeholder |
+| `/backlog` | Backlog kanban | ✅ v1 mock |
 | `/validation` | Validación | 🔲 Placeholder |
 | `/plant-map` | Mapa de planta | 🔲 Placeholder |
 | `/tablet` | Vista tablet | 🔲 Placeholder |
