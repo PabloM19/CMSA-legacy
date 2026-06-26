@@ -10,31 +10,45 @@ export function TabletActiveProduction({ orders }: TabletActiveProductionProps) 
   const d = t.tablet
 
   return (
-    <section className="tablet-panel dash-card">
+    <section className="tablet-panel tablet-panel--scroll dash-card">
       <h2 className="tablet-panel__title">{d.activeProductionTitle}</h2>
       {orders.length === 0 ? (
         <p className="tablet-panel__empty">{d.noActiveOrders}</p>
       ) : (
-        <ul className="tablet-production-list">
+        <ul className="tablet-production-scroll">
           {orders.map((order) => (
-            <li key={order.id} className="tablet-production-item">
-              <div className="tablet-production-item__head">
+            <li
+              key={order.id}
+              className={`tablet-production-card tablet-production-card--${order.company.toLowerCase()}`}
+            >
+              <div className="tablet-production-card__head">
                 <strong>{order.reference}</strong>
-                <span className={`dash-chip dash-chip--${order.company.toLowerCase()}`}>
+                <span className={`tablet-chip tablet-chip--${order.company.toLowerCase()}`}>
                   {order.company}
                 </span>
               </div>
-              <p className="tablet-production-item__meta">
+              <p className="tablet-production-card__product">{order.product}</p>
+              <p className="tablet-production-card__meta">
                 {d.tables}: {order.tables || '—'}
               </p>
               {order.remainingTime && (
-                <p className="tablet-production-item__meta">
-                  {d.remaining}: {order.remainingTime}
+                <p className="tablet-production-card__meta tablet-production-card__meta--strong">
+                  {order.remainingTime}
                 </p>
               )}
-              <p className="tablet-production-item__status">{order.status}</p>
+              {order.endTime && (
+                <p className="tablet-production-card__meta">
+                  {d.endTime}: {order.endTime}
+                </p>
+              )}
+              {order.eta && (
+                <p className="tablet-production-card__meta">
+                  {d.eta}: {order.eta}
+                </p>
+              )}
+              <p className="tablet-production-card__status">{order.status}</p>
               {order.alert && (
-                <p className="tablet-production-item__alert">⚠️ {order.alert}</p>
+                <p className="tablet-production-card__alert">⚠ {order.alert}</p>
               )}
             </li>
           ))}

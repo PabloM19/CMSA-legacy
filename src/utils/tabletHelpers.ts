@@ -1,6 +1,6 @@
 import type { Lang } from '../i18n/translations'
 import type { BacklogOrder } from '../types/backlog'
-import type { CmsaPersistedState, PlantTable } from '../types/plant'
+import type { CmsaPersistedState, PlantElementView, PlantTable } from '../types/plant'
 import { formatTableList, resolveAssignedTableIds } from './tableAssignment'
 
 export type TabletGeneralStatus = 'ok' | 'warning' | 'critical'
@@ -10,6 +10,7 @@ export interface TabletKpis {
   occupiedTables: number
   freeTables: number
   activeAlerts: number
+  finishingSoon: number
 }
 
 export interface TabletAlert {
@@ -17,14 +18,18 @@ export interface TabletAlert {
   severity: 'info' | 'warning' | 'critical'
   message: string
   source?: string
+  elementId?: string
 }
 
 export interface TabletActiveOrder {
   id: string
   reference: string
   company: string
+  product: string
   tables: string
   remainingTime: string | null
+  endTime: string | null
+  eta: string | null
   status: string
   alert: string | null
 }
@@ -41,10 +46,33 @@ function isTableOccupied(table: PlantTable): boolean {
   return OCCUPIED_STATUSES.has(table.status)
 }
 
+function parseEndTimeMinutes(endTime: string): number | null {
+  const match = endTime.match(/^(\d{1,2}):(\d{2})$/)
+  if (!match) return null
+
+  const now = new Date()
+  const end = new Date()
+  end.setHours(Number(match[1]), Number(match[2]), 0, 0)
+  if (end.getTime() <= now.getTime()) end.setDate(end.getDate() + 1)
+
+  return Math.max(1, Math.round((end.getTime() - now.getTime()) / 60000))
+}
+
+function formatRemaining(endTime: string, lang: Lang): string {
+  const minutes = parseEndTimeMinutes(endTime)
+  if (minutes == null) {
+    return lang === 'es' ? `~${endTime}` : `~${endTime}`
+  }
+  return lang === 'es' ? `${minutes} min restantes` : `${minutes} min remaining`
+}
+
 export function computeTabletKpis(state: CmsaPersistedState): TabletKpis {
   const activeProduction = state.orders.filter((o) => o.column === 'en_ejecucion').length
   const occupiedTables = state.plantTables.filter(isTableOccupied).length
   const freeTables = state.plantTables.filter((t) => t.status === 'free').length
+  const finishingSoon = state.orders.filter(
+    (o) => o.column === 'en_ejecucion' && o.endTime,
+  ).length
 
   const alerts = buildTabletAlerts(state, 'es')
   const activeAlerts = alerts.filter((a) => a.id !== 'all-ok').length
@@ -53,6 +81,7 @@ export function computeTabletKpis(state: CmsaPersistedState): TabletKpis {
     occupiedTables,
     freeTables,
     activeAlerts,
+    finishingSoon,
   }
 }
 
@@ -86,6 +115,7 @@ export function buildTabletAlerts(state: CmsaPersistedState, lang: Lang): Tablet
           ? `Mesa ${table.name} en conflicto`
           : `Table ${table.name} in conflict`,
         source: table.name,
+        elementId: table.id,
       })
     }
     if (table.status === 'blocked') {
@@ -94,6 +124,7 @@ export function buildTabletAlerts(state: CmsaPersistedState, lang: Lang): Tablet
         severity: 'critical',
         message: es ? `Mesa ${table.name} bloqueada` : `Table ${table.name} blocked`,
         source: table.name,
+        elementId: table.id,
       })
     }
     if (table.status === 'waiting') {
@@ -102,6 +133,7 @@ export function buildTabletAlerts(state: CmsaPersistedState, lang: Lang): Tablet
         severity: 'warning',
         message: es ? `Mesa ${table.name} en espera` : `Table ${table.name} waiting`,
         source: table.name,
+        elementId: table.id,
       })
     }
     if (table.alert && table.status !== 'blocked' && table.status !== 'conflict') {
@@ -110,6 +142,7 @@ export function buildTabletAlerts(state: CmsaPersistedState, lang: Lang): Tablet
         severity: 'warning',
         message: table.alert,
         source: table.name,
+        elementId: table.id,
       })
     }
   })
@@ -121,6 +154,16 @@ export function buildTabletAlerts(state: CmsaPersistedState, lang: Lang): Tablet
         severity: 'warning',
         message: p.alert,
         source: p.name,
+        elementId: p.id,
+      })
+    }
+    if (p.status === 'waiting') {
+      alerts.push({
+        id: `pallet-waiting-${p.id}`,
+        severity: 'warning',
+        message: es ? `Paletizador ${p.name} en espera` : `Palletizer ${p.name} waiting`,
+        source: p.name,
+        elementId: p.id,
       })
     }
   })
@@ -179,13 +222,32 @@ export function getActiveProductionOrders(
       id: order.id,
       reference: order.reference,
       company: order.company,
+      product: order.product,
       tables: formatTableList(resolveAssignedTableIds(order)),
-      remainingTime: order.endTime
-        ? lang === 'es'
-          ? `~${order.endTime} restante (sim.)`
-          : `~${order.endTime} remaining (sim.)`
-        : null,
+      remainingTime: order.endTime ? formatRemaining(order.endTime, lang) : null,
+      endTime: order.endTime || null,
+      eta: order.eta || null,
       status: lang === 'es' ? 'En ejecución' : 'In execution',
       alert: order.alerts[0] ?? null,
     }))
+}
+
+export function resolveAlertElement(
+  alert: TabletAlert,
+  elements: Map<string, PlantElementView>,
+): PlantElementView | null {
+  if (alert.id === 'all-ok') return null
+
+  if (alert.elementId) {
+    const direct = elements.get(alert.elementId)
+    if (direct) return direct
+  }
+
+  if (alert.source) {
+    for (const el of elements.values()) {
+      if (el.name === alert.source || el.orderReference === alert.source) return el
+    }
+  }
+
+  return null
 }

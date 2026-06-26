@@ -17,6 +17,7 @@ import {
   computeGeneralStatus,
   computeTabletKpis,
   getActiveProductionOrders,
+  resolveAlertElement,
 } from '../../../utils/tabletHelpers'
 import { TabletActiveProduction } from '../../tablet/components/TabletActiveProduction'
 import { TabletAlerts } from '../../tablet/components/TabletAlerts'
@@ -30,7 +31,7 @@ import { TabletStatusCards } from '../../tablet/components/TabletStatusCards'
 import '../plant-map.css'
 import '../../tablet/tablet.css'
 
-/** Vista tablet — se activa por ancho (768–1099px) dentro de /plant-map */
+/** Vista tablet — supervisión táctil en planta (768–1099px) */
 export function PlantMapTabletView() {
   const { user } = useAuth()
   const { t, lang } = useLanguage()
@@ -96,33 +97,43 @@ export function PlantMapTabletView() {
     setConfirmAction(null)
   }
 
+  function confirmTitle(action: TabletConfirmAction): string {
+    if (action === 'incident') return d.confirmTitleIncident
+    if (action === 'stop') return d.confirmTitleStop
+    return d.confirmTitleResume
+  }
+
   function confirmMessage(action: TabletConfirmAction): string {
     if (action === 'incident') return d.confirmIncident
     if (action === 'stop') return d.confirmStop
     return d.confirmResume
   }
 
+  function handleAlertTap(alert: Parameters<typeof resolveAlertElement>[0]) {
+    const element = resolveAlertElement(alert, elements)
+    if (element) setSelected(element)
+  }
+
   if (!user) return null
 
   return (
     <div className="tablet-page tablet-page--fluid">
-      <TabletHeader generalStatus={generalStatus} />
-      <TabletStatusCards kpis={kpis} />
+      <TabletHeader />
+      <TabletStatusCards generalStatus={generalStatus} kpis={kpis} />
 
-      <div className="tablet-page__body">
-        <section className="tablet-page__map">
-          <PlantLayout
-            boardClassName="plant-map-board--tablet"
-            elements={elements}
-            selectedId={selectedLive?.id ?? null}
-            onSelect={setSelected}
-          />
-        </section>
+      <section className="tablet-page__hero dash-card">
+        <p className="tablet-page__map-hint">{d.mapTouchHint}</p>
+        <PlantLayout
+          boardClassName="plant-map-board--tablet"
+          elements={elements}
+          selectedId={selectedLive?.id ?? null}
+          onSelect={setSelected}
+        />
+      </section>
 
-        <aside className="tablet-page__aside">
-          <TabletActiveProduction orders={activeOrders} />
-          <TabletAlerts alerts={alerts} />
-        </aside>
+      <div className="tablet-page__panels">
+        <TabletActiveProduction orders={activeOrders} />
+        <TabletAlerts alerts={alerts} onAlertTap={handleAlertTap} />
       </div>
 
       <PlantElementDrawer
@@ -141,9 +152,11 @@ export function PlantMapTabletView() {
 
       {confirmAction && (
         <TabletConfirmModal
+          title={confirmTitle(confirmAction)}
           message={confirmMessage(confirmAction)}
           confirmLabel={v.confirm}
           cancelLabel={v.cancel}
+          destructive={confirmAction === 'stop'}
           onConfirm={() => executeAction(confirmAction)}
           onCancel={() => setConfirmAction(null)}
         />

@@ -154,8 +154,13 @@ No hay entradas separadas en el menú para tablet ni móvil. Las URLs `/tablet` 
 
 **Tablet (768–1099px)**
 
-- **Roles:** todos los operativos pueden consultar; `master` parada/reanudación; `validator` incidencia; SUMO/MAF solo lectura en acciones críticas
-- **Persistencia:** overrides en `cmsa-tablet-overrides` (sincronizados con pictograma)
+- Pantalla de **supervisión táctil en planta**, no un dashboard reducido.
+- **Pictograma grande** como elemento principal (mesas R/M, paletizadores P, estados, colores SUMO/MAF, iconos velocidad/warning/pausa).
+- Franja de resumen: estado general, producción activa, mesas ocupadas/libres, alertas, próximos fin.
+- **Drawer inferior** al tocar un elemento: detalle completo + acciones de emergencia según rol (con confirmación).
+- Producción activa en **cards horizontales**; alertas tocables para ir al elemento.
+- **Roles:** `master` parada/reanudación/incidencia; `validator` incidencia; SUMO/MAF solo consulta en acciones críticas.
+- **Persistencia:** overrides en `cmsa-tablet-overrides`.
 
 **Móvil (&lt;768px)**
 
