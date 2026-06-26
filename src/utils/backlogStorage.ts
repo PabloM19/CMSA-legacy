@@ -1,7 +1,7 @@
 import { mockBacklogOrders, convertCreatedOrder } from '../data/mockBacklogOrders'
-import { createSeedPlantTables } from '../data/mockPlantTables'
+import { createSeedPalletizers, createSeedPlantTables } from '../data/mockPlantTables'
 import type { BacklogOrder } from '../types/backlog'
-import type { CmsaPersistedState, PlantTable } from '../types/plant'
+import type { CmsaPersistedState, PlantPalletizerElement, PlantTable } from '../types/plant'
 import type { CreatedOrder } from '../types/newOrder'
 import { getCreatedOrders } from './orderStorage'
 import { rebuildPlantTablesFromOrders } from './plantSync'
@@ -44,9 +44,16 @@ function readRawState(): CmsaPersistedState | null {
       return {
         orders: parsed as BacklogOrder[],
         plantTables: createSeedPlantTables(),
+        plantPalletizers: createSeedPalletizers(),
       }
     }
-    return parsed as CmsaPersistedState
+    const legacy = parsed as CmsaPersistedState
+    return {
+      ...legacy,
+      plantPalletizers: legacy.plantPalletizers?.length
+        ? legacy.plantPalletizers
+        : createSeedPalletizers(),
+    }
   } catch {
     return null
   }
@@ -85,7 +92,7 @@ function syncLegacyCreatedOrders(orders: BacklogOrder[]): BacklogOrder[] {
 function seedInitialState(): CmsaPersistedState {
   const orders = normalizeOrdersValidation(normalizePriorities([...mockBacklogOrders]))
   const plantTables = rebuildPlantTablesFromOrders(createSeedPlantTables(), orders)
-  return { orders, plantTables }
+  return { orders, plantTables, plantPalletizers: createSeedPalletizers() }
 }
 
 function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
@@ -93,10 +100,12 @@ function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
   orders = normalizeOrdersValidation(orders)
   orders = normalizePriorities(orders)
   const plantTables = rebuildPlantTablesFromOrders(
-    state.plantTables.length > 0 ? state.plantTables : createSeedPlantTables(),
+    state.plantTables?.length > 0 ? state.plantTables : createSeedPlantTables(),
     orders,
   )
-  return { orders, plantTables }
+  const plantPalletizers =
+    state.plantPalletizers?.length > 0 ? state.plantPalletizers : createSeedPalletizers()
+  return { orders, plantTables, plantPalletizers }
 }
 
 /** Fuente consolidada: pedidos + mesas de planta. */
@@ -118,6 +127,10 @@ export function getPlantTables(): PlantTable[] {
   return getState().plantTables
 }
 
+export function getPlantPalletizers(): PlantPalletizerElement[] {
+  return getState().plantPalletizers
+}
+
 export function saveState(state: CmsaPersistedState): void {
   const hydrated = hydrateState(state)
   localStorage.setItem(BACKLOG_STORAGE_KEY, JSON.stringify(hydrated))
@@ -129,7 +142,8 @@ export function saveOrders(orders: BacklogOrder[]): void {
 }
 
 export function saveOrdersAndPlant(orders: BacklogOrder[], plantTables: PlantTable[]): void {
-  saveState({ orders, plantTables })
+  const current = getState()
+  saveState({ ...current, orders, plantTables })
 }
 
 export function mergeOrder(order: BacklogOrder): BacklogOrder[] {

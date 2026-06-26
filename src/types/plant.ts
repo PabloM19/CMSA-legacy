@@ -26,9 +26,50 @@ export interface PlantTable {
   alert: string | null
 }
 
+export type PlantElementType = 'automatic' | 'manual' | 'palletizer'
+
+export type PlantPalletizerStatus =
+  | 'free'
+  | 'active'
+  | 'idle'
+  | 'waiting'
+  | 'blocked'
+  | 'conflict'
+
+export interface PlantPalletizerElement {
+  id: string
+  name: string
+  type: 'palletizer'
+  status: PlantPalletizerStatus
+  company: OrderCompany | null
+  orderId: string | null
+  alert: string | null
+}
+
+export interface PlantElementView {
+  id: string
+  name: string
+  type: PlantElementType
+  status: PlantTableStatus | PlantPalletizerStatus
+  company: OrderCompany | null
+  orderId: string | null
+  orderReference: string | null
+  product: string | null
+  variety: string | null
+  boxes: number | null
+  boxesPerHour: number | null
+  eta: string | null
+  endTime: string | null
+  remainingTime: string | null
+  speedStatus: PlantSpeedStatus
+  alert: string | null
+  isClickable: boolean
+}
+
 export interface CmsaPersistedState {
   orders: BacklogOrder[]
   plantTables: PlantTable[]
+  plantPalletizers: PlantPalletizerElement[]
 }
 
 /** @deprecated Usado por dashboard mock legacy */
