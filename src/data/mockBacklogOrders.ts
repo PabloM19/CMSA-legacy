@@ -11,6 +11,13 @@ function audit(action: string, user = 'Sistema'): BacklogOrder['auditTrail'][0] 
   }
 }
 
+const emptyAssignment = {
+  assignedTableIds: [] as string[],
+  assignedTables: [] as string[],
+  assignmentMode: 'none' as const,
+  validationTables: [] as ValidationTable[],
+}
+
 export const mockBacklogOrders: BacklogOrder[] = [
   {
     id: 'bk-1',
@@ -24,8 +31,7 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '14:30',
     endTime: '16:45',
     requiredTables: 2,
-    assignedTables: [],
-    validationTables: [],
+    ...emptyAssignment,
     tablesValidated: false,
     alerts: [],
     priority: 1,
@@ -43,10 +49,10 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '15:00',
     endTime: '17:10',
     requiredTables: 1,
-    assignedTables: [],
-    validationTables: [],
+    ...emptyAssignment,
     tablesValidated: false,
     alerts: ['Sobrecarga ligera'],
+    requiresManualTables: true,
     priority: 1,
     auditTrail: [audit('Pedido creado'), audit('Pedido aceptado')],
   },
@@ -62,30 +68,36 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '13:50',
     endTime: '14:20',
     requiredTables: 3,
-    assignedTables: ['Mesa 01', 'Mesa 02', 'Mesa 03'],
+    assignedTableIds: ['R1', 'R2', 'M1'],
+    assignedTables: ['R1', 'R2', 'M1'],
+    assignmentMode: 'mixed',
+    requiresManualTables: true,
     validationTables: [
       {
-        id: 'bk-3-table-1',
-        name: 'Mesa 01',
-        type: 'automatica',
+        id: 'bk-3-R1',
+        plantTableId: 'R1',
+        name: 'R1',
+        type: 'automatic',
         status: 'pendiente',
         company: 'SUMO',
         orderId: 'bk-3',
         orderReference: 'PED-240622-03',
       },
       {
-        id: 'bk-3-table-2',
-        name: 'Mesa 02',
+        id: 'bk-3-R2',
+        plantTableId: 'R2',
+        name: 'R2',
+        type: 'automatic',
+        status: 'pendiente',
+        company: 'SUMO',
+        orderId: 'bk-3',
+        orderReference: 'PED-240622-03',
+      },
+      {
+        id: 'bk-3-M1',
+        plantTableId: 'M1',
+        name: 'M1',
         type: 'manual',
-        status: 'pendiente',
-        company: 'SUMO',
-        orderId: 'bk-3',
-        orderReference: 'PED-240622-03',
-      },
-      {
-        id: 'bk-3-table-3',
-        name: 'Mesa 03',
-        type: 'automatica',
         status: 'pendiente',
         company: 'SUMO',
         orderId: 'bk-3',
@@ -93,7 +105,7 @@ export const mockBacklogOrders: BacklogOrder[] = [
       },
     ] satisfies ValidationTable[],
     tablesValidated: false,
-    alerts: ['Mesas pendientes'],
+    alerts: ['Mesas pendientes', 'Este pedido requiere apoyo de mesas manuales.'],
     priority: 1,
     auditTrail: [
       audit('Pedido creado'),
@@ -113,7 +125,9 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '16:00',
     endTime: '18:30',
     requiredTables: 1,
-    assignedTables: ['Mesa 03'],
+    assignedTableIds: ['R3'],
+    assignedTables: ['R3'],
+    assignmentMode: 'automatic',
     validationTables: [],
     tablesValidated: true,
     alerts: [],
@@ -132,7 +146,9 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '12:00',
     endTime: '13:15',
     requiredTables: 1,
-    assignedTables: ['Mesa 05'],
+    assignedTableIds: ['M5'],
+    assignedTables: ['M5'],
+    assignmentMode: 'manual',
     validationTables: [],
     tablesValidated: false,
     alerts: ['Incidencia material'],
@@ -151,7 +167,9 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '09:00',
     endTime: '11:30',
     requiredTables: 1,
-    assignedTables: ['Mesa 06'],
+    assignedTableIds: [],
+    assignedTables: [],
+    assignmentMode: 'none',
     validationTables: [],
     tablesValidated: true,
     alerts: [],
@@ -173,19 +191,16 @@ export function convertCreatedOrder(order: CreatedOrder): BacklogOrder {
     eta: order.calculation.eta,
     endTime: order.calculation.estimatedEnd,
     requiredTables: order.calculation.requiredTables,
+    assignedTableIds: [],
     assignedTables: [],
+    assignmentMode: 'none',
     validationTables: [],
     tablesValidated: false,
     alerts: order.calculation.alerts.map((a) => a.message),
+    requiresManualTables: order.calculation.alerts.some((a) => /sobrecarga|overload/i.test(a.message)),
     priority: 0,
     auditTrail: [audit('Pedido creado'), audit('Pedido aceptado')],
   }
-}
-
-export function assignMockTables(required: number): string[] {
-  return Array.from({ length: Math.max(1, required) }, (_, i) =>
-    `Mesa ${String(i + 1).padStart(2, '0')}`,
-  )
 }
 
 export function computeKpis(orders: BacklogOrder[]) {

@@ -1,0 +1,62 @@
+/* Utilidades de mesa — preparadas para el pictograma operativo */
+
+.table {
+  border-left: 3px solid var(--color-gray-300);
+}
+
+.table--automatic {
+  border-left-color: var(--color-brand-light);
+}
+
+.table--manual {
+  border-left-color: #94a3b8;
+}
+
+.table--sumo {
+  box-shadow: inset 3px 0 0 #7c3aed;
+}
+
+.table--maf {
+  box-shadow: inset 3px 0 0 #ea580c;
+}
+
+.table--free {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.table--reserved,
+.table--pending_validation {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.table--validated {
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.table--occupied {
+  background: rgba(0, 160, 210, 0.08);
+}
+
+.table--waiting {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.table--blocked {
+  background: rgba(100, 116, 139, 0.12);
+}
+
+.table--conflict {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.validation-table__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.validation-table__badge--manual-type {
+  background: #e2e8f0;
+  color: #475569;
+}

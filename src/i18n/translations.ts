@@ -162,6 +162,8 @@ const translations = {
       tables: 'Mesas',
       tablesNeeded: 'nec.',
       tablesPending: 'Mesas pendientes',
+      manualSupport: 'Este pedido requiere apoyo de mesas manuales.',
+      insufficientTables: 'No hay mesas suficientes disponibles para este pedido.',
       noTables: 'Sin mesas asignadas',
       viewDetail: 'Ver detalle',
       sendValidation: 'Lanzar a validación',
@@ -216,6 +218,7 @@ const translations = {
       tableActions: 'Acciones',
       typeAutomatic: 'Automática',
       typeManual: 'Manual',
+      manualBadge: 'Manual',
       statusPending: 'Pendiente',
       statusValidated: 'Validada',
       statusConflict: 'En conflicto',
@@ -239,6 +242,7 @@ const translations = {
       tablesPendingNotice: 'Faltan mesas por validar.',
       cannotStartNotice:
         'Este pedido no puede iniciar producción hasta validar todas las mesas.',
+      insufficientTables: 'No hay mesas suficientes disponibles para este pedido.',
       conflictNotice: 'Hay mesas en conflicto.',
       conflictBlockNotice:
         'Hay mesas en conflicto. El pedido no puede iniciar producción.',
@@ -399,6 +403,8 @@ const translations = {
       tables: 'Tables',
       tablesNeeded: 'req.',
       tablesPending: 'Tables pending',
+      manualSupport: 'This order requires manual table support.',
+      insufficientTables: 'Not enough tables available for this order.',
       noTables: 'No tables assigned',
       viewDetail: 'View detail',
       sendValidation: 'Send to validation',
@@ -453,6 +459,7 @@ const translations = {
       tableActions: 'Actions',
       typeAutomatic: 'Automatic',
       typeManual: 'Manual',
+      manualBadge: 'Manual',
       statusPending: 'Pending',
       statusValidated: 'Validated',
       statusConflict: 'In conflict',
@@ -476,6 +483,7 @@ const translations = {
       tablesPendingNotice: 'Missing tables to validate.',
       cannotStartNotice:
         'This order cannot start production until all tables are validated.',
+      insufficientTables: 'Not enough tables available for this order.',
       conflictNotice: 'There are tables in conflict.',
       conflictBlockNotice:
         'There are tables in conflict. The order cannot start production.',

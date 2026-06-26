@@ -1,6 +1,6 @@
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../../types/backlog'
-import { formatTableList } from '../../../utils/backlogStorage'
+import { formatTableList, resolveAssignedTableIds } from '../../../utils/backlogStorage'
 
 interface OrderDetailModalProps {
   order: BacklogOrder
@@ -11,9 +11,10 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
   const { t, dateLocale } = useLanguage()
   const d = t.backlog
 
+  const tableIds = resolveAssignedTableIds(order)
   const tablesDisplay =
-    order.assignedTables.length > 0
-      ? formatTableList(order.assignedTables)
+    tableIds.length > 0
+      ? formatTableList(tableIds)
       : order.requiredTables > 0
         ? `${order.requiredTables} ${d.tablesNeeded}`
         : d.noTables

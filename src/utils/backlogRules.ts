@@ -1,11 +1,9 @@
-import { assignMockTables } from '../data/mockBacklogOrders'
 import type { Lang } from '../i18n/translations'
 import type { User } from '../types/auth'
 import type { BacklogColumnId, BacklogOrder } from '../types/backlog'
 import { canActOnOrder } from './dashboardPermissions'
 import {
   canStartProduction,
-  createValidationTables,
   hasTableConflicts,
   resetValidationTables,
 } from './validationHelpers'
@@ -214,13 +212,6 @@ export function applyColumnMove(
   })
 
   if (targetColumn === 'pendiente_validacion') {
-    const tableNames = assignMockTables(order.requiredTables)
-    updated.assignedTables = tableNames
-    updated.validationTables = createValidationTables(
-      { ...updated, assignedTables: tableNames },
-      tableNames,
-    )
-    updated.tablesValidated = false
     updated.auditTrail.push(entry('Enviado a validación de mesas'))
   } else if (targetColumn === 'pendiente_lanzamiento') {
     updated.auditTrail.push(entry('Movido a pendiente de lanzamiento'))

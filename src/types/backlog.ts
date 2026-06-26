@@ -9,10 +9,11 @@ export type BacklogColumnId =
   | 'finalizado'
 
 export type ValidationTableStatus = 'pendiente' | 'validada' | 'conflicto' | 'parada'
-export type ValidationTableType = 'automatica' | 'manual'
+export type ValidationTableType = 'automatic' | 'manual'
 
 export interface ValidationTable {
   id: string
+  plantTableId: string
   name: string
   type: ValidationTableType
   status: ValidationTableStatus
@@ -29,6 +30,8 @@ export interface AuditEntry {
   user?: string
 }
 
+import type { AssignmentMode } from './plant'
+
 export interface BacklogOrder {
   id: string
   company: OrderCompany
@@ -40,8 +43,14 @@ export interface BacklogOrder {
   column: BacklogColumnId
   eta: string
   endTime: string
+  /** Mesas necesarias para el pedido. */
   requiredTables: number
+  /** IDs de mesas asignadas: R1, M4… */
+  assignedTableIds: string[]
+  /** Alias visible de mesas asignadas (mismos IDs). */
   assignedTables: string[]
+  assignmentMode: AssignmentMode
+  requiresManualTables?: boolean
   validationTables: ValidationTable[]
   tablesValidated: boolean
   alerts: string[]

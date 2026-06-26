@@ -225,6 +225,13 @@
   color: #b45309;
 }
 
+.backlog-card__hint {
+  margin-top: var(--space-xs);
+  font-size: 0.6875rem;
+  color: var(--color-brand-dark);
+  font-style: italic;
+}
+
 .backlog-card__readonly {
   font-size: 0.625rem;
   color: var(--color-gray-400);

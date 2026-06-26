@@ -108,18 +108,28 @@ export function ValidationDetailPanel({
           const canResolve = canAct && table.status === 'conflicto'
 
           return (
-            <article key={table.id} className={`validation-table validation-table--${table.status}`}>
+            <article
+              key={table.id}
+              className={`validation-table table table--${table.type} table--${order.company.toLowerCase()} table--${table.status === 'validada' ? 'validated' : table.status === 'conflicto' ? 'conflict' : 'pending_validation'} validation-table--${table.status}`}
+            >
               <div className="validation-table__main">
                 <div>
                   <strong className="validation-table__name">{table.name}</strong>
                   <p className="validation-table__meta">
                     {d.tableType}:{' '}
-                    {table.type === 'automatica' ? d.typeAutomatic : d.typeManual}
+                    {table.type === 'automatic' ? d.typeAutomatic : d.typeManual}
                   </p>
                 </div>
-                <span className={`validation-table__badge validation-table__badge--${table.status}`}>
-                  {statusLabel(table.status, d)}
-                </span>
+                <div className="validation-table__badges">
+                  <span className={`validation-table__badge validation-table__badge--${table.status}`}>
+                    {statusLabel(table.status, d)}
+                  </span>
+                  {table.type === 'manual' && (
+                    <span className="validation-table__badge validation-table__badge--manual-type">
+                      {d.manualBadge}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <dl className="validation-table__dl">

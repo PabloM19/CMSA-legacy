@@ -1,7 +1,8 @@
-import { assignMockTables } from '../data/mockBacklogOrders'
 import type { Lang } from '../i18n/translations'
 import type { BacklogOrder, ValidationTable, ValidationTableStatus } from '../types/backlog'
-import { formatTableLabel } from './backlogStorage'
+import type { PlantTable } from '../types/plant'
+import { formatTableLabel, isPlantTableId } from './tableAssignment'
+import { syncPlantFromValidationTables } from './plantSync'
 
 const CONFLICT_ALERT_ES = 'Hay mesas en conflicto. El pedido no puede iniciar producción.'
 const CONFLICT_ALERT_EN =
@@ -19,18 +20,24 @@ function auditEntry(action: string, user?: string): BacklogOrder['auditTrail'][0
   }
 }
 
-export function createValidationTables(order: BacklogOrder, tableNames?: string[]): ValidationTable[] {
-  const names =
-    tableNames && tableNames.length > 0
-      ? tableNames
-      : order.assignedTables.length > 0
-        ? order.assignedTables
-        : assignMockTables(order.requiredTables)
+export function createValidationTables(
+  order: BacklogOrder,
+  tableIds?: string[],
+): ValidationTable[] {
+  const ids =
+    tableIds && tableIds.length > 0
+      ? tableIds
+      : order.assignedTableIds.length > 0
+        ? order.assignedTableIds
+        : order.assignedTables.filter(isPlantTableId)
 
-  return names.map((name, index) => ({
-    id: `${order.id}-table-${index + 1}`,
-    name: formatTableLabel(name),
-    type: index % 2 === 0 ? 'automatica' : 'manual',
+  if (ids.length === 0) return []
+
+  return ids.map((id) => ({
+    id: `${order.id}-${id}`,
+    plantTableId: id,
+    name: formatTableLabel(id),
+    type: id.startsWith('R') ? 'automatic' : 'manual',
     status: 'pendiente',
     company: order.company,
     orderId: order.id,
@@ -66,6 +73,10 @@ function stripValidationAlerts(alerts: string[]): string[] {
     CONFLICT_ALERT_EN,
     'Faltan mesas por validar.',
     'Missing tables to validate.',
+    'Este pedido requiere apoyo de mesas manuales.',
+    'This order requires manual table support.',
+    'No hay mesas suficientes disponibles para este pedido.',
+    'Not enough tables available for this order.',
   ])
   return alerts.filter((a) => !systemAlerts.has(a))
 }
@@ -87,17 +98,25 @@ export function syncOrderValidationState(order: BacklogOrder, lang: Lang = 'es')
     alerts = [...alerts, lang === 'es' ? PENDING_ALERT_ES : PENDING_ALERT_EN]
   }
 
+  const ids = tables
+    .map((t) => t.plantTableId ?? t.name)
+    .filter(Boolean)
+
   return {
     ...order,
     alerts,
     tablesValidated: allValidated && !hasConflict,
-    assignedTables: tables.length > 0 ? tables.map((t) => t.name) : order.assignedTables,
+    assignedTableIds: ids,
+    assignedTables: ids,
   }
 }
 
 export function normalizeOrderValidation(order: BacklogOrder, lang: Lang = 'es'): BacklogOrder {
   let updated: BacklogOrder = {
     ...order,
+    assignedTableIds: order.assignedTableIds ?? [],
+    assignedTables: order.assignedTables ?? [],
+    assignmentMode: order.assignmentMode ?? 'none',
     validationTables: order.validationTables ? [...order.validationTables] : [],
     auditTrail: [...order.auditTrail],
   }
@@ -105,10 +124,16 @@ export function normalizeOrderValidation(order: BacklogOrder, lang: Lang = 'es')
   if (updated.column === 'pendiente_validacion') {
     if (updated.validationTables.length === 0) {
       updated.validationTables = createValidationTables(updated)
+      updated.assignedTableIds = updated.validationTables
+        .map((t) => t.plantTableId ?? t.name)
+        .filter(Boolean)
+      updated.assignedTables = updated.assignedTableIds
     } else {
       updated.validationTables = updated.validationTables.map((table) => ({
         ...table,
-        name: formatTableLabel(table.name),
+        plantTableId: table.plantTableId ?? table.name,
+        name: formatTableLabel(table.plantTableId ?? table.name),
+        type: table.type === 'manual' || table.name.startsWith('M') ? 'manual' : 'automatic',
         company: updated.company,
         orderId: updated.id,
         orderReference: updated.reference,
@@ -123,8 +148,8 @@ export function normalizeOrderValidation(order: BacklogOrder, lang: Lang = 'es')
         table.status === 'conflicto' ? table : { ...table, status: 'validada' },
       )
     }
-  } else if (updated.validationTables.length === 0 && updated.assignedTables.length > 0) {
-    updated.validationTables = createValidationTables(updated, updated.assignedTables).map(
+  } else if (updated.validationTables.length === 0 && updated.assignedTableIds.length > 0) {
+    updated.validationTables = createValidationTables(updated, updated.assignedTableIds).map(
       (table) => ({
         ...table,
         status: updated.tablesValidated ? ('validada' as ValidationTableStatus) : table.status,
@@ -179,16 +204,23 @@ function updateTable(
   }
 }
 
+function withPlantSync(order: BacklogOrder, plantTables: PlantTable[]): PlantTable[] {
+  return syncPlantFromValidationTables(plantTables, order)
+}
+
 export function validateSingleTable(
   order: BacklogOrder,
   tableId: string,
   userName: string,
   lang: Lang,
-): BacklogOrder {
+  plantTables: PlantTable[] = [],
+): { order: BacklogOrder; plantTables: PlantTable[] } {
   const table = order.validationTables?.find((t) => t.id === tableId)
-  if (!table || table.status === 'validada') return order
+  if (!table || table.status === 'validada') {
+    return { order, plantTables }
+  }
 
-  const updated = updateTable(order, tableId, (t) => ({ ...t, status: 'validada' }))
+  let updated = updateTable(order, tableId, (t) => ({ ...t, status: 'validada' }))
   updated.auditTrail = [
     ...updated.auditTrail,
     auditEntry(
@@ -196,15 +228,18 @@ export function validateSingleTable(
       userName,
     ),
   ]
-  return syncOrderValidationState(updated, lang)
+  updated = syncOrderValidationState(updated, lang)
+  const nextPlant = withPlantSync(updated, plantTables)
+  return { order: updated, plantTables: nextPlant }
 }
 
 export function validateAllTables(
   order: BacklogOrder,
   userName: string,
   lang: Lang,
-): BacklogOrder {
-  const updated: BacklogOrder = {
+  plantTables: PlantTable[] = [],
+): { order: BacklogOrder; plantTables: PlantTable[] } {
+  let updated: BacklogOrder = {
     ...order,
     validationTables: (order.validationTables ?? []).map((table) =>
       table.status === 'pendiente' || table.status === 'parada'
@@ -219,7 +254,9 @@ export function validateAllTables(
       ),
     ],
   }
-  return syncOrderValidationState(updated, lang)
+  updated = syncOrderValidationState(updated, lang)
+  const nextPlant = withPlantSync(updated, plantTables)
+  return { order: updated, plantTables: nextPlant }
 }
 
 export function markTableConflict(
@@ -228,11 +265,12 @@ export function markTableConflict(
   reason: string,
   userName: string,
   lang: Lang,
-): BacklogOrder {
+  plantTables: PlantTable[] = [],
+): { order: BacklogOrder; plantTables: PlantTable[] } {
   const table = order.validationTables?.find((t) => t.id === tableId)
-  if (!table) return order
+  if (!table) return { order, plantTables }
 
-  const updated = updateTable(order, tableId, (t) => ({
+  let updated = updateTable(order, tableId, (t) => ({
     ...t,
     status: 'conflicto',
     conflictReason: reason,
@@ -246,7 +284,9 @@ export function markTableConflict(
       userName,
     ),
   ]
-  return syncOrderValidationState(updated, lang)
+  updated = syncOrderValidationState(updated, lang)
+  const nextPlant = withPlantSync(updated, plantTables)
+  return { order: updated, plantTables: nextPlant }
 }
 
 export function resolveTableConflict(
@@ -254,11 +294,14 @@ export function resolveTableConflict(
   tableId: string,
   userName: string,
   lang: Lang,
-): BacklogOrder {
+  plantTables: PlantTable[] = [],
+): { order: BacklogOrder; plantTables: PlantTable[] } {
   const table = order.validationTables?.find((t) => t.id === tableId)
-  if (!table || table.status !== 'conflicto') return order
+  if (!table || table.status !== 'conflicto') {
+    return { order, plantTables }
+  }
 
-  const updated = updateTable(order, tableId, (t) => ({
+  let updated = updateTable(order, tableId, (t) => ({
     ...t,
     status: 'pendiente',
     conflictReason: undefined,
@@ -270,7 +313,9 @@ export function resolveTableConflict(
       userName,
     ),
   ]
-  return syncOrderValidationState(updated, lang)
+  updated = syncOrderValidationState(updated, lang)
+  const nextPlant = withPlantSync(updated, plantTables)
+  return { order: updated, plantTables: nextPlant }
 }
 
 export function resetValidationTables(order: BacklogOrder): BacklogOrder {
@@ -278,21 +323,10 @@ export function resetValidationTables(order: BacklogOrder): BacklogOrder {
     ...order,
     validationTables: [],
     assignedTables: [],
+    assignedTableIds: [],
+    assignmentMode: 'none',
     tablesValidated: false,
   }
-}
-
-export function ensureValidationTablesForOrder(order: BacklogOrder): BacklogOrder {
-  if (order.column !== 'pendiente_validacion') return order
-  const withTables =
-    order.validationTables.length > 0
-      ? order
-      : {
-          ...order,
-          validationTables: createValidationTables(order),
-          assignedTables: createValidationTables(order).map((t) => t.name),
-        }
-  return withTables
 }
 
 export function demoValidateAllTables(
@@ -300,5 +334,5 @@ export function demoValidateAllTables(
   userName: string,
   lang: Lang,
 ): BacklogOrder {
-  return validateAllTables(order, userName, lang)
+  return validateAllTables(order, userName, lang).order
 }

@@ -5,7 +5,7 @@ import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../../types/backlog'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
-import { formatTableList } from '../../../utils/backlogStorage'
+import { formatTableList, resolveAssignedTableIds } from '../../../utils/backlogStorage'
 
 interface BacklogOrderCardProps {
   order: BacklogOrder
@@ -43,9 +43,10 @@ export function BacklogOrderCard({
     opacity: isDragging ? 0.4 : 1,
   }
 
+  const tableIds = resolveAssignedTableIds(order)
   const tablesLabel =
-    order.assignedTables.length > 0
-      ? formatTableList(order.assignedTables)
+    tableIds.length > 0
+      ? formatTableList(tableIds)
       : `${order.requiredTables} ${d.tablesNeeded}`
 
   return (
@@ -116,6 +117,9 @@ export function BacklogOrderCard({
             <AlertTriangle size={12} aria-hidden="true" />
             {order.alerts[0]}
           </p>
+        )}
+        {(order.assignmentMode === 'mixed' || order.assignmentMode === 'manual') && (
+          <p className="backlog-card__hint">{d.manualSupport}</p>
         )}
       </div>
 

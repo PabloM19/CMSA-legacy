@@ -13,15 +13,18 @@ import { arrayMove } from '@dnd-kit/sortable'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogColumnId, BacklogOrder } from '../../../types/backlog'
+import type { PlantTable } from '../../../types/plant'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
-import { applyColumnMove, evaluateMove } from '../../../utils/backlogRules'
+import { evaluateMove } from '../../../utils/backlogRules'
+import { executeColumnMove } from '../../../utils/backlogMove'
 import { BACKLOG_COLUMNS, BacklogColumn } from './BacklogColumn'
 
 interface BacklogBoardProps {
   orders: BacklogOrder[]
+  plantTables: PlantTable[]
   activeDragId: string | null
   onDragStart: (id: string | null) => void
-  onOrdersChange: (orders: BacklogOrder[]) => void
+  onOrdersChange: (orders: BacklogOrder[], plantTables: PlantTable[]) => void
   onToast: (message: string, type: 'error' | 'success' | 'info') => void
   onConfirmIncident: (order: BacklogOrder) => void
   onConfirmFinalize: (order: BacklogOrder) => void
@@ -39,6 +42,7 @@ function findColumn(id: string, orders: BacklogOrder[]): BacklogColumnId | null 
 
 export function BacklogBoard({
   orders,
+  plantTables,
   activeDragId,
   onDragStart,
   onOrdersChange,
@@ -107,7 +111,7 @@ export function BacklogBoard({
         const idx = reordered.findIndex((r) => r.id === o.id)
         return idx >= 0 ? { ...o, priority: idx + 1 } : o
       })
-      onOrdersChange(next)
+      onOrdersChange(next, plantTables)
       return
     }
 
@@ -128,9 +132,21 @@ export function BacklogBoard({
       return
     }
 
-    const moved = applyColumnMove(order, targetColumn, user.name)
-    const next = orders.map((o) => (o.id === order.id ? moved : o))
-    onOrdersChange(next)
+    const moveResult = executeColumnMove(
+      orders,
+      plantTables,
+      order,
+      targetColumn,
+      user.name,
+      lang,
+    )
+
+    if (!moveResult.success) {
+      onToast(moveResult.message ?? '', 'error')
+      return
+    }
+
+    onOrdersChange(moveResult.orders, moveResult.plantTables)
 
     if (result.message) {
       onToast(result.message, result.toastType ?? 'success')

@@ -3,10 +3,12 @@ import { BacklogToast } from '../backlog/components/BacklogToast'
 import { useAuth } from '../auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../types/backlog'
-import { applyColumnMove } from '../../utils/backlogRules'
-import { getOrders, saveOrders } from '../../utils/backlogStorage'
+import type { PlantTable } from '../../types/plant'
+import { executeColumnMove } from '../../utils/backlogMove'
+import { getState, saveOrdersAndPlant } from '../../utils/backlogStorage'
 import { canPerformValidation } from '../../utils/permissions'
 import {
+  canStartProduction,
   computeValidationKpis,
   getPendingValidationOrders,
   markTableConflict,
@@ -30,7 +32,8 @@ export function ValidationPage() {
   const { t, lang } = useLanguage()
   const d = t.validation
 
-  const [orders, setOrders] = useState<BacklogOrder[]>(() => getOrders())
+  const [orders, setOrders] = useState<BacklogOrder[]>(() => getState().orders)
+  const [plantTables, setPlantTables] = useState<PlantTable[]>(() => getState().plantTables)
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null)
   const [toast, setToast] = useState<{
@@ -42,9 +45,10 @@ export function ValidationPage() {
   const kpis = useMemo(() => computeValidationKpis(orders), [orders])
   const selectedOrder = pendingOrders.find((o) => o.id === selectedOrderId) ?? null
 
-  const persist = useCallback((next: BacklogOrder[]) => {
-    saveOrders(next)
-    setOrders(next)
+  const persist = useCallback((nextOrders: BacklogOrder[], nextPlant: PlantTable[]) => {
+    saveOrdersAndPlant(nextOrders, nextPlant)
+    setOrders(nextOrders)
+    setPlantTables(nextPlant)
   }, [])
 
   const showToast = useCallback(
@@ -53,10 +57,6 @@ export function ValidationPage() {
     },
     [],
   )
-
-  function updateOrder(orderId: string, updater: (order: BacklogOrder) => BacklogOrder) {
-    persist(orders.map((o) => (o.id === orderId ? updater(o) : o)))
-  }
 
   function guardAction(): boolean {
     if (!user || !canPerformValidation(user)) {
@@ -68,8 +68,16 @@ export function ValidationPage() {
 
   function handleValidateTable(tableId: string) {
     if (!user || !selectedOrder || !guardAction()) return
-    updateOrder(selectedOrder.id, (order) =>
-      validateSingleTable(order, tableId, user.name, lang),
+    const { order, plantTables: nextPlant } = validateSingleTable(
+      selectedOrder,
+      tableId,
+      user.name,
+      lang,
+      plantTables,
+    )
+    persist(
+      orders.map((o) => (o.id === selectedOrder.id ? order : o)),
+      nextPlant,
     )
     showToast(d.tableValidated, 'success')
   }
@@ -86,14 +94,26 @@ export function ValidationPage() {
 
   function handleResolveConflict(tableId: string) {
     if (!user || !selectedOrder || !guardAction()) return
-    updateOrder(selectedOrder.id, (order) =>
-      resolveTableConflict(order, tableId, user.name, lang),
+    const { order, plantTables: nextPlant } = resolveTableConflict(
+      selectedOrder,
+      tableId,
+      user.name,
+      lang,
+      plantTables,
+    )
+    persist(
+      orders.map((o) => (o.id === selectedOrder.id ? order : o)),
+      nextPlant,
     )
     showToast(d.conflictResolved, 'success')
   }
 
   function handleStartProductionRequest() {
     if (!selectedOrder || !guardAction()) return
+    if (!canStartProduction(selectedOrder)) {
+      showToast(d.cannotStartNotice, 'error')
+      return
+    }
     setConfirm({ type: 'startProduction', orderId: selectedOrder.id })
   }
 
@@ -107,25 +127,50 @@ export function ValidationPage() {
     }
 
     if (confirm.type === 'validateAll') {
-      updateOrder(order.id, (current) => validateAllTables(current, user.name, lang))
+      const { order: updated, plantTables: nextPlant } = validateAllTables(
+        order,
+        user.name,
+        lang,
+        plantTables,
+      )
+      persist(
+        orders.map((o) => (o.id === order.id ? updated : o)),
+        nextPlant,
+      )
       showToast(d.allTablesValidated, 'success')
     }
 
     if (confirm.type === 'conflict') {
-      updateOrder(order.id, (current) =>
-        markTableConflict(
-          current,
-          confirm.tableId,
-          d.mockConflictReason,
-          user.name,
-          lang,
-        ),
+      const { order: updated, plantTables: nextPlant } = markTableConflict(
+        order,
+        confirm.tableId,
+        d.mockConflictReason,
+        user.name,
+        lang,
+        plantTables,
+      )
+      persist(
+        orders.map((o) => (o.id === order.id ? updated : o)),
+        nextPlant,
       )
       showToast(d.conflictNotice, 'info')
     }
 
     if (confirm.type === 'startProduction') {
-      const moved = applyColumnMove(order, 'en_ejecucion', user.name)
+      const moveResult = executeColumnMove(
+        orders,
+        plantTables,
+        order,
+        'en_ejecucion',
+        user.name,
+        lang,
+      )
+      if (!moveResult.success) {
+        showToast(moveResult.message ?? d.cannotStartNotice, 'error')
+        setConfirm(null)
+        return
+      }
+      const moved = moveResult.movedOrder!
       moved.auditTrail = [
         ...moved.auditTrail,
         {
@@ -135,7 +180,10 @@ export function ValidationPage() {
           user: user.name,
         },
       ]
-      persist(orders.map((o) => (o.id === order.id ? moved : o)))
+      persist(
+        moveResult.orders.map((o) => (o.id === order.id ? moved : o)),
+        moveResult.plantTables,
+      )
       setSelectedOrderId(null)
       showToast(d.productionStarted, 'success')
     }
