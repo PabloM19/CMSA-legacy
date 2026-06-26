@@ -36,8 +36,11 @@ export interface BacklogOrder {
 
 export interface BacklogKpiCounts {
   total: number
-  enBacklog: number
+  inQueue: number
+  inBacklog: number
+  pendingLaunch: number
   pendingValidation: number
   inExecution: number
   blocked: number
+  completed: number
 }

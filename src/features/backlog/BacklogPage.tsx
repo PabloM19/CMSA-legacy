@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react'
-import { computeKpis, loadBacklogOrders, saveBacklogOrders } from '../../data/mockBacklogOrders'
+import { computeKpis } from '../../data/mockBacklogOrders'
 import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { BacklogColumnId, BacklogOrder } from '../../types/backlog'
 import { canActOnOrder } from '../../utils/dashboardPermissions'
 import { applyColumnMove, evaluateMove } from '../../utils/backlogRules'
+import { getOrders, saveOrders } from '../../utils/backlogStorage'
 import { BacklogBoard } from './components/BacklogBoard'
 import { BacklogKpis } from './components/BacklogKpis'
 import { BacklogToast } from './components/BacklogToast'
@@ -12,7 +13,7 @@ import { OrderDetailModal } from './components/OrderDetailModal'
 import './backlog.css'
 
 interface ConfirmState {
-  type: 'incident' | 'cancel'
+  type: 'incident' | 'cancel' | 'finalize'
   order: BacklogOrder
 }
 
@@ -21,7 +22,7 @@ export function BacklogPage() {
   const { t, lang } = useLanguage()
   const d = t.backlog
 
-  const [orders, setOrders] = useState<BacklogOrder[]>(() => loadBacklogOrders())
+  const [orders, setOrders] = useState<BacklogOrder[]>(() => getOrders())
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [detailOrder, setDetailOrder] = useState<BacklogOrder | null>(null)
   const [confirm, setConfirm] = useState<ConfirmState | null>(null)
@@ -32,7 +33,7 @@ export function BacklogPage() {
 
   const persist = useCallback((next: BacklogOrder[]) => {
     setOrders(next)
-    saveBacklogOrders(next)
+    saveOrders(next)
   }, [])
 
   const showToast = useCallback(
@@ -45,6 +46,10 @@ export function BacklogPage() {
   function moveOrderToColumn(order: BacklogOrder, targetColumn: BacklogColumnId) {
     if (!user) return
     const result = evaluateMove(user, order, targetColumn, lang)
+    if (result.needsConfirm && result.confirmAction === 'finalize') {
+      setConfirm({ type: 'finalize', order })
+      return
+    }
     if (!result.ok) {
       showToast(result.message ?? '', result.toastType ?? 'error')
       return
@@ -70,7 +75,7 @@ export function BacklogPage() {
     }
     const entry = {
       id: `audit-${Date.now()}`,
-      action: lang === 'es' ? 'Mesas validadas' : 'Tables validated',
+      action: lang === 'es' ? 'Mesas validadas (demo)' : 'Tables validated (demo)',
       timestamp: new Date().toISOString(),
       user: user.name,
     }
@@ -86,6 +91,10 @@ export function BacklogPage() {
 
   function handleMarkIncident(order: BacklogOrder) {
     setConfirm({ type: 'incident', order })
+  }
+
+  function handleConfirmFinalize(order: BacklogOrder) {
+    setConfirm({ type: 'finalize', order })
   }
 
   function handleCancel(order: BacklogOrder) {
@@ -107,6 +116,9 @@ export function BacklogPage() {
     if (type === 'incident') {
       const moved = applyColumnMove(order, 'bloqueado', user.name)
       persist(orders.map((o) => (o.id === order.id ? moved : o)))
+    } else if (type === 'finalize') {
+      const moved = applyColumnMove(order, 'finalizado', user.name)
+      persist(orders.map((o) => (o.id === order.id ? moved : o)))
     } else {
       const moved = applyColumnMove(
         { ...order, alerts: [...order.alerts, lang === 'es' ? 'Anulado' : 'Cancelled'] },
@@ -116,6 +128,13 @@ export function BacklogPage() {
       persist(orders.map((o) => (o.id === order.id ? moved : o)))
     }
     setConfirm(null)
+  }
+
+  function confirmMessage(): string {
+    if (!confirm) return ''
+    if (confirm.type === 'incident') return d.confirmIncident
+    if (confirm.type === 'finalize') return d.confirmFinalize
+    return d.confirmCancel
   }
 
   const kpis = computeKpis(orders)
@@ -136,6 +155,7 @@ export function BacklogPage() {
         onOrdersChange={persist}
         onToast={showToast}
         onConfirmIncident={handleMarkIncident}
+        onConfirmFinalize={handleConfirmFinalize}
         onViewDetail={setDetailOrder}
         onSendValidation={handleSendValidation}
         onMarkIncident={handleMarkIncident}
@@ -156,9 +176,7 @@ export function BacklogPage() {
       {confirm && (
         <div className="order-modal-overlay" role="presentation">
           <div className="order-modal backlog-confirm" role="alertdialog" aria-modal="true">
-            <p className="backlog-confirm__text">
-              {confirm.type === 'incident' ? d.confirmIncident : d.confirmCancel}
-            </p>
+            <p className="backlog-confirm__text">{confirmMessage()}</p>
             <div className="order-modal__actions">
               <button
                 type="button"

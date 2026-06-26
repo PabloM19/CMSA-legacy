@@ -24,6 +24,7 @@ interface BacklogBoardProps {
   onOrdersChange: (orders: BacklogOrder[]) => void
   onToast: (message: string, type: 'error' | 'success' | 'info') => void
   onConfirmIncident: (order: BacklogOrder) => void
+  onConfirmFinalize: (order: BacklogOrder) => void
   onViewDetail: (order: BacklogOrder) => void
   onSendValidation: (order: BacklogOrder) => void
   onMarkIncident: (order: BacklogOrder) => void
@@ -43,6 +44,7 @@ export function BacklogBoard({
   onOrdersChange,
   onToast,
   onConfirmIncident,
+  onConfirmFinalize,
   onViewDetail,
   onSendValidation,
   onMarkIncident,
@@ -113,6 +115,11 @@ export function BacklogBoard({
 
     if (result.needsConfirm && result.confirmAction === 'incident') {
       onConfirmIncident(order)
+      return
+    }
+
+    if (result.needsConfirm && result.confirmAction === 'finalize') {
+      onConfirmFinalize(order)
       return
     }
 

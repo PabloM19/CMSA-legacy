@@ -16,6 +16,7 @@ import {
   validateNewOrderForm,
 } from '../../utils/orderCalculation'
 import { generateOrderId, saveCreatedOrder } from '../../utils/orderStorage'
+import { mergeCreatedOrder } from '../../utils/backlogStorage'
 import { ConfirmOrderModal } from './components/ConfirmOrderModal'
 import './newOrder.css'
 
@@ -98,15 +99,18 @@ export function NewOrderPage() {
     const boxes = Number(form.boxes)
     const boxesPerHour = Number(form.boxesPerHour)
 
-    saveCreatedOrder({
+    const created = {
       ...form,
       boxes,
       boxesPerHour,
       id: generateOrderId(),
       createdAt: new Date().toISOString(),
-      status: 'pending',
+      status: 'pending' as const,
       calculation,
-    })
+    }
+
+    saveCreatedOrder(created)
+    mergeCreatedOrder(created)
 
     navigate('/backlog', { replace: true })
   }

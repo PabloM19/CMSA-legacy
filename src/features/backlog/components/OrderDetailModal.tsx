@@ -1,5 +1,6 @@
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../../types/backlog'
+import { formatTableList } from '../../../utils/backlogStorage'
 
 interface OrderDetailModalProps {
   order: BacklogOrder
@@ -9,6 +10,13 @@ interface OrderDetailModalProps {
 export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
   const { t, dateLocale } = useLanguage()
   const d = t.backlog
+
+  const tablesDisplay =
+    order.assignedTables.length > 0
+      ? formatTableList(order.assignedTables)
+      : order.requiredTables > 0
+        ? `${order.requiredTables} ${d.tablesNeeded}`
+        : d.noTables
 
   return (
     <div className="order-modal-overlay" role="presentation" onClick={onClose}>
@@ -22,6 +30,10 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
 
         <dl className="order-modal__dl">
           <div className="order-modal__row">
+            <dt>{d.reference}</dt>
+            <dd className="order-modal__mono">{order.reference}</dd>
+          </div>
+          <div className="order-modal__row">
             <dt>{d.company}</dt>
             <dd>
               <span className={`dash-chip dash-chip--${order.company.toLowerCase()}`}>
@@ -34,8 +46,12 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
             <dd>{d.columns[order.column]}</dd>
           </div>
           <div className="order-modal__row">
-            <dt>Referencia</dt>
-            <dd className="order-modal__mono">{order.reference}</dd>
+            <dt>{d.product}</dt>
+            <dd>{order.product}</dd>
+          </div>
+          <div className="order-modal__row">
+            <dt>{d.variety}</dt>
+            <dd>{order.variety}</dd>
           </div>
           <div className="order-modal__row">
             <dt>{d.boxes}</dt>
@@ -46,12 +62,16 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
             <dd>{order.boxesPerHour}</dd>
           </div>
           <div className="order-modal__row">
+            <dt>{d.eta}</dt>
+            <dd>{order.eta}</dd>
+          </div>
+          <div className="order-modal__row">
+            <dt>{d.endTime}</dt>
+            <dd>{order.endTime}</dd>
+          </div>
+          <div className="order-modal__row">
             <dt>{d.assignedTables}</dt>
-            <dd>
-              {order.assignedTables.length > 0
-                ? order.assignedTables.join(', ')
-                : d.noAlerts}
-            </dd>
+            <dd>{tablesDisplay}</dd>
           </div>
         </dl>
 

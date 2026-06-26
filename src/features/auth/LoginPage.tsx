@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -62,6 +63,7 @@ export function LoginPage() {
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -141,8 +143,8 @@ export function LoginPage() {
                 <LockIcon />
                 <input
                   id="password"
-                  className={`login-card__input${error ? ' login-card__input--error' : ''}`}
-                  type="password"
+                  className={`login-card__input login-card__input--password${error ? ' login-card__input--error' : ''}`}
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   placeholder={copy.passwordPlaceholder}
                   value={password}
@@ -152,6 +154,15 @@ export function LoginPage() {
                   }}
                   disabled={loading}
                 />
+                <button
+                  type="button"
+                  className="login-card__password-toggle"
+                  aria-label={showPassword ? copy.hidePassword : copy.showPassword}
+                  onClick={() => setShowPassword((v) => !v)}
+                  disabled={loading}
+                >
+                  {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                </button>
               </div>
             </div>
 

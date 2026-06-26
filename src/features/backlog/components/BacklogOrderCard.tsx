@@ -5,6 +5,7 @@ import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../../types/backlog'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
+import { formatTableList } from '../../../utils/backlogStorage'
 
 interface BacklogOrderCardProps {
   order: BacklogOrder
@@ -44,7 +45,7 @@ export function BacklogOrderCard({
 
   const tablesLabel =
     order.assignedTables.length > 0
-      ? order.assignedTables.join(', ')
+      ? formatTableList(order.assignedTables)
       : `${order.requiredTables} ${d.tablesNeeded}`
 
   return (
@@ -105,6 +106,11 @@ export function BacklogOrderCard({
             {d.tablesValidated}
           </span>
         )}
+        {order.column === 'pendiente_validacion' && !order.tablesValidated && (
+          <span className="backlog-card__badge backlog-card__badge--pending">
+            {d.tablesPending}
+          </span>
+        )}
         {order.alerts.length > 0 && (
           <p className="backlog-card__alert">
             <AlertTriangle size={12} aria-hidden="true" />
@@ -138,10 +144,11 @@ export function BacklogOrderCard({
           onValidateTables && (
             <button
               type="button"
-              className="backlog-card__btn"
+              className="backlog-card__btn backlog-card__btn--demo"
               onClick={() => onValidateTables(order)}
             >
               {d.validateTables}
+              <span className="backlog-card__demo-tag">{d.demo}</span>
             </button>
           )}
         {isMaster && onMarkIncident && order.column !== 'bloqueado' && (

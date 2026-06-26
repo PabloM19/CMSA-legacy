@@ -11,7 +11,7 @@ export interface BacklogMoveResult {
   message?: string
   toastType?: BacklogToastType
   needsConfirm?: boolean
-  confirmAction?: 'incident' | 'cancel'
+  confirmAction?: 'incident' | 'cancel' | 'finalize'
 }
 
 const COLUMN_ORDER: BacklogColumnId[] = [
@@ -91,6 +91,8 @@ function messages(lang: Lang) {
         masterIncident: 'Solo un usuario máster puede marcar incidencias.',
         masterCancel: 'Solo un usuario máster puede anular pedidos aceptados.',
         masterFinish: 'Solo un usuario máster puede finalizar pedidos.',
+        confirmFinalize:
+          'Este pedido se marcará como finalizado y liberará recursos en la simulación. ¿Deseas continuar?',
         invalidTransition: 'Transición no permitida en el flujo operativo.',
         tablesNotValidated:
           'Las mesas aún no están validadas para pasar a ejecución.',
@@ -104,6 +106,8 @@ function messages(lang: Lang) {
         masterIncident: 'Only a master user can mark incidents.',
         masterCancel: 'Only a master user can cancel accepted orders.',
         masterFinish: 'Only a master user can complete orders.',
+        confirmFinalize:
+          'This order will be marked as completed and release resources in the simulation. Continue?',
         invalidTransition: 'Transition not allowed in the operational flow.',
         tablesNotValidated: 'Tables are not validated yet for execution.',
         movedBack: 'Order moved back in the backlog.',
@@ -137,7 +141,12 @@ export function evaluateMove(
     if (user.role !== 'master') {
       return { ok: false, message: msg.masterFinish, toastType: 'error' }
     }
-    return { ok: true }
+    return {
+      ok: false,
+      needsConfirm: true,
+      confirmAction: 'finalize',
+      message: msg.confirmFinalize,
+    }
   }
 
   if (targetColumn === 'en_ejecucion') {

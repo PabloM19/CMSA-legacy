@@ -1,8 +1,5 @@
 import type { BacklogOrder } from '../types/backlog'
 import type { CreatedOrder } from '../types/newOrder'
-import { getCreatedOrders } from '../utils/orderStorage'
-
-const STORAGE_KEY = 'cmsa-backlog-orders'
 
 function audit(action: string, user = 'Sistema'): BacklogOrder['auditTrail'][0] {
   return {
@@ -30,10 +27,7 @@ export const mockBacklogOrders: BacklogOrder[] = [
     tablesValidated: false,
     alerts: [],
     priority: 1,
-    auditTrail: [
-      audit('Pedido creado'),
-      audit('Pedido aceptado'),
-    ],
+    auditTrail: [audit('Pedido creado'), audit('Pedido aceptado')],
   },
   {
     id: 'bk-2',
@@ -65,9 +59,9 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '13:50',
     endTime: '14:20',
     requiredTables: 1,
-    assignedTables: ['M4'],
+    assignedTables: ['Mesa 04'],
     tablesValidated: false,
-    alerts: ['Pendiente validación'],
+    alerts: ['Mesas pendientes'],
     priority: 1,
     auditTrail: [
       audit('Pedido creado'),
@@ -87,15 +81,11 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '16:00',
     endTime: '18:30',
     requiredTables: 1,
-    assignedTables: ['M3'],
+    assignedTables: ['Mesa 03'],
     tablesValidated: true,
     alerts: [],
     priority: 1,
-    auditTrail: [
-      audit('Pedido creado'),
-      audit('Mesas validadas'),
-      audit('En ejecución'),
-    ],
+    auditTrail: [audit('Pedido creado'), audit('Mesas validadas'), audit('En ejecución')],
   },
   {
     id: 'bk-5',
@@ -109,7 +99,7 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '12:00',
     endTime: '13:15',
     requiredTables: 1,
-    assignedTables: ['M5'],
+    assignedTables: ['Mesa 05'],
     tablesValidated: false,
     alerts: ['Incidencia material'],
     priority: 1,
@@ -127,7 +117,7 @@ export const mockBacklogOrders: BacklogOrder[] = [
     eta: '09:00',
     endTime: '11:30',
     requiredTables: 1,
-    assignedTables: ['M6'],
+    assignedTables: ['Mesa 06'],
     tablesValidated: true,
     alerts: [],
     priority: 1,
@@ -152,70 +142,28 @@ export function convertCreatedOrder(order: CreatedOrder): BacklogOrder {
     tablesValidated: false,
     alerts: order.calculation.alerts.map((a) => a.message),
     priority: 0,
-    auditTrail: [
-      audit('Pedido creado'),
-      audit('Pedido aceptado'),
-    ],
+    auditTrail: [audit('Pedido creado'), audit('Pedido aceptado')],
   }
-}
-
-export function loadBacklogOrders(): BacklogOrder[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as BacklogOrder[]
-      if (parsed.length > 0) return normalizePriorities(parsed)
-    }
-  } catch {
-    /* fall through */
-  }
-
-  const created = getCreatedOrders().map(convertCreatedOrder)
-  const merged = [...created, ...mockBacklogOrders]
-  const byId = new Map<string, BacklogOrder>()
-  merged.forEach((o) => byId.set(o.id, o))
-  const initial = normalizePriorities(Array.from(byId.values()))
-  saveBacklogOrders(initial)
-  return initial
-}
-
-export function saveBacklogOrders(orders: BacklogOrder[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders))
-}
-
-function normalizePriorities(orders: BacklogOrder[]): BacklogOrder[] {
-  const columns = [
-    'en_backlog',
-    'pendiente_lanzamiento',
-    'pendiente_validacion',
-    'en_ejecucion',
-    'bloqueado',
-    'finalizado',
-  ] as const
-
-  const result = [...orders]
-  columns.forEach((col) => {
-    const colOrders = result.filter((o) => o.column === col).sort((a, b) => a.priority - b.priority)
-    colOrders.forEach((o, idx) => {
-      o.priority = idx + 1
-    })
-  })
-  return result
 }
 
 export function assignMockTables(required: number): string[] {
-  const pool = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6']
-  return pool.slice(0, Math.max(1, required))
+  return Array.from({ length: Math.max(1, required) }, (_, i) =>
+    `Mesa ${String(i + 1).padStart(2, '0')}`,
+  )
 }
 
 export function computeKpis(orders: BacklogOrder[]) {
+  const inBacklog = orders.filter((o) => o.column === 'en_backlog').length
+  const pendingLaunch = orders.filter((o) => o.column === 'pendiente_lanzamiento').length
+
   return {
     total: orders.length,
-    enBacklog:
-      orders.filter((o) => o.column === 'en_backlog' || o.column === 'pendiente_lanzamiento')
-        .length,
+    inQueue: inBacklog + pendingLaunch,
+    inBacklog,
+    pendingLaunch,
     pendingValidation: orders.filter((o) => o.column === 'pendiente_validacion').length,
     inExecution: orders.filter((o) => o.column === 'en_ejecucion').length,
     blocked: orders.filter((o) => o.column === 'bloqueado').length,
+    completed: orders.filter((o) => o.column === 'finalizado').length,
   }
 }

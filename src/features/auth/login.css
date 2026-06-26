@@ -157,6 +157,37 @@
   box-shadow: 0 0 0 3px var(--color-brand-muted);
 }
 
+.login-card__input--password {
+  padding-right: 2.75rem;
+}
+
+.login-card__password-toggle {
+  position: absolute;
+  right: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-gray-400);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.login-card__password-toggle:hover:not(:disabled) {
+  color: var(--color-gray-600);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.login-card__password-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .login-card__input--error {
   border-color: #f87171;
 }

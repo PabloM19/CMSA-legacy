@@ -10,19 +10,25 @@ export function BacklogKpis({ counts }: BacklogKpisProps) {
   const d = t.backlog
 
   const items = [
-    { label: d.kpiTotal, value: counts.total },
-    { label: d.kpiBacklog, value: counts.enBacklog },
-    { label: d.kpiValidation, value: counts.pendingValidation },
-    { label: d.kpiExecution, value: counts.inExecution },
-    { label: d.kpiBlocked, value: counts.blocked },
+    { key: 'total', label: d.kpiTotal, value: counts.total },
+    { key: 'queue', label: d.kpiQueue, value: counts.inQueue, isQueue: true },
+    { key: 'validation', label: d.kpiValidation, value: counts.pendingValidation },
+    { key: 'execution', label: d.kpiExecution, value: counts.inExecution },
+    { key: 'blocked', label: d.kpiBlocked, value: counts.blocked },
+    { key: 'completed', label: d.kpiCompleted, value: counts.completed },
   ]
 
   return (
     <div className="backlog-kpis">
       {items.map((item) => (
-        <article key={item.label} className="dash-card backlog-kpi">
+        <article key={item.key} className="dash-card backlog-kpi">
           <span className="backlog-kpi__label">{item.label}</span>
           <span className="backlog-kpi__value">{item.value}</span>
+          {item.isQueue && (
+            <span className="backlog-kpi__detail">
+              {d.kpiQueueBacklog}: {counts.inBacklog} · {d.kpiQueueLaunch}: {counts.pendingLaunch}
+            </span>
+          )}
         </article>
       ))}
     </div>

@@ -25,7 +25,7 @@
 /* KPIs */
 .backlog-kpis {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: var(--space-md);
 }
 
@@ -45,6 +45,12 @@
   font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-gray-900);
+}
+
+.backlog-kpi__detail {
+  font-size: 0.6875rem;
+  color: var(--color-gray-500);
+  line-height: 1.35;
 }
 
 /* Board */
@@ -205,6 +211,11 @@
   color: #15803d;
 }
 
+.backlog-card__badge--pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
 .backlog-card__alert {
   display: flex;
   align-items: center;
@@ -253,6 +264,26 @@
 .backlog-card__btn--warn {
   border-color: rgba(239, 68, 68, 0.3);
   color: #b91c1c;
+}
+
+.backlog-card__btn--demo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-style: dashed;
+  border-color: var(--color-gray-300);
+  color: var(--color-gray-600);
+}
+
+.backlog-card__demo-tag {
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-gray-100);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-gray-500);
 }
 
 /* Toast */
