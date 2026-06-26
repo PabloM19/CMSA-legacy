@@ -8,6 +8,20 @@ export type BacklogColumnId =
   | 'bloqueado'
   | 'finalizado'
 
+export type ValidationTableStatus = 'pendiente' | 'validada' | 'conflicto' | 'parada'
+export type ValidationTableType = 'automatica' | 'manual'
+
+export interface ValidationTable {
+  id: string
+  name: string
+  type: ValidationTableType
+  status: ValidationTableStatus
+  company: OrderCompany
+  orderId: string
+  orderReference: string
+  conflictReason?: string
+}
+
 export interface AuditEntry {
   id: string
   action: string
@@ -28,6 +42,7 @@ export interface BacklogOrder {
   endTime: string
   requiredTables: number
   assignedTables: string[]
+  validationTables: ValidationTable[]
   tablesValidated: boolean
   alerts: string[]
   priority: number

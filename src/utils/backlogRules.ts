@@ -3,6 +3,12 @@ import type { Lang } from '../i18n/translations'
 import type { User } from '../types/auth'
 import type { BacklogColumnId, BacklogOrder } from '../types/backlog'
 import { canActOnOrder } from './dashboardPermissions'
+import {
+  canStartProduction,
+  createValidationTables,
+  hasTableConflicts,
+  resetValidationTables,
+} from './validationHelpers'
 
 export type BacklogToastType = 'error' | 'success' | 'info'
 
@@ -96,6 +102,8 @@ function messages(lang: Lang) {
         invalidTransition: 'Transición no permitida en el flujo operativo.',
         tablesNotValidated:
           'Las mesas aún no están validadas para pasar a ejecución.',
+        tablesInConflict:
+          'Hay mesas en conflicto. El pedido no puede iniciar producción.',
         movedBack: 'Pedido retrocedido en el backlog.',
       }
     : {
@@ -110,6 +118,8 @@ function messages(lang: Lang) {
           'This order will be marked as completed and release resources in the simulation. Continue?',
         invalidTransition: 'Transition not allowed in the operational flow.',
         tablesNotValidated: 'Tables are not validated yet for execution.',
+        tablesInConflict:
+          'There are tables in conflict. The order cannot start production.',
         movedBack: 'Order moved back in the backlog.',
       }
 }
@@ -153,7 +163,10 @@ export function evaluateMove(
     if (order.column !== 'pendiente_validacion') {
       return { ok: false, message: msg.needsValidation, toastType: 'error' }
     }
-    if (!order.tablesValidated) {
+    if (hasTableConflicts(order)) {
+      return { ok: false, message: msg.tablesInConflict, toastType: 'error' }
+    }
+    if (!canStartProduction(order)) {
       return { ok: false, message: msg.tablesNotValidated, toastType: 'error' }
     }
   }
@@ -201,13 +214,18 @@ export function applyColumnMove(
   })
 
   if (targetColumn === 'pendiente_validacion') {
-    updated.assignedTables = assignMockTables(order.requiredTables)
+    const tableNames = assignMockTables(order.requiredTables)
+    updated.assignedTables = tableNames
+    updated.validationTables = createValidationTables(
+      { ...updated, assignedTables: tableNames },
+      tableNames,
+    )
+    updated.tablesValidated = false
     updated.auditTrail.push(entry('Enviado a validación de mesas'))
   } else if (targetColumn === 'pendiente_lanzamiento') {
     updated.auditTrail.push(entry('Movido a pendiente de lanzamiento'))
     if (getColumnIndex(order.column) > getColumnIndex('pendiente_lanzamiento')) {
-      updated.assignedTables = []
-      updated.tablesValidated = false
+      Object.assign(updated, resetValidationTables(updated))
     }
   } else if (targetColumn === 'en_ejecucion') {
     updated.auditTrail.push(entry('En ejecución'))
@@ -219,8 +237,7 @@ export function applyColumnMove(
   } else if (targetColumn === 'en_backlog') {
     updated.auditTrail.push(entry('Movido en backlog'))
     if (getColumnIndex(order.column) > getColumnIndex('en_backlog')) {
-      updated.assignedTables = []
-      updated.tablesValidated = false
+      Object.assign(updated, resetValidationTables(updated))
     }
   }
 
@@ -231,10 +248,12 @@ export function applyColumnMove(
   ) {
     updated.auditTrail.push(entry('Retrocedido en backlog (master)'))
     if (getColumnIndex(targetColumn) < getColumnIndex('pendiente_validacion')) {
-      updated.assignedTables = []
-      updated.tablesValidated = false
+      Object.assign(updated, resetValidationTables(updated))
     } else if (targetColumn === 'pendiente_validacion') {
       updated.tablesValidated = false
+      updated.validationTables = (updated.validationTables ?? []).map((table) =>
+        table.status === 'conflicto' ? table : { ...table, status: 'pendiente' },
+      )
     }
   }
 

@@ -5,6 +5,7 @@ const USER_ROUTES = [
   '/dashboard',
   '/orders/new',
   '/backlog',
+  '/validation',
   '/plant-map',
   '/mobile',
 ] as const
@@ -51,4 +52,8 @@ export const NAV_ITEMS: { to: string; key: NavKey }[] = [
 
 export function getVisibleNavItems(user: User) {
   return NAV_ITEMS.filter((item) => canAccessRoute(user, item.to))
+}
+
+export function canPerformValidation(user: User): boolean {
+  return user.role === 'validator' || user.role === 'master'
 }

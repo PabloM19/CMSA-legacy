@@ -4,6 +4,7 @@ import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { BacklogColumnId, BacklogOrder } from '../../types/backlog'
 import { canActOnOrder } from '../../utils/dashboardPermissions'
+import { demoValidateAllTables } from '../../utils/validationHelpers'
 import { applyColumnMove, evaluateMove } from '../../utils/backlogRules'
 import { getOrders, saveOrders } from '../../utils/backlogStorage'
 import { BacklogBoard } from './components/BacklogBoard'
@@ -73,17 +74,9 @@ export function BacklogPage() {
       )
       return
     }
-    const entry = {
-      id: `audit-${Date.now()}`,
-      action: lang === 'es' ? 'Mesas validadas (demo)' : 'Tables validated (demo)',
-      timestamp: new Date().toISOString(),
-      user: user.name,
-    }
     persist(
       orders.map((o) =>
-        o.id === order.id
-          ? { ...o, tablesValidated: true, auditTrail: [...o.auditTrail, entry] }
-          : o,
+        o.id === order.id ? demoValidateAllTables(o, user.name, lang) : o,
       ),
     )
     showToast(d.tablesValidated, 'success')

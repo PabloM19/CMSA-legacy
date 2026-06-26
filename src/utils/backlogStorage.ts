@@ -2,6 +2,7 @@ import { mockBacklogOrders, convertCreatedOrder } from '../data/mockBacklogOrder
 import type { BacklogOrder } from '../types/backlog'
 import type { CreatedOrder } from '../types/newOrder'
 import { getCreatedOrders } from './orderStorage'
+import { normalizeOrdersValidation } from './validationHelpers'
 
 export const BACKLOG_STORAGE_KEY = 'cmsa-backlog-orders'
 
@@ -55,7 +56,7 @@ function syncLegacyCreatedOrders(orders: BacklogOrder[]): BacklogOrder[] {
 }
 
 function seedInitial(): BacklogOrder[] {
-  return normalizePriorities([...mockBacklogOrders])
+  return normalizeOrdersValidation(normalizePriorities([...mockBacklogOrders]))
 }
 
 /** Fuente consolidada de pedidos del backlog. */
@@ -67,6 +68,7 @@ export function getOrders(): BacklogOrder[] {
   }
 
   orders = syncLegacyCreatedOrders(orders)
+  orders = normalizeOrdersValidation(orders)
   orders = normalizePriorities(orders)
   saveOrders(orders)
   return orders
