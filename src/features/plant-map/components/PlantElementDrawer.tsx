@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { PlantElementView } from '../../../types/plant'
 import { getSpeedLabel, getStatusLabel, getTypeLabel } from '../../../utils/plantMapHelpers'
@@ -5,9 +6,16 @@ import { getSpeedLabel, getStatusLabel, getTypeLabel } from '../../../utils/plan
 interface PlantElementDrawerProps {
   element: PlantElementView | null
   onClose: () => void
+  variant?: 'side' | 'bottom'
+  footer?: ReactNode
 }
 
-export function PlantElementDrawer({ element, onClose }: PlantElementDrawerProps) {
+export function PlantElementDrawer({
+  element,
+  onClose,
+  variant = 'side',
+  footer,
+}: PlantElementDrawerProps) {
   const { t, lang } = useLanguage()
   const d = t.plantMap
 
@@ -20,7 +28,7 @@ export function PlantElementDrawer({ element, onClose }: PlantElementDrawerProps
   return (
     <div className="plant-drawer-overlay" role="presentation" onClick={onClose}>
       <aside
-        className="plant-drawer"
+        className={`plant-drawer${variant === 'bottom' ? ' plant-drawer--bottom' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="plant-drawer-title"
@@ -140,6 +148,8 @@ export function PlantElementDrawer({ element, onClose }: PlantElementDrawerProps
             <p>{getSpeedLabel(element.speedStatus, lang)}</p>
           </section>
         )}
+
+        {footer && <footer className="plant-drawer__footer">{footer}</footer>}
       </aside>
     </div>
   )

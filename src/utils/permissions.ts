@@ -7,10 +7,11 @@ const USER_ROUTES = [
   '/backlog',
   '/validation',
   '/plant-map',
+  '/tablet',
   '/mobile',
 ] as const
 
-const VALIDATOR_ROUTES = ['/validation', '/mobile'] as const
+const VALIDATOR_ROUTES = ['/validation', '/plant-map', '/tablet', '/mobile'] as const
 
 export function normalizePath(path: string): string {
   return path.split('?')[0].replace(/\/$/, '') || '/'
@@ -50,10 +51,43 @@ export const NAV_ITEMS: { to: string; key: NavKey }[] = [
   { to: '/admin', key: 'admin' },
 ]
 
+/** Navegación móvil mínima: monitorización primero, sin alta de pedidos. */
+export function getMobileNavItems(user: User) {
+  const items: { to: string; key: NavKey }[] = [{ to: '/plant-map', key: 'plantMap' }]
+
+  if (
+    (user.role === 'validator' || user.role === 'master') &&
+    canAccessRoute(user, '/validation')
+  ) {
+    items.push({ to: '/validation', key: 'validation' })
+  }
+
+  if (user.role === 'master') {
+    const extra = getVisibleNavItems(user).filter(
+      (item) => !['plantMap', 'validation', 'newOrder'].includes(item.key),
+    )
+    items.push(...extra)
+  }
+
+  return items
+}
+
 export function getVisibleNavItems(user: User) {
-  return NAV_ITEMS.filter((item) => canAccessRoute(user, item.to))
+  return NAV_ITEMS.filter(
+    (item) => !['mobile', 'tablet'].includes(item.key) && canAccessRoute(user, item.to),
+  )
 }
 
 export function canPerformValidation(user: User): boolean {
   return user.role === 'validator' || user.role === 'master'
+}
+
+/** Parada / reanudación simulada en tablet */
+export function canPerformTabletCriticalActions(user: User): boolean {
+  return user.role === 'master'
+}
+
+/** Marcar incidencia desde tablet */
+export function canMarkTabletIncident(user: User): boolean {
+  return user.role === 'master' || user.role === 'validator'
 }

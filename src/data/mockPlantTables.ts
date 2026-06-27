@@ -13,6 +13,28 @@ function palletizer(id: string, overrides: Partial<PlantPalletizerElement> = {})
   }
 }
 
+/** Overrides visuales para mesas sin pedido (demo estable, no cambia al recargar). */
+export const PLANT_TABLE_DEMO_OVERRIDES: Record<
+  string,
+  Partial<Pick<PlantTable, 'status' | 'speedStatus' | 'alert'>>
+> = {
+  R4: { speedStatus: 'normal' },
+  R5: { status: 'waiting', speedStatus: 'slow', alert: 'Espera de material' },
+  R6: { speedStatus: 'normal' },
+  R7: { speedStatus: 'normal' },
+  R8: { speedStatus: 'normal' },
+  R9: { speedStatus: 'normal' },
+}
+
+export function applyUnassignedTableDemos(tables: PlantTable[]): PlantTable[] {
+  return tables.map((table) => {
+    if (table.orderId) return table
+    const demo = PLANT_TABLE_DEMO_OVERRIDES[table.id]
+    if (!demo) return table
+    return { ...table, ...demo }
+  })
+}
+
 /** Estado inicial de la planta mock (R1-R9, M1-M7). */
 export function createSeedPlantTables(): PlantTable[] {
   return [

@@ -7,6 +7,7 @@ interface PlantLayoutProps {
   elements: Map<string, PlantElementView>
   selectedId: string | null
   onSelect: (element: PlantElementView) => void
+  boardClassName?: string
 }
 
 function renderRow(
@@ -35,12 +36,17 @@ function renderRow(
   })
 }
 
-export function PlantLayout({ elements, selectedId, onSelect }: PlantLayoutProps) {
+export function PlantLayout({
+  elements,
+  selectedId,
+  onSelect,
+  boardClassName,
+}: PlantLayoutProps) {
   const { t } = useLanguage()
   const d = t.plantMap
 
   return (
-    <div className="plant-map-board dash-card">
+    <div className={`plant-map-board dash-card${boardClassName ? ` ${boardClassName}` : ''}`}>
       <section className="plant-zone">
         <p className="plant-zone__label">{d.upperZone}</p>
         <div className="plant-zone__row">{renderRow(PLANT_UPPER_ROW, elements, selectedId, onSelect)}</div>

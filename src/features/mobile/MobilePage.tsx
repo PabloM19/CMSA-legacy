@@ -1,10 +1,6 @@
-import { PagePlaceholder } from '../../components/ui/PagePlaceholder'
+import { Navigate } from 'react-router-dom'
 
+/** @deprecated Usar /plant-map — se adapta al ancho automáticamente */
 export function MobilePage() {
-  return (
-    <PagePlaceholder
-      title="Vista Mobile"
-      description="Interfaz móvil para consultas y notificaciones en campo. Layout responsive sin lógica de backend."
-    />
-  )
+  return <Navigate to="/plant-map" replace />
 }

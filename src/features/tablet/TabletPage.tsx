@@ -1,10 +1,6 @@
-import { PagePlaceholder } from '../../components/ui/PagePlaceholder'
+import { Navigate } from 'react-router-dom'
 
+/** @deprecated Usar /plant-map — se adapta al ancho automáticamente */
 export function TabletPage() {
-  return (
-    <PagePlaceholder
-      title="Vista Tablet"
-      description="Interfaz optimizada para operarios en planta con tablet. Wireframe de flujos táctiles y acciones rápidas."
-    />
-  )
+  return <Navigate to="/plant-map" replace />
 }

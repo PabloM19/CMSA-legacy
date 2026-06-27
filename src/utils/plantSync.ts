@@ -1,5 +1,6 @@
 import type { BacklogOrder, ValidationTableStatus } from '../types/backlog'
 import type { PlantTable, PlantTableStatus } from '../types/plant'
+import { applyUnassignedTableDemos } from '../data/mockPlantTables'
 
 const FREE: PlantTableStatus = 'free'
 
@@ -122,5 +123,5 @@ export function rebuildPlantTablesFromOrders(
     }
   })
 
-  return next
+  return applyUnassignedTableDemos(next)
 }

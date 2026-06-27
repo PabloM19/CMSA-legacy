@@ -1,7 +1,8 @@
 import { mockBacklogOrders, convertCreatedOrder } from '../data/mockBacklogOrders'
 import { createSeedPalletizers, createSeedPlantTables } from '../data/mockPlantTables'
 import type { BacklogOrder } from '../types/backlog'
-import type { CmsaPersistedState, PlantPalletizerElement, PlantTable } from '../types/plant'
+import type { CmsaPersistedState, PlantPalletizerElement, PlantPalletizerStatus, PlantTable } from '../types/plant'
+import { readTabletOverrides } from './tabletStorage'
 import type { CreatedOrder } from '../types/newOrder'
 import { getCreatedOrders } from './orderStorage'
 import { rebuildPlantTablesFromOrders } from './plantSync'
@@ -108,6 +109,33 @@ function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
   return { orders, plantTables, plantPalletizers }
 }
 
+function applyTabletOverrides(state: CmsaPersistedState): CmsaPersistedState {
+  const overrides = readTabletOverrides()
+  if (Object.keys(overrides).length === 0) return state
+
+  return {
+    ...state,
+    plantTables: state.plantTables.map((table) => {
+      const override = overrides[table.id]
+      if (!override) return table
+      return {
+        ...table,
+        status: override.status as PlantTable['status'],
+        alert: override.alert,
+      }
+    }),
+    plantPalletizers: state.plantPalletizers.map((palletizer) => {
+      const override = overrides[palletizer.id]
+      if (!override) return palletizer
+      return {
+        ...palletizer,
+        status: override.status as PlantPalletizerStatus,
+        alert: override.alert,
+      }
+    }),
+  }
+}
+
 /** Fuente consolidada: pedidos + mesas de planta. */
 export function getState(): CmsaPersistedState {
   let state = readRawState()
@@ -116,7 +144,7 @@ export function getState(): CmsaPersistedState {
   }
   state = hydrateState(state)
   saveState(state)
-  return state
+  return applyTabletOverrides(state)
 }
 
 export function getOrders(): BacklogOrder[] {
