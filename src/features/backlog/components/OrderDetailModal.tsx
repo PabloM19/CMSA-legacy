@@ -1,14 +1,27 @@
+import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
+import { CompanyBadge, StatusBadge } from '../../../components/ui/StatusBadge'
 import type { BacklogOrder } from '../../../types/backlog'
 import { formatTableList, resolveAssignedTableIds } from '../../../utils/backlogStorage'
+import { getColumnStatusBadge } from '../../../utils/statusBadge'
 
 interface OrderDetailModalProps {
   order: BacklogOrder
   onClose: () => void
+  onMarkIncident?: () => void
+  onCancel?: () => void
+  onValidateTables?: () => void
 }
 
-export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
-  const { t, dateLocale } = useLanguage()
+export function OrderDetailModal({
+  order,
+  onClose,
+  onMarkIncident,
+  onCancel,
+  onValidateTables,
+}: OrderDetailModalProps) {
+  const { user } = useAuth()
+  const { t, lang, dateLocale } = useLanguage()
   const d = t.backlog
 
   const tableIds = resolveAssignedTableIds(order)
@@ -19,6 +32,9 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
         ? `${order.requiredTables} ${d.tablesNeeded}`
         : d.noTables
 
+  const statusBadge = getColumnStatusBadge(order.column, lang)
+  const columnLabel = d.columns[order.column]
+
   return (
     <div className="order-modal-overlay" role="presentation" onClick={onClose}>
       <div
@@ -27,33 +43,20 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="order-modal__title">{d.detailTitle}</h2>
+        <header className="backlog-detail__hero">
+          <div className="backlog-detail__hero-main">
+            <h2 className="order-modal__title">{order.reference}</h2>
+            <div className="backlog-detail__hero-badges">
+              <CompanyBadge company={order.company} />
+              <StatusBadge label={columnLabel} variant={statusBadge.variant} />
+            </div>
+          </div>
+          <p className="backlog-detail__hero-product">
+            {order.product} · {order.variety}
+          </p>
+        </header>
 
-        <dl className="order-modal__dl">
-          <div className="order-modal__row">
-            <dt>{d.reference}</dt>
-            <dd className="order-modal__mono">{order.reference}</dd>
-          </div>
-          <div className="order-modal__row">
-            <dt>{d.company}</dt>
-            <dd>
-              <span className={`dash-chip dash-chip--${order.company.toLowerCase()}`}>
-                {order.company}
-              </span>
-            </dd>
-          </div>
-          <div className="order-modal__row">
-            <dt>{d.status}</dt>
-            <dd>{d.columns[order.column]}</dd>
-          </div>
-          <div className="order-modal__row">
-            <dt>{d.product}</dt>
-            <dd>{order.product}</dd>
-          </div>
-          <div className="order-modal__row">
-            <dt>{d.variety}</dt>
-            <dd>{order.variety}</dd>
-          </div>
+        <dl className="order-modal__dl backlog-detail__grid">
           <div className="order-modal__row">
             <dt>{d.boxes}</dt>
             <dd>{order.boxes}</dd>
@@ -113,8 +116,24 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
           )}
         </section>
 
-        <div className="order-modal__actions">
-          <button type="button" className="order-btn order-btn--ghost" onClick={onClose}>
+        <div className="order-modal__actions backlog-detail__actions">
+          {onValidateTables && (
+            <button type="button" className="order-btn order-btn--ghost" onClick={onValidateTables}>
+              {d.validateTables}
+              <span className="backlog-card__demo-tag">{d.demo}</span>
+            </button>
+          )}
+          {user?.role === 'master' && onMarkIncident && (
+            <button type="button" className="order-btn order-btn--ghost" onClick={onMarkIncident}>
+              {d.markIncident}
+            </button>
+          )}
+          {user?.role === 'master' && onCancel && (
+            <button type="button" className="order-btn order-btn--danger" onClick={onCancel}>
+              {d.cancelOrder}
+            </button>
+          )}
+          <button type="button" className="order-btn order-btn--primary" onClick={onClose}>
             {d.close}
           </button>
         </div>

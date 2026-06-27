@@ -10,6 +10,8 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
+import { useMemo, useState } from 'react'
+import { EmptyState } from '../../../components/ui/EmptyState'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogColumnId, BacklogOrder } from '../../../types/backlog'
@@ -17,12 +19,22 @@ import type { PlantTable } from '../../../types/plant'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
 import { evaluateMove } from '../../../utils/backlogRules'
 import { executeColumnMove } from '../../../utils/backlogMove'
+import { filterOrdersForView } from '../../../utils/backlogViewFilters'
+import {
+  resolveVisibleLimit,
+  type BacklogDensity,
+  type BacklogViewMode,
+} from '../../../utils/backlogViewPrefs'
 import { BACKLOG_COLUMNS, BacklogColumn } from './BacklogColumn'
+import { BacklogColumnDrawer } from './BacklogColumnDrawer'
+import { BacklogBoardScrollArea } from './BacklogBoardScrollArea'
 
 interface BacklogBoardProps {
   orders: BacklogOrder[]
   plantTables: PlantTable[]
   activeDragId: string | null
+  viewMode: BacklogViewMode
+  density: BacklogDensity
   onDragStart: (id: string | null) => void
   onOrdersChange: (orders: BacklogOrder[], plantTables: PlantTable[]) => void
   onToast: (message: string, type: 'error' | 'success' | 'info') => void
@@ -40,10 +52,18 @@ function findColumn(id: string, orders: BacklogOrder[]): BacklogColumnId | null 
   return orders.find((o) => o.id === id)?.column ?? null
 }
 
+function sortColumnOrders(orders: BacklogOrder[], columnId: BacklogColumnId): BacklogOrder[] {
+  return orders
+    .filter((o) => o.column === columnId)
+    .sort((a, b) => a.priority - b.priority)
+}
+
 export function BacklogBoard({
   orders,
   plantTables,
   activeDragId,
+  viewMode,
+  density,
   onDragStart,
   onOrdersChange,
   onToast,
@@ -56,12 +76,38 @@ export function BacklogBoard({
   onValidateTables,
 }: BacklogBoardProps) {
   const { user } = useAuth()
-  const { lang } = useLanguage()
+  const { t, lang } = useLanguage()
+  const d = t.backlog
+
+  const [drawerColumn, setDrawerColumn] = useState<BacklogColumnId | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor),
   )
+
+  const filteredOrders = useMemo(
+    () => filterOrdersForView(orders, viewMode, user),
+    [orders, viewMode, user],
+  )
+
+  const visibleLimit = resolveVisibleLimit(viewMode, density)
+  const scrollable = viewMode === 'full'
+  const compactCards = viewMode !== 'full'
+  const isSummaryMode = viewMode === 'summary'
+
+  const boardEmpty =
+    (viewMode === 'attention' || viewMode === 'mine') && filteredOrders.length === 0
+
+  const emptyBoardMessage =
+    viewMode === 'attention' ? d.emptyAttention : viewMode === 'mine' ? d.emptyMine : ''
+
+  const columnEmptyMessage =
+    viewMode === 'attention'
+      ? d.emptyAttentionColumn
+      : viewMode === 'mine'
+        ? d.emptyMineColumn
+        : undefined
 
   const activeOrder = activeDragId ? orders.find((o) => o.id === activeDragId) : null
 
@@ -153,39 +199,102 @@ export function BacklogBoard({
     }
   }
 
-  return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="backlog-board">
-        {BACKLOG_COLUMNS.map((columnId) => (
-          <BacklogColumn
-            key={columnId}
-            columnId={columnId}
-            orders={orders
-              .filter((o) => o.column === columnId)
-              .sort((a, b) => a.priority - b.priority)}
-            onViewDetail={onViewDetail}
-            onSendValidation={onSendValidation}
-            onMarkIncident={onMarkIncident}
-            onCancel={onCancel}
-            onValidateTables={onValidateTables}
-          />
-        ))}
-      </div>
+  function handlePrepare(order: BacklogOrder) {
+    if (!user) return
+    const result = evaluateMove(user, order, 'pendiente_lanzamiento', lang)
+    if (!result.ok) {
+      onToast(result.message ?? '', result.toastType ?? 'error')
+      return
+    }
+    const moveResult = executeColumnMove(
+      orders,
+      plantTables,
+      order,
+      'pendiente_lanzamiento',
+      user.name,
+      lang,
+    )
+    if (!moveResult.success) {
+      onToast(moveResult.message ?? '', 'error')
+      return
+    }
+    onOrdersChange(moveResult.orders, moveResult.plantTables)
+    if (result.message) onToast(result.message, result.toastType ?? 'success')
+  }
 
-      <DragOverlay dropAnimation={null}>
-        {activeOrder ? (
-          <div
-            className={`backlog-card backlog-card--overlay order-card--${activeOrder.company.toLowerCase()}`}
-          >
-            <span className="backlog-card__ref">{activeOrder.reference}</span>
+  return (
+    <>
+      {boardEmpty && (
+        <EmptyState title={emptyBoardMessage} className="backlog-board-empty" />
+      )}
+
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <BacklogBoardScrollArea hidden={boardEmpty}>
+          <div className={`backlog-board${boardEmpty ? ' backlog-board--hidden' : ''}`}>
+            {BACKLOG_COLUMNS.map((columnId) => {
+              const columnOrders = sortColumnOrders(filteredOrders, columnId)
+              const allInColumn = sortColumnOrders(orders, columnId)
+              const sourceForLimit = isSummaryMode ? allInColumn : columnOrders
+
+              return (
+                <BacklogColumn
+                  key={columnId}
+                  columnId={columnId}
+                  orders={columnOrders}
+                  allOrdersInColumn={sourceForLimit}
+                  visibleLimit={visibleLimit}
+                  scrollable={scrollable}
+                  compactCards={compactCards}
+                  summaryMode={isSummaryMode}
+                  emptyMessage={columnEmptyMessage}
+                  onViewAll={
+                    isSummaryMode &&
+                    visibleLimit != null &&
+                    sourceForLimit.length > visibleLimit
+                      ? () => setDrawerColumn(columnId)
+                      : undefined
+                  }
+                  onViewDetail={onViewDetail}
+                  onSendValidation={onSendValidation}
+                  onPrepare={handlePrepare}
+                  onMarkIncident={onMarkIncident}
+                  onCancel={onCancel}
+                  onValidateTables={onValidateTables}
+                />
+              )
+            })}
           </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+        </BacklogBoardScrollArea>
+
+        <DragOverlay dropAnimation={null}>
+          {activeOrder ? (
+            <div
+              className={`backlog-card backlog-card--overlay order-card--${activeOrder.company.toLowerCase()}`}
+            >
+              <span className="backlog-card__ref">{activeOrder.reference}</span>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+
+      {drawerColumn && (
+        <BacklogColumnDrawer
+          columnId={drawerColumn}
+          orders={sortColumnOrders(
+            viewMode === 'summary' ? orders : filteredOrders,
+            drawerColumn,
+          )}
+          onClose={() => setDrawerColumn(null)}
+          onViewDetail={onViewDetail}
+          onSendValidation={onSendValidation}
+          onPrepare={handlePrepare}
+        />
+      )}
+    </>
   )
 }

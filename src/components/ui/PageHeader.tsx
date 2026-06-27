@@ -6,6 +6,7 @@ interface PageHeaderProps {
   description?: string
   action?: ReactNode
   showMockBadge?: boolean
+  badgeLabel?: string
   extra?: ReactNode
   className?: string
 }
@@ -15,6 +16,7 @@ export function PageHeader({
   description,
   action,
   showMockBadge = false,
+  badgeLabel,
   extra,
   className = '',
 }: PageHeaderProps) {
@@ -30,7 +32,7 @@ export function PageHeader({
         {(showMockBadge || action) && (
           <div className="ui-page-header__aside">
             {showMockBadge && (
-              <span className="ui-mock-badge">{t.common.mockBadge}</span>
+              <span className="ui-mock-badge">{badgeLabel ?? t.common.mockBadge}</span>
             )}
             {action}
           </div>

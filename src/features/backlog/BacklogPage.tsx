@@ -12,9 +12,15 @@ import { executeColumnMove } from '../../utils/backlogMove'
 import { getState, saveOrdersAndPlant } from '../../utils/backlogStorage'
 import { demoValidateAllTables } from '../../utils/validationHelpers'
 import { BacklogBoard } from './components/BacklogBoard'
-import { BacklogKpis } from './components/BacklogKpis'
+import { BacklogBoardSkeleton } from './components/BacklogBoardSkeleton'
+import { BacklogHelpNote } from './components/BacklogHelpNote'
+import { BacklogHero } from './components/BacklogHero'
+import { BacklogQuickActions } from './components/BacklogQuickActions'
 import { BacklogToast } from './components/BacklogToast'
+import { BacklogViewControls } from './components/BacklogViewControls'
 import { OrderDetailModal } from './components/OrderDetailModal'
+import { useBacklogView } from './hooks/useBacklogView'
+import '../dashboard/dashboard.css'
 import './backlog.css'
 
 interface ConfirmState {
@@ -99,6 +105,7 @@ export function BacklogPage() {
       plantTables,
     )
     showToast(d.tablesValidated, 'success')
+    setDetailOrder((current) => (current?.id === order.id ? updated : current))
   }
 
   function handleMarkIncident(order: BacklogOrder) {
@@ -137,6 +144,7 @@ export function BacklogPage() {
       applyMove(withAlert, 'bloqueado')
     }
     setConfirm(null)
+    setDetailOrder(null)
   }
 
   function confirmMessage(): string {
@@ -146,29 +154,66 @@ export function BacklogPage() {
     return d.confirmCancel
   }
 
+  function handleRefresh() {
+    const state = getState()
+    persist(state.orders, state.plantTables)
+    showToast(d.refreshed, 'info')
+  }
+
   const kpis = computeKpis(orders)
+  const {
+    viewMode,
+    density,
+    isLoading,
+    changeViewMode,
+    changeDensity,
+    densityDisabled,
+  } = useBacklogView()
 
   return (
     <div className="backlog-page">
-      <PageHeader title={d.title} description={d.subtitle} showMockBadge />
-
-      <BacklogKpis counts={kpis} />
-
-      <BacklogBoard
-        orders={orders}
-        plantTables={plantTables}
-        activeDragId={activeDragId}
-        onDragStart={setActiveDragId}
-        onOrdersChange={persist}
-        onToast={showToast}
-        onConfirmIncident={handleMarkIncident}
-        onConfirmFinalize={handleConfirmFinalize}
-        onViewDetail={setDetailOrder}
-        onSendValidation={handleSendValidation}
-        onMarkIncident={handleMarkIncident}
-        onCancel={handleCancel}
-        onValidateTables={handleValidateTables}
+      <PageHeader
+        title={d.title}
+        description={d.subtitle}
+        showMockBadge
+        badgeLabel={d.simulatedBadge}
       />
+
+      <BacklogHero counts={kpis} />
+
+      <BacklogQuickActions onRefresh={handleRefresh} />
+
+      <BacklogHelpNote />
+
+      <BacklogViewControls
+        viewMode={viewMode}
+        density={density}
+        densityDisabled={densityDisabled}
+        onViewModeChange={changeViewMode}
+        onDensityChange={changeDensity}
+      />
+
+      {isLoading ? (
+        <BacklogBoardSkeleton />
+      ) : (
+        <BacklogBoard
+          orders={orders}
+          plantTables={plantTables}
+          activeDragId={activeDragId}
+          viewMode={viewMode}
+          density={density}
+          onDragStart={setActiveDragId}
+          onOrdersChange={persist}
+          onToast={showToast}
+          onConfirmIncident={handleMarkIncident}
+          onConfirmFinalize={handleConfirmFinalize}
+          onViewDetail={setDetailOrder}
+          onSendValidation={handleSendValidation}
+          onMarkIncident={handleMarkIncident}
+          onCancel={handleCancel}
+          onValidateTables={handleValidateTables}
+        />
+      )}
 
       <BacklogToast
         message={toast?.message ?? null}
@@ -176,8 +221,28 @@ export function BacklogPage() {
         onClear={() => setToast(null)}
       />
 
-      {detailOrder && (
-        <OrderDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} />
+      {detailOrder && user && (
+        <OrderDetailModal
+          order={detailOrder}
+          onClose={() => setDetailOrder(null)}
+          onMarkIncident={
+            user.role === 'master' && detailOrder.column !== 'bloqueado'
+              ? () => handleMarkIncident(detailOrder)
+              : undefined
+          }
+          onCancel={
+            user.role === 'master' && detailOrder.column !== 'finalizado'
+              ? () => handleCancel(detailOrder)
+              : undefined
+          }
+          onValidateTables={
+            canActOnOrder(user, detailOrder.company) &&
+            detailOrder.column === 'pendiente_validacion' &&
+            !detailOrder.tablesValidated
+              ? () => handleValidateTables(detailOrder)
+              : undefined
+          }
+        />
       )}
 
       {confirm && (
@@ -188,6 +253,7 @@ export function BacklogPage() {
           cancelLabel={d.cancel}
           onConfirm={handleConfirm}
           onCancel={() => setConfirm(null)}
+          danger={confirm.type === 'incident' || confirm.type === 'cancel'}
         />
       )}
     </div>
