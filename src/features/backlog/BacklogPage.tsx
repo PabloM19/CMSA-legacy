@@ -1,4 +1,6 @@
 import { useCallback, useState } from 'react'
+import { PageHeader } from '../../components/ui/PageHeader'
+import { ConfirmModal } from '../../components/ui/ConfirmModal'
 import { computeKpis } from '../../data/mockBacklogOrders'
 import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
@@ -148,10 +150,7 @@ export function BacklogPage() {
 
   return (
     <div className="backlog-page">
-      <header className="backlog-page__header">
-        <h1 className="backlog-page__title">{d.title}</h1>
-        <p className="backlog-page__subtitle">{d.subtitle}</p>
-      </header>
+      <PageHeader title={d.title} description={d.subtitle} showMockBadge />
 
       <BacklogKpis counts={kpis} />
 
@@ -182,23 +181,14 @@ export function BacklogPage() {
       )}
 
       {confirm && (
-        <div className="order-modal-overlay" role="presentation">
-          <div className="order-modal backlog-confirm" role="alertdialog" aria-modal="true">
-            <p className="backlog-confirm__text">{confirmMessage()}</p>
-            <div className="order-modal__actions">
-              <button
-                type="button"
-                className="order-btn order-btn--ghost"
-                onClick={() => setConfirm(null)}
-              >
-                {d.cancel}
-              </button>
-              <button type="button" className="order-btn order-btn--primary" onClick={handleConfirm}>
-                {d.confirm}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          title={d.confirmModalTitle}
+          description={confirmMessage()}
+          confirmLabel={d.confirm}
+          cancelLabel={d.cancel}
+          onConfirm={handleConfirm}
+          onCancel={() => setConfirm(null)}
+        />
       )}
     </div>
   )

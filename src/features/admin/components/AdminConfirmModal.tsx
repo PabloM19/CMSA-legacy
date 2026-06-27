@@ -1,3 +1,5 @@
+import { ConfirmModal } from '../../../components/ui/ConfirmModal'
+
 interface AdminConfirmModalProps {
   title: string
   message: string
@@ -18,31 +20,22 @@ export function AdminConfirmModal({
   onCancel,
 }: AdminConfirmModalProps) {
   return (
-    <div className="order-modal-overlay" role="presentation" onClick={onCancel}>
-      <div
-        className="order-modal admin-confirm"
-        role="alertdialog"
-        aria-modal="true"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="order-modal__title">{title}</h2>
-        <p className="admin-form__note" style={{ marginBottom: 'var(--space-sm)' }}>
-          Esta acción quedará registrada en auditoría mock.
-        </p>
-        <p className="order-modal__notice">{message}</p>
-        <div className="admin-modal__foot">
-          <button type="button" className="admin-btn admin-btn--ghost" onClick={onCancel}>
-            {cancelLabel}
-          </button>
-          <button
-            type="button"
-            className={`admin-btn${destructive ? ' admin-btn--danger' : ' admin-btn--primary'}`}
-            onClick={onConfirm}
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConfirmModal
+      title={title}
+      description={
+        <>
+          <p className="ui-microcopy" style={{ marginBottom: 'var(--space-3)' }}>
+            Esta acción quedará registrada en auditoría mock.
+          </p>
+          <p>{message}</p>
+        </>
+      }
+      confirmLabel={confirmLabel}
+      cancelLabel={cancelLabel}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+      danger={destructive}
+      className="admin-confirm"
+    />
   )
 }

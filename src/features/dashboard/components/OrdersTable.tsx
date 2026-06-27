@@ -1,11 +1,13 @@
 import { AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../../features/auth/AuthContext'
+import { CompanyBadge, StatusBadge } from '../../../components/ui/StatusBadge'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { DashboardOrder } from '../../../types/dashboard'
 import {
   canActOnOrder,
   getActionDisabledReason,
 } from '../../../utils/dashboardPermissions'
+import { getDashboardOrderStatusBadge } from '../../../utils/statusBadge'
 
 interface OrdersTableProps {
   orders: DashboardOrder[]
@@ -43,18 +45,15 @@ export function OrdersTable({ orders }: OrdersTableProps) {
             {orders.map((order) => {
               const allowed = canActOnOrder(user, order.company)
               const disabledReason = getActionDisabledReason(user, order.company, lang)
+              const statusBadge = getDashboardOrderStatusBadge(order.status, lang)
 
               return (
                 <tr key={order.id}>
                   <td>
-                    <span className={`dash-order-status dash-order-status--${order.status}`}>
-                      {d.orderStatus[order.status]}
-                    </span>
+                    <StatusBadge label={statusBadge.label} variant={statusBadge.variant} />
                   </td>
                   <td>
-                    <span className={`dash-chip dash-chip--${order.company.toLowerCase()}`}>
-                      {order.company}
-                    </span>
+                    <CompanyBadge company={order.company} />
                   </td>
                   <td className="dash-table__mono">{order.reference}</td>
                   <td>{order.product}</td>

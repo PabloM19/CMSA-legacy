@@ -1,4 +1,5 @@
 @import './tokens.css';
+@import './ui.css';
 @import '../components/ui/CmsaLogo.css';
 
 *,
@@ -18,14 +19,41 @@ body,
 body {
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
-  color: var(--color-gray-900);
+  color: var(--color-text);
   background: linear-gradient(
     145deg,
     var(--color-brand-pale) 0%,
-    var(--color-gray-50) 40%,
+    var(--color-bg) 40%,
     var(--color-gray-100) 100%
   );
+  line-height: var(--line-height-normal);
   -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  line-height: var(--line-height-tight);
+}
+
+h2 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+}
+
+p {
+  line-height: var(--line-height-relaxed);
 }
 
 a {

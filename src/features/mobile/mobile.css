@@ -416,34 +416,7 @@
   line-height: 1.4;
 }
 
-/* Chips reutilizados en listas */
-.dash-chip {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-}
-
-.dash-chip--sumo {
-  background: rgba(124, 58, 237, 0.12);
-  color: var(--color-sumo);
-}
-
-.dash-chip--maf {
-  background: rgba(234, 88, 12, 0.12);
-  color: var(--color-maf);
-}
-
-.dash-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid rgba(0, 160, 210, 0.1);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--glass-shadow);
-}
+/* Chips y cards — definidos en ui.css global */
 
 @media (min-width: 769px) {
   .mobile-page:not(.mobile-page--fluid) {

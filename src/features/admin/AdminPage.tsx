@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PageHeader } from '../../components/ui/PageHeader'
 import { useAuth } from '../auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { AdminTabId } from '../../types/admin'
@@ -33,14 +34,17 @@ export function AdminPage() {
 
   return (
     <div className="admin-page">
-      <header className="admin-page__header">
-        <h1 className="admin-page__title">{d.title}</h1>
-        <p className="admin-page__subtitle">{d.subtitle}</p>
-        <p className="admin-page__notice">
-          <span className="admin-badge admin-badge--master">{d.masterOnly}</span>{' '}
-          {d.phaseNotice}
-        </p>
-      </header>
+      <PageHeader
+        title={d.title}
+        description={d.subtitle}
+        showMockBadge
+        extra={
+          <p className="admin-page__notice">
+            <span className="admin-badge admin-badge--master">{d.masterOnly}</span>{' '}
+            {d.phaseNotice}
+          </p>
+        }
+      />
 
       <nav className="admin-tabs" aria-label={d.title}>
         {TABS.map((tab) => (

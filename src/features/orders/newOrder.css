@@ -95,74 +95,9 @@
   justify-content: flex-end;
 }
 
-/* Buttons */
-.order-btn {
-  padding: 0.625rem var(--space-lg);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s, background 0.15s;
-}
+/* Buttons — definidos en ui.css (.order-btn) */
 
-.order-btn--primary {
-  border: none;
-  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
-  color: var(--color-white);
-  box-shadow: 0 2px 8px var(--color-brand-shadow);
-}
-
-.order-btn--primary:hover:not(:disabled) {
-  opacity: 0.92;
-}
-
-.order-btn--primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.order-btn--ghost {
-  border: 1px solid var(--color-gray-300);
-  background: var(--color-white);
-  color: var(--color-gray-700);
-}
-
-.order-btn--ghost:hover {
-  background: var(--color-gray-50);
-}
-
-/* Modal */
-.order-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-lg);
-  background: rgba(26, 35, 40, 0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.order-modal {
-  width: 100%;
-  max-width: 520px;
-  max-height: calc(100vh - var(--space-xl) * 2);
-  overflow-y: auto;
-  background: var(--color-white);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18);
-  padding: var(--space-xl);
-}
-
-.order-modal__title {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--color-gray-900);
-  margin-bottom: var(--space-lg);
-}
-
+/* Modal content — shell en ui.css */
 .order-modal__body {
   display: flex;
   flex-direction: column;

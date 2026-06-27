@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
+import { ClipboardCheck } from 'lucide-react'
 import { BacklogToast } from '../backlog/components/BacklogToast'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { PageHeader } from '../../components/ui/PageHeader'
 import { useAuth } from '../auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../types/backlog'
@@ -202,10 +205,7 @@ export function ValidationPage() {
 
   return (
     <div className="validation-page">
-      <header className="validation-page__header">
-        <h1 className="validation-page__title">{d.title}</h1>
-        <p className="validation-page__subtitle">{d.subtitle}</p>
-      </header>
+      <PageHeader title={d.title} description={d.subtitle} showMockBadge />
 
       <ValidationKpis counts={kpis} />
 
@@ -214,10 +214,11 @@ export function ValidationPage() {
           <h2 className="validation-list__title">{d.kpiPendingOrders}</h2>
 
           {pendingOrders.length === 0 ? (
-            <div className="validation-empty">
-              <p className="validation-empty__title">{d.emptyTitle}</p>
-              <p className="validation-empty__subtitle">{d.emptySubtitle}</p>
-            </div>
+            <EmptyState
+              icon={<ClipboardCheck size={28} strokeWidth={1.5} />}
+              title={d.emptyTitle}
+              description={d.emptySubtitle}
+            />
           ) : (
             <div className="validation-list__items">
               {pendingOrders.map((order) => (

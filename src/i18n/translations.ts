@@ -16,6 +16,7 @@ const translations = {
       logout: 'Salir',
       wireframeSubtitle: 'Wireframe Fase 1',
       wireframeFooter: 'Wireframe funcional · Datos simulados',
+      mockBadge: 'Wireframe · Mock',
     },
     roles: {
       user: 'Usuario',
@@ -50,6 +51,7 @@ const translations = {
     },
     dashboard: {
       title: 'Panel operativo',
+      subtitle: 'Resumen del estado operativo en planta',
       date: 'Fecha',
       user: 'Usuario',
       role: 'Rol',
@@ -183,6 +185,7 @@ const translations = {
       confirmCancel: '¿Anular este pedido aceptado?',
       confirmFinalize:
         'Este pedido se marcará como finalizado y liberará recursos en la simulación. ¿Deseas continuar?',
+      confirmModalTitle: 'Confirmar acción',
       confirm: 'Confirmar',
       cancel: 'Cancelar',
       close: 'Cerrar',
@@ -248,6 +251,7 @@ const translations = {
         'Hay mesas en conflicto. El pedido no puede iniciar producción.',
       productionStarted: 'Pedido iniciado en producción.',
       conflictResolved: 'Conflicto resuelto.',
+      confirmModalTitle: 'Confirmar acción',
       confirm: 'Confirmar',
       cancel: 'Cancelar',
     },
@@ -433,6 +437,8 @@ const translations = {
       },
     },
     mobile: {
+      title: 'Monitor de planta',
+      subtitle: 'Consulta rápida del estado operativo desde móvil',
       brand: 'CMSA',
       monitorTag: 'Monitor',
       menuOpen: 'Abrir menú',
@@ -482,6 +488,7 @@ const translations = {
       logout: 'Sign out',
       wireframeSubtitle: 'Wireframe Phase 1',
       wireframeFooter: 'Functional wireframe · Simulated data',
+      mockBadge: 'Wireframe · Mock',
     },
     roles: {
       user: 'User',
@@ -516,6 +523,7 @@ const translations = {
     },
     dashboard: {
       title: 'Operations panel',
+      subtitle: 'Overview of floor operations status',
       date: 'Date',
       user: 'User',
       role: 'Role',
@@ -649,6 +657,7 @@ const translations = {
       confirmCancel: 'Cancel this accepted order?',
       confirmFinalize:
         'This order will be marked as completed and release resources in the simulation. Continue?',
+      confirmModalTitle: 'Confirm action',
       confirm: 'Confirm',
       cancel: 'Cancel',
       close: 'Close',
@@ -714,6 +723,7 @@ const translations = {
         'There are tables in conflict. The order cannot start production.',
       productionStarted: 'Order started in production.',
       conflictResolved: 'Conflict resolved.',
+      confirmModalTitle: 'Confirm action',
       confirm: 'Confirm',
       cancel: 'Cancel',
     },
@@ -899,6 +909,8 @@ const translations = {
       },
     },
     mobile: {
+      title: 'Floor monitor',
+      subtitle: 'Quick operational status check from mobile',
       brand: 'CMSA',
       monitorTag: 'Monitor',
       menuOpen: 'Open menu',

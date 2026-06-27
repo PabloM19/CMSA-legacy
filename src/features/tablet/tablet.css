@@ -462,15 +462,6 @@
   justify-content: flex-end;
 }
 
-.dash-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid rgba(0, 160, 210, 0.1);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--glass-shadow);
-}
-
 @media (max-width: 900px) {
   .plant-map-board--tablet .plant-element {
     --plant-slot-width: 104px;

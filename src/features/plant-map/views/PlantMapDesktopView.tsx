@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { PageHeader } from '../../../components/ui/PageHeader'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { PlantElementView } from '../../../types/plant'
 import { getState } from '../../../utils/backlogStorage'
@@ -34,10 +35,7 @@ export function PlantMapDesktopView() {
 
   return (
     <div className="plant-map-page">
-      <header className="plant-map-page__header">
-        <h1 className="plant-map-page__title">{d.title}</h1>
-        <p className="plant-map-page__subtitle">{d.subtitle}</p>
-      </header>
+      <PageHeader title={d.title} description={d.subtitle} showMockBadge />
 
       <PlantLegend />
 

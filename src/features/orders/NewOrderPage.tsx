@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { PageHeader } from '../../components/ui/PageHeader'
 import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type {
@@ -122,10 +123,7 @@ export function NewOrderPage() {
 
   return (
     <div className="new-order">
-      <header className="new-order__header">
-        <h1 className="new-order__title">{d.title}</h1>
-        <p className="new-order__subtitle">{d.subtitle}</p>
-      </header>
+      <PageHeader title={d.title} description={d.subtitle} showMockBadge />
 
       <form className="order-form dash-card" onSubmit={handleSubmit} noValidate>
         <div className="order-form__grid">

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Bell, Factory } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
+import { EmptyState } from '../../../components/ui/EmptyState'
+import { PageHeader } from '../../../components/ui/PageHeader'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import { getState } from '../../../utils/backlogStorage'
 import {
@@ -81,21 +84,28 @@ export function PlantMapMobileView() {
 
   return (
     <div className="mobile-page mobile-page--fluid">
-      <header className="mobile-header">
-        <div className="mobile-header__row">
-          <time className="mobile-header__datetime">{dateTime}</time>
-          <span className={`mobile-header__status mobile-header__status--${generalStatus}`}>
-            {statusLabel}
-          </span>
-        </div>
-        <div className="mobile-header__user">
-          <span>{user.name}</span>
-          <span className="mobile-header__dot">·</span>
-          <span>{user.company}</span>
-          <span className="mobile-header__dot">·</span>
-          <span>{t.roles[user.role]}</span>
-        </div>
-      </header>
+      <PageHeader
+        title={d.title}
+        description={d.subtitle}
+        showMockBadge
+        extra={
+          <header className="mobile-header">
+            <div className="mobile-header__row">
+              <time className="mobile-header__datetime">{dateTime}</time>
+              <span className={`mobile-header__status mobile-header__status--${generalStatus}`}>
+                {statusLabel}
+              </span>
+            </div>
+            <div className="mobile-header__user">
+              <span>{user.name}</span>
+              <span className="mobile-header__dot">·</span>
+              <span>{user.company}</span>
+              <span className="mobile-header__dot">·</span>
+              <span>{t.roles[user.role]}</span>
+            </div>
+          </header>
+        }
+      />
 
       <section className={`mobile-hero dash-card mobile-hero--${generalStatus}`}>
         <p className="mobile-hero__status">{d.generalStatus}</p>
@@ -138,7 +148,11 @@ export function PlantMapMobileView() {
       <section className="mobile-section dash-card">
         <h2 className="mobile-section__title">{d.activeProductionTitle}</h2>
         {activeProduction.length === 0 ? (
-          <p className="mobile-section__empty">{d.noActiveProduction}</p>
+          <EmptyState
+            icon={<Factory size={26} strokeWidth={1.5} />}
+            title={d.noActiveProduction}
+            description={d.readOnlyHint}
+          />
         ) : (
           <ul className="mobile-list">
             {activeProduction.map((order) => (
@@ -210,7 +224,11 @@ export function PlantMapMobileView() {
       <section className="mobile-section dash-card">
         <h2 className="mobile-section__title">{d.alertsTitle}</h2>
         {alerts.length === 0 ? (
-          <p className="mobile-section__empty">{d.noAlerts}</p>
+          <EmptyState
+            icon={<Bell size={26} strokeWidth={1.5} />}
+            title={d.noAlerts}
+            description={d.statusStable}
+          />
         ) : (
           <ul className="mobile-list">
             {alerts.map((alert) => (
