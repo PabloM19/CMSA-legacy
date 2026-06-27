@@ -3,6 +3,7 @@ import { createSeedPalletizers, createSeedPlantTables } from '../data/mockPlantT
 import type { BacklogOrder } from '../types/backlog'
 import type { CmsaPersistedState, PlantPalletizerElement, PlantPalletizerStatus, PlantTable } from '../types/plant'
 import { readTabletOverrides } from './tabletStorage'
+import { applyAdminPlantOverrides } from './adminPlantOverrides'
 import type { CreatedOrder } from '../types/newOrder'
 import { getCreatedOrders } from './orderStorage'
 import { rebuildPlantTablesFromOrders } from './plantSync'
@@ -100,9 +101,11 @@ function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
   let orders = syncLegacyCreatedOrders(state.orders.map(normalizeOrderFields))
   orders = normalizeOrdersValidation(orders)
   orders = normalizePriorities(orders)
-  const plantTables = rebuildPlantTablesFromOrders(
-    state.plantTables?.length > 0 ? state.plantTables : createSeedPlantTables(),
-    orders,
+  const plantTables = applyAdminPlantOverrides(
+    rebuildPlantTablesFromOrders(
+      state.plantTables?.length > 0 ? state.plantTables : createSeedPlantTables(),
+      orders,
+    ),
   )
   const plantPalletizers =
     state.plantPalletizers?.length > 0 ? state.plantPalletizers : createSeedPalletizers()

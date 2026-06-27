@@ -22,6 +22,8 @@ export function canAccessRoute(user: User, path: string): boolean {
 
   if (user.role === 'master') return true
 
+  if (normalized === '/admin') return true
+
   if (normalized === '/mobile') return true
 
   if (user.role === 'validator') {
@@ -73,9 +75,11 @@ export function getMobileNavItems(user: User) {
 }
 
 export function getVisibleNavItems(user: User) {
-  return NAV_ITEMS.filter(
-    (item) => !['mobile', 'tablet'].includes(item.key) && canAccessRoute(user, item.to),
-  )
+  return NAV_ITEMS.filter((item) => {
+    if (['mobile', 'tablet'].includes(item.key)) return false
+    if (item.key === 'admin') return user.role === 'master'
+    return canAccessRoute(user, item.to)
+  })
 }
 
 export function canPerformValidation(user: User): boolean {

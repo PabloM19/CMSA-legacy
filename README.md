@@ -41,7 +41,7 @@ npx tsx scripts/plant-map-check.ts           # checks del pictograma y sincroniz
 | `/plant-map` | Mapa de planta (responsive) | ✅ v1 mock + localStorage |
 | `/tablet` | — | ↪ redirige a `/plant-map` |
 | `/mobile` | — | ↪ redirige a `/plant-map` |
-| `/admin` | Administración | 🔲 Placeholder |
+| `/admin` | Administración máster | ✅ CRUD mock + auditoría |
 
 ## Login
 
@@ -171,6 +171,20 @@ No hay entradas separadas en el menú para tablet ni móvil. Las URLs `/tablet` 
 
 Componentes: `PlantMapPage` (orquestador), `PlantMapDesktopView`, `PlantMapTabletView`, `PlantMapMobileView`, `PlantLayout`, `PlantElementCard`, `PlantLegend`, `PlantElementDrawer`.
 
+## Administración máster (`/admin`)
+
+Solo **`usuario_master`**. SUMO, MAF y validador ven pantalla de acceso denegado si entran por URL.
+
+Persistencia en `localStorage` (`cmsa-admin-data`). Mesas y paletizadores se sincronizan con `cmsa-backlog-orders`.
+
+Pestañas: **Usuarios · Empresas · Mesas · Paletizadores · Configuración · Auditoría**
+
+- CRUD visual mock con modales y confirmaciones en acciones críticas
+- Desactivar en lugar de borrar (usuarios, empresas, mesas, paletizadores)
+- Liberar/bloquear mesas con confirmación (solo máster)
+- Configuración de producción simulada (velocidades, capas, umbrales, capacidades SUMO/MAF)
+- Auditoría mock con filtros por entidad
+
 ## Estructura del proyecto
 
 ```
@@ -213,7 +227,7 @@ Identidad visual alineada al manual de marca **CMSA** (Pantone Process Cyan). To
 - ✅ Backlog kanban v1 con storage consolidado y asignación mock R/M
 - ✅ Validación de mesas v1 (conflictos, iniciar producción)
 - ✅ Mapa de planta responsive v1 (escritorio / tablet / móvil según ancho, una sola ruta)
-- 🔲 Admin
+- ✅ Administración máster v1 (CRUD mock usuarios, empresas, mesas, paletizadores, config, auditoría)
 - ❌ Backend, API real, Firebase
 - ❌ Recuperación de contraseña real
 
