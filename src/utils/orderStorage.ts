@@ -20,3 +20,12 @@ export function saveCreatedOrder(order: CreatedOrder): void {
 export function generateOrderId(): string {
   return `ord-${Date.now()}`
 }
+
+export function generateOrderReference(): string {
+  const d = new Date()
+  const y = d.getFullYear().toString().slice(-2)
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const seq = String(Math.floor(Math.random() * 89) + 10)
+  return `PED-${y}${m}${day}-${seq}`
+}

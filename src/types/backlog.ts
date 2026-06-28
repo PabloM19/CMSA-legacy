@@ -36,6 +36,9 @@ export interface BacklogOrder {
   id: string
   company: OrderCompany
   reference: string
+  productId?: string
+  productReference?: string
+  productName?: string
   product: string
   variety: string
   boxes: number

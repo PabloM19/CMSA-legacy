@@ -1,6 +1,8 @@
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, LayoutGrid, Gauge, Clock } from 'lucide-react'
+import { CompanyBadge } from '../../../components/ui/StatusBadge'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { NewOrderFormData, OrderCalculation } from '../../../types/newOrder'
+import { getAssignmentDisplayType } from '../../../utils/newOrderViewHelpers'
 
 interface ConfirmOrderModalProps {
   form: NewOrderFormData
@@ -22,74 +24,82 @@ export function ConfirmOrderModal({
   const { t } = useLanguage()
   const d = t.newOrder
 
+  const assignmentType = getAssignmentDisplayType(calculation)
+  const assignmentLabel =
+    assignmentType === 'automatic'
+      ? d.assignmentAutomatic
+      : assignmentType === 'manual'
+        ? d.assignmentManual
+        : d.assignmentMixed
+
   return (
     <div className="order-modal-overlay" role="presentation" onClick={onModify}>
       <div
-        className="order-modal"
+        className={`order-modal order-modal--wizard order-card--${form.company.toLowerCase()}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-order-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="confirm-order-title" className="order-modal__title">
-          {d.confirmTitle}
-        </h2>
+        <header className="order-modal__head">
+          <h2 id="confirm-order-title" className="order-modal__title">
+            {d.confirmTitle}
+          </h2>
+          <p className="order-modal__subtitle">{d.step4Desc}</p>
+        </header>
 
         <div className="order-modal__body">
-          <section className="order-modal__section">
-            <h3 className="order-modal__section-title">{d.summary}</h3>
-            <dl className="order-modal__dl">
-              <div className="order-modal__row">
-                <dt>{d.company}</dt>
-                <dd>
-                  <span className={`dash-chip dash-chip--${form.company.toLowerCase()}`}>
-                    {form.company}
-                  </span>
-                </dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.reference}</dt>
-                <dd className="order-modal__mono">{form.reference}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.product}</dt>
-                <dd>{form.product}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.variety}</dt>
-                <dd>{form.variety}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.boxes}</dt>
-                <dd>{boxes.toLocaleString()}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.boxesPerHour}</dt>
-                <dd>{boxesPerHour.toLocaleString()}</dd>
-              </div>
-            </dl>
+          <section className="order-modal__hero dash-card">
+            <div className="order-modal__hero-main">
+              <span className="order-modal__ref">{form.productReference || form.productName}</span>
+              <CompanyBadge company={form.company} />
+            </div>
+            <p className="order-modal__product">
+              {form.productName || `${form.product} · ${form.variety}`}
+            </p>
+            {form.productReference && form.productName && (
+              <p className="order-modal__product-sub">
+                {form.product} · {form.variety}
+              </p>
+            )}
           </section>
 
-          <section className="order-modal__section">
-            <dl className="order-modal__dl">
-              <div className="order-modal__row">
-                <dt>{d.requiredTables}</dt>
-                <dd>{calculation.requiredTables}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.eta}</dt>
-                <dd>{calculation.eta}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.estimatedEnd}</dt>
-                <dd>{calculation.estimatedEnd}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.capacityConsumed}</dt>
-                <dd>{calculation.capacityConsumed}%</dd>
-              </div>
-            </dl>
-          </section>
+          <div className="order-modal__impact-grid">
+            <article className="order-modal__impact-card">
+              <LayoutGrid size={18} aria-hidden="true" />
+              <span>{d.requiredTables}</span>
+              <strong>{calculation.requiredTables}</strong>
+            </article>
+            <article className="order-modal__impact-card">
+              <Clock size={18} aria-hidden="true" />
+              <span>{d.estimatedEnd}</span>
+              <strong>{calculation.estimatedEnd}</strong>
+            </article>
+            <article className="order-modal__impact-card">
+              <Gauge size={18} aria-hidden="true" />
+              <span>{d.capacityConsumed}</span>
+              <strong>{calculation.capacityConsumed}%</strong>
+            </article>
+          </div>
+
+          <dl className="order-modal__dl">
+            <div className="order-modal__row">
+              <dt>{d.boxes}</dt>
+              <dd>{boxes.toLocaleString()}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.boxesPerHour}</dt>
+              <dd>{boxesPerHour.toLocaleString()}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.assignmentType}</dt>
+              <dd>{assignmentLabel}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.eta}</dt>
+              <dd>{calculation.eta}</dd>
+            </div>
+          </dl>
 
           <section className="order-modal__section">
             <h3 className="order-modal__section-title">{d.alerts}</h3>
@@ -121,12 +131,12 @@ export function ConfirmOrderModal({
         </div>
 
         <div className="order-modal__actions">
-          <button type="button" className="order-btn order-btn--ghost" onClick={onModify}>
+          <button type="button" className="order-btn order-btn--ghost order-btn--large" onClick={onModify}>
             {d.modify}
           </button>
           <button
             type="button"
-            className="order-btn order-btn--primary"
+            className="order-btn order-btn--primary order-btn--large"
             disabled={calculation.blocked}
             title={calculation.blockReason}
             onClick={onAccept}

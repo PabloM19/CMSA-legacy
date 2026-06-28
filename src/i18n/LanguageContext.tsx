@@ -1,3 +1,4 @@
+// @refresh reset — evita instancias duplicadas del contexto tras HMR en Vite
 import {
   createContext,
   useCallback,

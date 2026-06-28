@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
+import { AppProviders } from './AppProviders'
 import { AppLayout } from '../components/layout/AppLayout'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ProtectedRoute } from '../features/auth/ProtectedRoute'
@@ -14,33 +15,38 @@ import { RootRedirect } from './RootRedirect'
 
 export const router = createBrowserRouter([
   {
-    path: '/login',
-    element: <LoginPage />,
-  },
-  {
-    element: <ProtectedRoute />,
+    element: <AppProviders />,
     children: [
       {
-        element: <AppLayout />,
+        path: '/login',
+        element: <LoginPage />,
+      },
+      {
+        element: <ProtectedRoute />,
         children: [
-          { path: '/dashboard', element: <DashboardPage /> },
-          { path: '/orders/new', element: <NewOrderPage /> },
-          { path: '/backlog', element: <BacklogPage /> },
-          { path: '/validation', element: <ValidationPage /> },
-          { path: '/plant-map', element: <PlantMapPage /> },
-          { path: '/tablet', element: <TabletPage /> },
-          { path: '/mobile', element: <MobilePage /> },
-          { path: '/admin', element: <AdminPage /> },
+          {
+            element: <AppLayout />,
+            children: [
+              { path: '/dashboard', element: <DashboardPage /> },
+              { path: '/orders/new', element: <NewOrderPage /> },
+              { path: '/backlog', element: <BacklogPage /> },
+              { path: '/validation', element: <ValidationPage /> },
+              { path: '/plant-map', element: <PlantMapPage /> },
+              { path: '/tablet', element: <TabletPage /> },
+              { path: '/mobile', element: <MobilePage /> },
+              { path: '/admin', element: <AdminPage /> },
+            ],
+          },
         ],
       },
+      {
+        path: '/',
+        element: <RootRedirect />,
+      },
+      {
+        path: '*',
+        element: <RootRedirect />,
+      },
     ],
-  },
-  {
-    path: '/',
-    element: <RootRedirect />,
-  },
-  {
-    path: '*',
-    element: <RootRedirect />,
   },
 ])

@@ -48,7 +48,6 @@ export function validateNewOrderForm(
           noNegative: 'Negative values are not allowed',
         }
 
-  if (!data.reference.trim()) errors.reference = msg.required
   if (!data.product.trim()) errors.product = msg.required
   if (!data.variety.trim()) errors.variety = msg.required
 

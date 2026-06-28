@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { PlantElementView } from '../../../types/plant'
-import { getSpeedLabel, getStatusLabel, getTypeLabel } from '../../../utils/plantMapHelpers'
+import { getDrawerSpeedMessage, getDrawerStateNotice } from '../../../utils/plantMapCopyHelpers'
+import { getStatusLabel, getTypeLabel } from '../../../utils/plantMapHelpers'
 
 interface PlantElementDrawerProps {
   element: PlantElementView | null
@@ -22,8 +24,11 @@ export function PlantElementDrawer({
   if (!element) return null
 
   const isFree = element.status === 'free' || element.status === 'idle'
-  const isBlocked = element.status === 'blocked' || element.status === 'conflict'
   const isPalletizer = element.type === 'palletizer'
+  const stateNotice = getDrawerStateNotice(element, d)
+  const speedMessage = element.speedStatus
+    ? getDrawerSpeedMessage(element.speedStatus, d)
+    : null
 
   return (
     <div className="plant-drawer-overlay" role="presentation" onClick={onClose}>
@@ -74,10 +79,10 @@ export function PlantElementDrawer({
           </div>
         )}
 
-        {isBlocked && (
-          <div className="plant-drawer__notice plant-drawer__notice--warn">
-            <p>{d.drawerBlockedTitle}</p>
-            <p>{d.drawerBlockedSubtitle}</p>
+        {stateNotice && (
+          <div className={`plant-drawer__notice plant-drawer__notice--${stateNotice.tone}`}>
+            <p>{stateNotice.title}</p>
+            {stateNotice.detail && <p>{stateNotice.detail}</p>}
           </div>
         )}
 
@@ -135,17 +140,20 @@ export function PlantElementDrawer({
           </section>
         )}
 
-        {element.alert && (
+        {element.alert && !stateNotice?.detail && (
           <section className="plant-drawer__section">
             <h3 className="plant-drawer__section-title">{d.drawerAlerts}</h3>
-            <p className="plant-drawer__alert">⚠️ {element.alert}</p>
+            <p className="plant-drawer__alert">
+              <AlertTriangle size={16} aria-hidden="true" />
+              {element.alert}
+            </p>
           </section>
         )}
 
-        {element.speedStatus && (
+        {speedMessage && (
           <section className="plant-drawer__section">
-            <h3 className="plant-drawer__section-title">{d.drawerSpeed}</h3>
-            <p>{getSpeedLabel(element.speedStatus, lang)}</p>
+            <h3 className="plant-drawer__section-title">{d.drawerSpeedTitle}</h3>
+            <p>{speedMessage}</p>
           </section>
         )}
 

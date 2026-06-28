@@ -5,6 +5,9 @@ export type OrderCompany = Extract<Company, 'SUMO' | 'MAF'>
 export interface NewOrderFormData {
   company: OrderCompany
   reference: string
+  productId: string
+  productReference: string
+  productName: string
   product: string
   variety: string
   type: string
@@ -35,6 +38,9 @@ export interface CreatedOrder {
   id: string
   company: OrderCompany
   reference: string
+  productId?: string
+  productReference?: string
+  productName?: string
   product: string
   variety: string
   type: string

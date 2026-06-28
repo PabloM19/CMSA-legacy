@@ -4,9 +4,11 @@ import { useLanguage } from '../../../i18n/LanguageContext'
 import type { PlantElementView } from '../../../types/plant'
 import { getState } from '../../../utils/backlogStorage'
 import { buildPlantElementMap } from '../../../utils/plantMapHelpers'
+import { computePlantMapSummaryStats } from '../../../utils/plantMapSummaryHelpers'
 import { PlantElementDrawer } from '../components/PlantElementDrawer'
 import { PlantLayout } from '../components/PlantLayout'
 import { PlantLegend } from '../components/PlantLegend'
+import { PlantMapSummary } from '../components/PlantMapSummary'
 import '../plant-map.css'
 
 /** Vista escritorio — se activa por ancho (≥1100px) dentro de /plant-map */
@@ -33,9 +35,16 @@ export function PlantMapDesktopView() {
     [state, lang],
   )
 
+  const summaryStats = useMemo(
+    () => computePlantMapSummaryStats(elements, state.orders),
+    [elements, state.orders],
+  )
+
   return (
     <div className="plant-map-page">
       <PageHeader title={d.title} description={d.subtitle} showMockBadge />
+
+      <PlantMapSummary stats={summaryStats} />
 
       <PlantLegend />
 

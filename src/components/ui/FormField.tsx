@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
+import { forwardRef, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
 interface FormFieldProps {
   label: string
@@ -39,14 +39,18 @@ export function FormError({ message }: { message: string }) {
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & { hasError?: boolean }
 
-export function Input({ hasError, className = '', ...rest }: InputProps) {
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  { hasError, className = '', ...rest },
+  ref,
+) {
   return (
     <input
+      ref={ref}
       className={`ui-input order-field__input${hasError ? ' ui-input--error order-field__input--error' : ''} ${className}`.trim()}
       {...rest}
     />
   )
-}
+})
 
 type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & { hasError?: boolean }
 
