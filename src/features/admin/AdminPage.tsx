@@ -5,16 +5,15 @@ import { useLanguage } from '../../i18n/LanguageContext'
 import type { AdminTabId } from '../../types/admin'
 import { canAccessAdmin } from '../../utils/adminStorage'
 import { AdminAccessDenied } from './components/AdminAccessDenied'
-import { AuditTab } from './components/AuditTab'
+import { ActivityTab } from './components/ActivityTab'
 import { CompaniesTab } from './components/CompaniesTab'
-import { ConfigTab } from './components/ConfigTab'
 import { PalletizersTab } from './components/PalletizersTab'
 import { TablesTab } from './components/TablesTab'
 import { UsersTab } from './components/UsersTab'
 import './admin.css'
 import '../orders/newOrder.css'
 
-const TABS: AdminTabId[] = ['users', 'companies', 'tables', 'palletizers', 'config', 'audit']
+const TABS: AdminTabId[] = ['users', 'companies', 'tables', 'palletizers', 'activity']
 
 export function AdminPage() {
   const { user } = useAuth()
@@ -38,12 +37,7 @@ export function AdminPage() {
         title={d.title}
         description={d.subtitle}
         showMockBadge
-        extra={
-          <p className="admin-page__notice">
-            <span className="admin-badge admin-badge--master">{d.masterOnly}</span>{' '}
-            {d.phaseNotice}
-          </p>
-        }
+        badgeLabel={d.mockPhaseBadge}
       />
 
       <nav className="admin-tabs" aria-label={d.title}>
@@ -52,7 +46,10 @@ export function AdminPage() {
             key={tab}
             type="button"
             className={`admin-tabs__btn${activeTab === tab ? ' admin-tabs__btn--active' : ''}`}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              setActiveTab(tab)
+              if (tab === 'activity') bumpRefresh()
+            }}
           >
             {d.tabs[tab]}
           </button>
@@ -63,8 +60,7 @@ export function AdminPage() {
       {activeTab === 'companies' && <CompaniesTab refreshKey={refreshKey} onChanged={bumpRefresh} />}
       {activeTab === 'tables' && <TablesTab refreshKey={refreshKey} onChanged={bumpRefresh} />}
       {activeTab === 'palletizers' && <PalletizersTab refreshKey={refreshKey} onChanged={bumpRefresh} />}
-      {activeTab === 'config' && <ConfigTab refreshKey={refreshKey} onChanged={bumpRefresh} />}
-      {activeTab === 'audit' && <AuditTab refreshKey={refreshKey} />}
+      {activeTab === 'activity' && <ActivityTab refreshKey={refreshKey} />}
     </div>
   )
 }

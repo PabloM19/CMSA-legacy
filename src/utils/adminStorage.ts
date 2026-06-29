@@ -149,7 +149,7 @@ export function addAuditEvent(
     entity,
     detail,
   }
-  data.auditLog = [event, ...data.auditLog].slice(0, 200)
+  data.auditLog = [event, ...data.auditLog].slice(0, 500)
   saveAdminData(data)
   return event
 }

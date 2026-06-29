@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
+import { CmsaBackgroundDecor } from './CmsaBackgroundDecor'
 import { Header } from './Header'
 import { MobileShell } from './MobileShell'
 import { Sidebar } from './Sidebar'
@@ -22,7 +23,8 @@ export function AppLayout() {
   const contentClass = wide ? 'app-content app-content--wide' : 'app-content'
 
   return (
-    <div className="app-layout">
+    <div className="app-layout cmsa-background">
+      <CmsaBackgroundDecor />
       <Sidebar />
       <div className="app-layout__main">
         <Header wide={wide} />

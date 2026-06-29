@@ -19,6 +19,12 @@ import {
   validateAllTables,
   validateSingleTable,
 } from '../../utils/validationHelpers'
+import {
+  logAllTablesValidated,
+  logTableConflict,
+  logTableConflictResolved,
+  logTableValidated,
+} from '../../utils/activityLogActions'
 import { filterValidationOrders } from '../../utils/validationViewHelpers'
 import { ValidationConfirmModal } from './components/ValidationConfirmModal'
 import {
@@ -101,6 +107,10 @@ export function ValidationPage() {
       orders.map((o) => (o.id === selectedOrder.id ? order : o)),
       nextPlant,
     )
+    const table = selectedOrder.validationTables?.find((t) => t.id === tableId)
+    if (table) {
+      logTableValidated(user, selectedOrder.reference, table.name)
+    }
     showToast(d.tableValidated, 'success')
   }
 
@@ -148,6 +158,7 @@ export function ValidationPage() {
         orders.map((o) => (o.id === order.id ? updated : o)),
         nextPlant,
       )
+      logAllTablesValidated(user, order.reference)
       showToast(d.allTablesValidated, 'success')
     }
 
@@ -164,6 +175,10 @@ export function ValidationPage() {
         orders.map((o) => (o.id === order.id ? updated : o)),
         nextPlant,
       )
+      const table = order.validationTables?.find((t) => t.id === confirm.tableId)
+      if (table) {
+        logTableConflict(user, order.reference, table.name)
+      }
       showToast(d.conflictNotice, 'info')
     }
 
@@ -179,6 +194,10 @@ export function ValidationPage() {
         orders.map((o) => (o.id === order.id ? updated : o)),
         nextPlant,
       )
+      const table = order.validationTables?.find((t) => t.id === confirm.tableId)
+      if (table) {
+        logTableConflictResolved(user, order.reference, table.name)
+      }
       showToast(d.conflictResolved, 'success')
     }
 
@@ -188,7 +207,7 @@ export function ValidationPage() {
         plantTables,
         order,
         'en_ejecucion',
-        user.name,
+        user,
         lang,
       )
       if (!moveResult.success) {

@@ -11,6 +11,7 @@ import { evaluateMove } from '../../utils/backlogRules'
 import { executeColumnMove } from '../../utils/backlogMove'
 import { getState, saveOrdersAndPlant } from '../../utils/backlogStorage'
 import { demoValidateAllTables } from '../../utils/validationHelpers'
+import { logAllTablesValidated } from '../../utils/activityLogActions'
 import { BacklogBoard } from './components/BacklogBoard'
 import { BacklogBoardSkeleton } from './components/BacklogBoardSkeleton'
 import { BacklogHelpNote } from './components/BacklogHelpNote'
@@ -59,7 +60,7 @@ export function BacklogPage() {
   function applyMove(order: BacklogOrder, targetColumn: BacklogColumnId) {
     if (!user) return false
 
-    const result = executeColumnMove(orders, plantTables, order, targetColumn, user.name, lang)
+    const result = executeColumnMove(orders, plantTables, order, targetColumn, user, lang)
     if (!result.success) {
       showToast(result.message ?? t.validation.insufficientTables, 'error')
       return false
@@ -100,6 +101,7 @@ export function BacklogPage() {
       return
     }
     const updated = demoValidateAllTables(order, user.name, lang)
+    logAllTablesValidated(user, order.reference)
     persist(
       orders.map((o) => (o.id === order.id ? updated : o)),
       plantTables,

@@ -5,6 +5,7 @@ import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { LangSwitcher } from '../ui/LangSwitcher'
 import { getMobileNavItems } from '../../utils/permissions'
+import { CmsaBackgroundDecor } from './CmsaBackgroundDecor'
 import './mobile-shell.css'
 
 export function MobileShell() {
@@ -38,7 +39,8 @@ export function MobileShell() {
   }
 
   return (
-    <div className="mobile-shell">
+    <div className="mobile-shell cmsa-background">
+      <CmsaBackgroundDecor />
       <header className="mobile-shell__topbar">
         <button
           type="button"

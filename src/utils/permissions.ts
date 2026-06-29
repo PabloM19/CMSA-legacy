@@ -53,22 +53,15 @@ export const NAV_ITEMS: { to: string; key: NavKey }[] = [
   { to: '/admin', key: 'admin' },
 ]
 
-/** Navegación móvil mínima: monitorización primero, sin alta de pedidos. */
+/** Navegación móvil mínima: consulta primero, sin acciones operativas. */
 export function getMobileNavItems(user: User) {
-  const items: { to: string; key: NavKey }[] = [{ to: '/plant-map', key: 'plantMap' }]
+  const items: { to: string; key: NavKey }[] = [
+    { to: '/mobile', key: 'mobile' },
+    { to: '/plant-map', key: 'plantMap' },
+  ]
 
-  if (
-    (user.role === 'validator' || user.role === 'master') &&
-    canAccessRoute(user, '/validation')
-  ) {
-    items.push({ to: '/validation', key: 'validation' })
-  }
-
-  if (user.role === 'master') {
-    const extra = getVisibleNavItems(user).filter(
-      (item) => !['plantMap', 'validation', 'newOrder'].includes(item.key),
-    )
-    items.push(...extra)
+  if (user.role === 'master' && canAccessRoute(user, '/dashboard')) {
+    items.push({ to: '/dashboard', key: 'dashboard' })
   }
 
   return items

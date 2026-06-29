@@ -3,12 +3,6 @@
   flex-direction: column;
   height: 100%;
   min-height: 100dvh;
-  background: linear-gradient(
-    180deg,
-    var(--color-brand-pale) 0%,
-    var(--color-gray-50) 120px,
-    var(--color-gray-50) 100%
-  );
 }
 
 .mobile-shell__topbar {
@@ -20,7 +14,7 @@
   gap: var(--space-sm);
   min-height: 52px;
   padding: var(--space-xs) var(--space-md);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 160, 210, 0.12);
@@ -165,4 +159,5 @@
   overflow-y: auto;
   padding: var(--space-md);
   padding-bottom: calc(var(--space-xl) + env(safe-area-inset-bottom, 0px));
+  background: transparent;
 }

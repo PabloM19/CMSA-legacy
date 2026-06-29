@@ -113,8 +113,8 @@ export function ProductSearchAutocomplete({
         <p className="product-selected__ref">{selectedProduct.referenciaProducto}</p>
         <p className="product-selected__name">{selectedProduct.nombre}</p>
         <p className="product-selected__meta">
-          {selectedProduct.producto} · {selectedProduct.variedad} · {selectedProduct.tipo} ·{' '}
-          {selectedProduct.formatoCaja}
+          {selectedProduct.producto} · {selectedProduct.variedad} · {selectedProduct.calibre} ·{' '}
+          {selectedProduct.uso} · {selectedProduct.formatoCaja}
         </p>
       </div>
     )
@@ -193,7 +193,7 @@ export function ProductSearchAutocomplete({
                 <span className="product-search__option-ref">{product.referenciaProducto}</span>
                 <span className="product-search__option-name">{product.nombre}</span>
                 <span className="product-search__option-meta">
-                  {product.producto} · {product.variedad} · {product.formatoCaja}
+                  {product.variedad} · {product.calibre} · {product.uso} · {product.formatoCaja}
                 </span>
               </button>
             ))

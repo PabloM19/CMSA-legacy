@@ -1,6 +1,8 @@
 import type { Lang } from '../i18n/translations'
 import type { BacklogColumnId, BacklogOrder } from '../types/backlog'
 import type { PlantTable } from '../types/plant'
+import type { User } from '../types/auth'
+import { logOrderColumnMove } from './activityLogActions'
 import { applyColumnMove } from './backlogRules'
 import { occupyOrderTables, releaseTablesForOrder, syncPlantFromValidationTables } from './plantSync'
 import { assignTablesToOrder } from './tableAssignment'
@@ -10,7 +12,7 @@ export function executeColumnMove(
   plantTables: PlantTable[],
   order: BacklogOrder,
   targetColumn: BacklogColumnId,
-  userName: string,
+  actor: User,
   lang: Lang,
 ): {
   success: boolean
@@ -53,7 +55,7 @@ export function executeColumnMove(
     workingPlant = assignment.plantTables
   }
 
-  const moved = applyColumnMove(workingOrder, targetColumn, userName)
+  const moved = applyColumnMove(workingOrder, targetColumn, actor.name)
 
   if (targetColumn === 'en_ejecucion') {
     workingPlant = syncPlantFromValidationTables(workingPlant, moved)
@@ -61,6 +63,10 @@ export function executeColumnMove(
   }
 
   const nextOrders = orders.map((o) => (o.id === order.id ? moved : o))
+
+  if (order.column !== targetColumn) {
+    logOrderColumnMove(actor, moved.reference, order.column, targetColumn, lang)
+  }
 
   return {
     success: true,

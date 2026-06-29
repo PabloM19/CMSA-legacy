@@ -73,6 +73,9 @@ export type AuditEntity =
   | 'paletizador'
   | 'configuracion'
   | 'pedido'
+  | 'validacion'
+  | 'autenticacion'
+  | 'tablet'
   | 'sistema'
 
 export type AuditFilter =
@@ -83,6 +86,10 @@ export type AuditFilter =
   | 'paletizador'
   | 'configuracion'
   | 'pedido'
+  | 'validacion'
+  | 'autenticacion'
+  | 'tablet'
+  | 'sistema'
 
 export interface AuditEvent {
   id: string
@@ -108,5 +115,6 @@ export type AdminTabId =
   | 'companies'
   | 'tables'
   | 'palletizers'
+  | 'activity'
   | 'config'
   | 'audit'

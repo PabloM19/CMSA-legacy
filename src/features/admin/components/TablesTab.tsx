@@ -1,44 +1,23 @@
 import { useState } from 'react'
+import { LayoutGrid } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { AdminTableRow } from '../../../types/admin'
-import type { OrderCompany } from '../../../types/newOrder'
-import type { PlantTableStatus, PlantTableType } from '../../../types/plant'
 import {
-  blockAdminTable,
-  createAdminTable,
   getAdminTables,
-  releaseAdminTable,
   toggleAdminTableActive,
   updateAdminTable,
 } from '../../../utils/adminStorage'
+import { filterAdminTables } from '../../../utils/adminViewHelpers'
 import { getStatusLabel } from '../../../utils/plantMapHelpers'
 import { AdminConfirmModal } from './AdminConfirmModal'
+import { AdminEmptyState } from './AdminEmptyState'
+import { AdminSearchBar } from './AdminSearchBar'
 
 interface TablesTabProps {
   refreshKey: number
   onChanged: () => void
 }
-
-type TableForm = {
-  name: string
-  type: PlantTableType
-  status: PlantTableStatus
-  company: OrderCompany | ''
-  capacity: number
-  active: boolean
-}
-
-const STATUSES: PlantTableStatus[] = [
-  'free',
-  'reserved',
-  'pending_validation',
-  'validated',
-  'occupied',
-  'waiting',
-  'blocked',
-  'conflict',
-]
 
 export function TablesTab({ refreshKey, onChanged }: TablesTabProps) {
   const { user: actor } = useAuth()
@@ -48,206 +27,209 @@ export function TablesTab({ refreshKey, onChanged }: TablesTabProps) {
   const tables = getAdminTables()
   void refreshKey
 
-  const [modal, setModal] = useState<'create' | 'edit' | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState<TableForm>({
-    name: '',
-    type: 'automatic',
-    status: 'free',
-    company: '',
-    capacity: 1000,
-    active: true,
-  })
+  const [search, setSearch] = useState('')
+  const [modal, setModal] = useState<'edit' | 'detail' | null>(null)
+  const [selected, setSelected] = useState<AdminTableRow | null>(null)
+  const [form, setForm] = useState({ capacity: 1000, active: true })
   const [error, setError] = useState<string | null>(null)
-  const [confirm, setConfirm] = useState<
-    { type: 'block' | 'release'; table: AdminTableRow } | null
-  >(null)
+  const [confirmToggle, setConfirmToggle] = useState<AdminTableRow | null>(null)
 
-  function openCreate() {
-    setForm({ name: '', type: 'automatic', status: 'free', company: '', capacity: 1000, active: true })
-    setEditingId(null)
-    setModal('create')
-    setError(null)
-  }
+  const filtered = filterAdminTables(tables, search, lang)
 
   function openEdit(row: AdminTableRow) {
-    setForm({
-      name: row.name,
-      type: row.type,
-      status: row.status,
-      company: row.company ?? '',
-      capacity: row.capacity,
-      active: row.active,
-    })
-    setEditingId(row.id)
-    setModal('edit')
+    setSelected(row)
+    setForm({ capacity: row.capacity, active: row.active })
     setError(null)
+    setModal('edit')
+  }
+
+  function openDetail(row: AdminTableRow) {
+    setSelected(row)
+    setModal('detail')
   }
 
   function handleSave() {
-    if (!actor) return
-    const payload = {
-      name: form.name,
-      type: form.type,
-      status: form.status,
-      company: form.company || null,
+    if (!actor || !selected) return
+    const result = updateAdminTable(actor, selected.id, {
+      name: selected.name,
+      type: selected.type,
+      status: selected.status,
+      company: selected.company,
       capacity: form.capacity,
       active: form.active,
-    }
-
-    const result =
-      modal === 'create'
-        ? createAdminTable(actor, payload)
-        : editingId
-          ? updateAdminTable(actor, editingId, payload)
-          : { ok: false as const, error: 'generic' }
-
+    })
     if (!result.ok) {
       setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
       return
     }
-
     setModal(null)
     onChanged()
   }
 
-  function runConfirmAction() {
-    if (!actor || !confirm) return
-    if (confirm.type === 'block') blockAdminTable(actor, confirm.table.id)
-    else releaseAdminTable(actor, confirm.table.id)
-    setConfirm(null)
+  function requestToggle(row: AdminTableRow) {
+    setConfirmToggle(row)
+  }
+
+  function confirmToggleAction() {
+    if (!actor || !confirmToggle) return
+    toggleAdminTableActive(actor, confirmToggle.id)
+    setConfirmToggle(null)
     onChanged()
   }
 
   return (
-    <section className="admin-panel dash-card">
-      <div className="admin-panel__head">
-        <h2 className="admin-panel__title">{d.tabs.tables}</h2>
-        <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
-          {d.createTable}
-        </button>
+    <section className="admin-section dash-card">
+      <div className="admin-section__intro">
+        <div className="admin-section__icon" aria-hidden="true">
+          <LayoutGrid size={32} strokeWidth={1.75} />
+        </div>
+        <div>
+          <h2 className="admin-section__title">{d.tabs.tables}</h2>
+          <p className="admin-section__desc">{d.sectionTablesDesc}</p>
+        </div>
       </div>
-      <p className="admin-panel__hint">{d.tablesHint}</p>
 
-      <div className="admin-table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>{d.colName}</th>
-              <th>{d.colType}</th>
-              <th>{d.colTableStatus}</th>
-              <th>{d.colCompany}</th>
-              <th>{d.colOrder}</th>
-              <th>{d.colActive}</th>
-              <th>{d.colActions}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tables.map((row) => (
-              <tr key={row.id}>
-                <td><strong>{row.name}</strong></td>
-                <td>{row.type === 'automatic' ? d.typeAutomatic : d.typeManual}</td>
-                <td>{getStatusLabel(row.status, lang)}</td>
-                <td>{row.company ?? '—'}</td>
-                <td>{row.orderReference ?? '—'}</td>
-                <td>
+      <AdminSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder={d.searchTables}
+        resultCount={filtered.length}
+      />
+
+      {filtered.length === 0 ? (
+        <AdminEmptyState />
+      ) : (
+        <ul className="admin-card-list">
+          {filtered.map((row) => (
+            <li key={row.id} className="admin-card">
+              <div className="admin-card__main">
+                <div className="admin-card__head">
+                  <strong className="admin-card__title">{row.name}</strong>
                   <span className={`admin-badge admin-badge--${row.active ? 'ok' : 'off'}`}>
-                    {row.active ? d.yes : d.no}
+                    {row.active ? d.statusActiveF : d.statusInactiveF}
                   </span>
-                </td>
-                <td>
-                  <div className="admin-actions">
-                    <button type="button" className="admin-btn" onClick={() => openEdit(row)}>{d.edit}</button>
-                    <button type="button" className="admin-btn" onClick={() => { if (actor) { toggleAdminTableActive(actor, row.id); onChanged() } }}>
-                      {row.active ? d.deactivate : d.activate}
-                    </button>
-                    <button type="button" className="admin-btn admin-btn--danger" onClick={() => setConfirm({ type: 'block', table: row })}>
-                      {d.blockTable}
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      disabled={!row.orderId && row.status === 'free'}
-                      onClick={() => setConfirm({ type: 'release', table: row })}
-                    >
-                      {d.releaseTable}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+                <div className="admin-card__tags">
+                  <span className="admin-badge admin-badge--master">
+                    {row.type === 'automatic' ? d.typeAutomatic : d.typeManual}
+                  </span>
+                  <span className="admin-badge admin-badge--warn">{getStatusLabel(row.status, lang)}</span>
+                  {row.company && (
+                    <span className={`admin-badge admin-badge--${row.company.toLowerCase()}`}>
+                      {row.company}
+                    </span>
+                  )}
+                </div>
+                {row.orderReference && (
+                  <p className="admin-card__meta">
+                    {d.colOrder}: {row.orderReference}
+                  </p>
+                )}
+              </div>
+              <div className="admin-card__actions">
+                <button type="button" className="admin-btn" onClick={() => openDetail(row)}>
+                  {d.viewDetail}
+                </button>
+                <button type="button" className="admin-btn" onClick={() => openEdit(row)}>
+                  {d.editMock}
+                </button>
+                <button type="button" className="admin-btn" onClick={() => requestToggle(row)}>
+                  {row.active ? d.deactivate : d.activate}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      {modal && (
+      {modal === 'edit' && selected && (
         <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
           <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{modal === 'create' ? d.createTable : d.editTable}</h2>
+            <h2 className="order-modal__title">{d.editTable}</h2>
             <div className="admin-form">
               <div className="admin-form__row">
-                <label>{d.colName}</label>
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div className="admin-form__grid">
-                <div className="admin-form__row">
-                  <label>{d.colType}</label>
-                  <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as PlantTableType })}>
-                    <option value="automatic">{d.typeAutomatic}</option>
-                    <option value="manual">{d.typeManual}</option>
-                  </select>
-                </div>
-                <div className="admin-form__row">
-                  <label>{d.colTableStatus}</label>
-                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as PlantTableStatus })}>
-                    {STATUSES.map((s) => (
-                      <option key={s} value={s}>{getStatusLabel(s, lang)}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="admin-form__grid">
-                <div className="admin-form__row">
-                  <label>{d.colCompany}</label>
-                  <select value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value as OrderCompany | '' })}>
-                    <option value="">—</option>
-                    <option value="SUMO">SUMO</option>
-                    <option value="MAF">MAF</option>
-                  </select>
-                </div>
-                <div className="admin-form__row">
-                  <label>{d.colCapacity}</label>
-                  <input type="number" min={1} value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} />
-                </div>
+                <label>{d.colCapacity}</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={form.capacity}
+                  onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
+                />
               </div>
               <label className="admin-form__check">
-                <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+                <input
+                  type="checkbox"
+                  checked={form.active}
+                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                />
                 {d.colActive}
               </label>
               {error && <p className="admin-form__error">{error}</p>}
-              <p className="admin-form__note">{d.auditNote}</p>
+              <p className="admin-form__note">{d.confirmToggleTableMsg}</p>
             </div>
             <div className="admin-modal__foot">
-              <button type="button" className="admin-btn" onClick={() => setModal(null)}>{d.cancel}</button>
-              <button type="button" className="admin-btn admin-btn--primary" onClick={handleSave}>{d.save}</button>
+              <button type="button" className="admin-btn" onClick={() => setModal(null)}>
+                {d.cancel}
+              </button>
+              <button type="button" className="admin-btn admin-btn--primary" onClick={handleSave}>
+                {d.save}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {confirm && (
+      {modal === 'detail' && selected && (
+        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
+          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
+            <h2 className="order-modal__title">{d.tableDetail}</h2>
+            <dl className="order-modal__dl">
+              <div className="order-modal__row">
+                <dt>{d.colCode}</dt>
+                <dd>{selected.name}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colType}</dt>
+                <dd>{selected.type === 'automatic' ? d.typeAutomatic : d.typeManual}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colTableStatus}</dt>
+                <dd>{getStatusLabel(selected.status, lang)}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colCompany}</dt>
+                <dd>{selected.company ?? '—'}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colOrder}</dt>
+                <dd>{selected.orderReference ?? '—'}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colCapacity}</dt>
+                <dd>{selected.capacity}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colActive}</dt>
+                <dd>{selected.active ? d.yes : d.no}</dd>
+              </div>
+            </dl>
+            <div className="admin-modal__foot">
+              <button type="button" className="admin-btn admin-btn--primary" onClick={() => setModal(null)}>
+                {d.close}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmToggle && (
         <AdminConfirmModal
-          title={confirm.type === 'block' ? d.confirmBlockTable : d.confirmReleaseTable}
-          message={
-            confirm.type === 'release' && confirm.table.orderId
-              ? d.releaseTableMsg
-              : d.auditNote
-          }
-          confirmLabel={d.confirm}
+          title={d.confirmToggleTable}
+          message={d.confirmToggleTableMsg}
+          confirmLabel={confirmToggle.active ? d.deactivate : d.activate}
           cancelLabel={d.cancel}
-          destructive={confirm.type === 'block'}
-          onConfirm={runConfirmAction}
-          onCancel={() => setConfirm(null)}
+          onConfirm={confirmToggleAction}
+          onCancel={() => setConfirmToggle(null)}
         />
       )}
     </section>

@@ -1,0 +1,65 @@
+/* Fondo global CMSA — degradado + blobs (mismo visual que login) */
+
+.cmsa-background {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background: linear-gradient(
+    160deg,
+    var(--color-brand-pale) 0%,
+    #f5fafb 45%,
+    var(--color-gray-100) 100%
+  );
+}
+
+.cmsa-background__blobs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.cmsa-background__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+}
+
+.cmsa-background__blob--1 {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  right: -80px;
+  background: radial-gradient(circle, var(--color-brand-lighter) 0%, transparent 70%);
+}
+
+.cmsa-background__blob--2 {
+  width: 360px;
+  height: 360px;
+  bottom: -100px;
+  left: -60px;
+  background: radial-gradient(circle, var(--color-brand-light) 0%, transparent 70%);
+}
+
+.cmsa-background__blob--3 {
+  width: 280px;
+  height: 280px;
+  top: 40%;
+  left: 55%;
+  background: radial-gradient(circle, rgba(0, 160, 210, 0.28) 0%, transparent 70%);
+}
+
+.cmsa-background__content {
+  position: relative;
+  z-index: 1;
+}
+
+.cmsa-background > .app-layout__sidebar,
+.cmsa-background > .app-layout__main,
+.cmsa-background > .mobile-shell__topbar,
+.cmsa-background > .mobile-shell__content {
+  position: relative;
+  z-index: 1;
+}

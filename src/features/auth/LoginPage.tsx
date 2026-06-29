@@ -8,6 +8,7 @@ import { mockCredentials } from '../../data/mockUsers'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { authenticate, getPostLoginPath } from '../../utils/auth'
 import { useAuth } from './AuthContext'
+import { CmsaBackgroundDecor } from '../../components/layout/CmsaBackgroundDecor'
 import './login.css'
 
 const LOGIN_DELAY_MS = 600
@@ -91,15 +92,10 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login-page">
+    <div className="login-page cmsa-background">
+      <CmsaBackgroundDecor />
       <div className="login-page__lang">
         <LangSwitcher />
-      </div>
-
-      <div className="login-page__blobs" aria-hidden="true">
-        <div className="login-page__blob login-page__blob--1" />
-        <div className="login-page__blob login-page__blob--2" />
-        <div className="login-page__blob login-page__blob--3" />
       </div>
 
       <div className="login-page__inner">

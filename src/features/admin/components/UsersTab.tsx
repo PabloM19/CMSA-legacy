@@ -1,15 +1,18 @@
 import { useState } from 'react'
+import { User } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { AdminUser } from '../../../types/admin'
 import type { Company, UserRole } from '../../../types/auth'
 import {
-  createAdminUser,
   getAdminUsers,
   toggleAdminUserStatus,
   updateAdminUser,
 } from '../../../utils/adminStorage'
+import { filterAdminUsers, getAdminUserEmail } from '../../../utils/adminViewHelpers'
 import { AdminConfirmModal } from './AdminConfirmModal'
+import { AdminEmptyState } from './AdminEmptyState'
+import { AdminSearchBar } from './AdminSearchBar'
 
 interface UsersTabProps {
   refreshKey: number
@@ -24,36 +27,29 @@ type UserForm = {
   status: AdminUser['status']
 }
 
-const emptyForm = (): UserForm => ({
-  name: '',
-  username: '',
-  role: 'user',
-  company: 'SUMO',
-  status: 'activo',
-})
-
 export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
   const { user: actor } = useAuth()
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const d = t.admin
 
   const users = getAdminUsers()
   void refreshKey
 
-  const [modal, setModal] = useState<'create' | 'edit' | 'detail' | null>(null)
+  const [search, setSearch] = useState('')
+  const [modal, setModal] = useState<'edit' | 'detail' | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState<UserForm>(emptyForm())
+  const [form, setForm] = useState<UserForm>({
+    name: '',
+    username: '',
+    role: 'user',
+    company: 'SUMO',
+    status: 'activo',
+  })
   const [error, setError] = useState<string | null>(null)
   const [confirmDeactivate, setConfirmDeactivate] = useState<AdminUser | null>(null)
 
+  const filtered = filterAdminUsers(users, search, lang)
   const editingUser = editingId ? users.find((u) => u.id === editingId) : null
-
-  function openCreate() {
-    setForm(emptyForm())
-    setError(null)
-    setEditingId(null)
-    setModal('create')
-  }
 
   function openEdit(u: AdminUser) {
     setForm({
@@ -74,23 +70,12 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
   }
 
   function handleSave() {
-    if (!actor) return
-    const payload = { ...form }
-
-    if (modal === 'create') {
-      const result = createAdminUser(actor, payload)
-      if (!result.ok) {
-        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
-        return
-      }
-    } else if (modal === 'edit' && editingId) {
-      const result = updateAdminUser(actor, editingId, payload)
-      if (!result.ok) {
-        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
-        return
-      }
+    if (!actor || !editingId) return
+    const result = updateAdminUser(actor, editingId, { ...form })
+    if (!result.ok) {
+      setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+      return
     }
-
     setModal(null)
     onChanged()
   }
@@ -118,82 +103,77 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
   }
 
   return (
-    <section className="admin-panel dash-card">
-      <div className="admin-panel__head">
-        <h2 className="admin-panel__title">{d.tabs.users}</h2>
-        <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
-          {d.createUser}
-        </button>
+    <section className="admin-section dash-card">
+      <div className="admin-section__intro">
+        <div className="admin-section__icon" aria-hidden="true">
+          <User size={32} strokeWidth={1.75} />
+        </div>
+        <div>
+          <h2 className="admin-section__title">{d.tabs.users}</h2>
+          <p className="admin-section__desc">{d.sectionUsersDesc}</p>
+        </div>
       </div>
-      <p className="admin-panel__hint">{d.inactiveHint}</p>
 
-      <div className="admin-table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>{d.colName}</th>
-              <th>{d.colUsername}</th>
-              <th>{d.colCompany}</th>
-              <th>{d.colRole}</th>
-              <th>{d.colStatus}</th>
-              <th>{d.colActions}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td>{u.name}</td>
-                <td>{u.username}</td>
-                <td>
-                  <span className={`admin-badge admin-badge--${u.company.toLowerCase()}`}>
-                    {u.company}
-                  </span>
-                </td>
-                <td>{t.roles[u.role]}</td>
-                <td>
+      <AdminSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder={d.searchUsers}
+        resultCount={filtered.length}
+      />
+
+      {filtered.length === 0 ? (
+        <AdminEmptyState />
+      ) : (
+        <ul className="admin-card-list">
+          {filtered.map((u) => (
+            <li key={u.id} className="admin-card">
+              <div className="admin-card__main">
+                <div className="admin-card__head">
+                  <strong className="admin-card__title">{u.name}</strong>
                   <span className={`admin-badge admin-badge--${u.status === 'activo' ? 'ok' : 'off'}`}>
                     {u.status === 'activo' ? d.statusActive : d.statusInactive}
                   </span>
-                </td>
-                <td>
-                  <div className="admin-actions">
-                    <button type="button" className="admin-btn" onClick={() => openDetail(u)}>
-                      {d.viewDetail}
-                    </button>
-                    <button type="button" className="admin-btn" onClick={() => openEdit(u)}>
-                      {d.edit}
-                    </button>
-                    <button type="button" className="admin-btn" onClick={() => handleToggle(u)}>
-                      {u.status === 'activo' ? d.deactivate : d.activate}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+                <p className="admin-card__meta">{u.username}</p>
+                <p className="admin-card__meta">{getAdminUserEmail(u)}</p>
+                <div className="admin-card__tags">
+                  <span className={`admin-badge admin-badge--${u.company.toLowerCase()}`}>{u.company}</span>
+                  <span className="admin-badge admin-badge--master">{t.roles[u.role]}</span>
+                </div>
+                {u.lastAccessMock && (
+                  <p className="admin-card__foot">
+                    {d.lastAccess}: {u.lastAccessMock}
+                  </p>
+                )}
+              </div>
+              <div className="admin-card__actions">
+                <button type="button" className="admin-btn" onClick={() => openDetail(u)}>
+                  {d.viewDetail}
+                </button>
+                <button type="button" className="admin-btn" onClick={() => openEdit(u)}>
+                  {d.editMock}
+                </button>
+                <button type="button" className="admin-btn" onClick={() => handleToggle(u)}>
+                  {u.status === 'activo' ? d.deactivate : d.activate}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      {modal && modal !== 'detail' && (
+      {modal === 'edit' && (
         <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
           <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">
-              {modal === 'create' ? d.createUser : d.editUser}
-            </h2>
+            <h2 className="order-modal__title">{d.editUser}</h2>
             <div className="admin-form">
               <div className="admin-form__row">
                 <label>{d.colName}</label>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="admin-form__row">
                 <label>{d.colUsername}</label>
-                <input
-                  value={form.username}
-                  onChange={(e) => setForm({ ...form, username: e.target.value })}
-                />
+                <input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
               </div>
               <div className="admin-form__grid">
                 <div className="admin-form__row">
@@ -224,16 +204,14 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
                 <label>{d.colStatus}</label>
                 <select
                   value={form.status}
-                  onChange={(e) =>
-                    setForm({ ...form, status: e.target.value as AdminUser['status'] })
-                  }
+                  onChange={(e) => setForm({ ...form, status: e.target.value as AdminUser['status'] })}
                 >
                   <option value="activo">{d.statusActive}</option>
                   <option value="inactivo">{d.statusInactive}</option>
                 </select>
               </div>
               {error && <p className="admin-form__error">{error}</p>}
-              <p className="admin-form__note">{d.auditNote}</p>
+              <p className="admin-form__note">{d.inactiveHint}</p>
             </div>
             <div className="admin-modal__foot">
               <button type="button" className="admin-btn" onClick={() => setModal(null)}>
@@ -261,6 +239,10 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
                 <dd>{editingUser.username}</dd>
               </div>
               <div className="order-modal__row">
+                <dt>{d.colEmail}</dt>
+                <dd>{getAdminUserEmail(editingUser)}</dd>
+              </div>
+              <div className="order-modal__row">
                 <dt>{d.colRole}</dt>
                 <dd>{t.roles[editingUser.role]}</dd>
               </div>
@@ -270,7 +252,7 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
               </div>
               <div className="order-modal__row">
                 <dt>{d.colStatus}</dt>
-                <dd>{editingUser.status}</dd>
+                <dd>{editingUser.status === 'activo' ? d.statusActive : d.statusInactive}</dd>
               </div>
               <div className="order-modal__row">
                 <dt>{d.lastAccess}</dt>

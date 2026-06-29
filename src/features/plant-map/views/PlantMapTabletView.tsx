@@ -12,6 +12,7 @@ import {
   simulateTabletResume,
   simulateTabletStop,
 } from '../../../utils/tabletActions'
+import { logTabletAction } from '../../../utils/activityLogActions'
 import {
   buildTabletAlerts,
   computeGeneralStatus,
@@ -80,16 +81,19 @@ export function PlantMapTabletView() {
   }, [selected, lang])
 
   function executeAction(action: TabletConfirmAction) {
-    if (!selectedLive) return
+    if (!selectedLive || !user) return
 
     if (action === 'incident') {
       markTabletIncident(state, selectedLive, lang)
+      logTabletAction(user, 'incident', selectedLive.name, lang)
       setToast({ message: d.feedbackIncident, type: 'success' })
     } else if (action === 'stop') {
       simulateTabletStop(state, selectedLive, lang)
+      logTabletAction(user, 'stop', selectedLive.name, lang)
       setToast({ message: d.feedbackStop, type: 'success' })
     } else {
       simulateTabletResume(state, selectedLive)
+      logTabletAction(user, 'resume', selectedLive.name, lang)
       setToast({ message: d.feedbackResume, type: 'success' })
     }
 

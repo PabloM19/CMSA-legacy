@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type { User } from '../../types/auth'
 import { clearSession, getSession, setSession } from '../../utils/auth'
+import { logAuthLogin, logAuthLogout } from '../../utils/activityLogActions'
 import { canAccessRoute, getDefaultRoute } from '../../utils/permissions'
 
 interface AuthContextValue {
@@ -28,12 +29,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((loggedInUser: User) => {
     setSession(loggedInUser)
     setUser(loggedInUser)
+    logAuthLogin(loggedInUser)
   }, [])
 
   const logout = useCallback(() => {
+    if (user) {
+      logAuthLogout(user)
+    }
     clearSession()
     setUser(null)
-  }, [])
+  }, [user])
 
   const canAccess = useCallback(
     (path: string) => {

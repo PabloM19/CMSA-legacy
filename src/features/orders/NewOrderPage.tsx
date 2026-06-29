@@ -20,6 +20,7 @@ import {
 } from '../../utils/newOrderViewHelpers'
 import { generateOrderId, generateOrderReference, saveCreatedOrder } from '../../utils/orderStorage'
 import { mergeCreatedOrder } from '../../utils/backlogStorage'
+import { logOrderCreated } from '../../utils/activityLogActions'
 import type { MockProduct } from '../../data/mockProducts'
 import { ConfirmOrderModal } from './components/ConfirmOrderModal'
 import { NewOrderImpactReview } from './components/NewOrderImpactReview'
@@ -96,7 +97,7 @@ export function NewOrderPage() {
       productName: product.nombre,
       product: product.producto,
       variety: product.variedad,
-      type: product.tipo,
+      type: product.uso,
       boxFormat: product.formatoCaja,
       boxesPerHour:
         product.cajasHoraSugeridas != null
@@ -212,6 +213,7 @@ export function NewOrderPage() {
 
     saveCreatedOrder(created)
     mergeCreatedOrder(created)
+    logOrderCreated(user, created.reference, created.company)
 
     navigate('/backlog', { replace: true })
   }

@@ -1,32 +1,26 @@
 import { useState } from 'react'
+import { Package } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { AdminPalletizerRow } from '../../../types/admin'
 import type { PlantPalletizerStatus } from '../../../types/plant'
 import {
-  createAdminPalletizer,
   getAdminPalletizers,
-  markPalletizerConflict,
-  resolvePalletizerConflict,
   toggleAdminPalletizerActive,
   updateAdminPalletizer,
 } from '../../../utils/adminStorage'
+import { filterAdminPalletizers } from '../../../utils/adminViewHelpers'
 import { getStatusLabel } from '../../../utils/plantMapHelpers'
 import { AdminConfirmModal } from './AdminConfirmModal'
+import { AdminEmptyState } from './AdminEmptyState'
+import { AdminSearchBar } from './AdminSearchBar'
 
 interface PalletizersTabProps {
   refreshKey: number
   onChanged: () => void
 }
 
-const STATUSES: PlantPalletizerStatus[] = [
-  'free',
-  'active',
-  'idle',
-  'waiting',
-  'blocked',
-  'conflict',
-]
+const STATUSES: PlantPalletizerStatus[] = ['free', 'active', 'idle', 'waiting', 'blocked', 'conflict']
 
 export function PalletizersTab({ refreshKey, onChanged }: PalletizersTabProps) {
   const { user: actor } = useAuth()
@@ -36,140 +30,142 @@ export function PalletizersTab({ refreshKey, onChanged }: PalletizersTabProps) {
   const rows = getAdminPalletizers()
   void refreshKey
 
-  const [modal, setModal] = useState<'create' | 'edit' | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [modal, setModal] = useState<'edit' | 'detail' | null>(null)
+  const [selected, setSelected] = useState<AdminPalletizerRow | null>(null)
   const [form, setForm] = useState({
-    name: '',
     status: 'idle' as PlantPalletizerStatus,
     capacity: 500,
     alert: '',
     active: true,
   })
   const [error, setError] = useState<string | null>(null)
-  const [confirmConflict, setConfirmConflict] = useState<AdminPalletizerRow | null>(null)
+  const [confirmToggle, setConfirmToggle] = useState<AdminPalletizerRow | null>(null)
 
-  function openCreate() {
-    setForm({ name: '', status: 'idle', capacity: 500, alert: '', active: true })
-    setEditingId(null)
-    setModal('create')
-  }
+  const filtered = filterAdminPalletizers(rows, search, lang)
 
   function openEdit(row: AdminPalletizerRow) {
+    setSelected(row)
     setForm({
-      name: row.name,
       status: row.status,
       capacity: row.capacity,
       alert: row.alert ?? '',
       active: row.active,
     })
-    setEditingId(row.id)
-    setModal('edit')
     setError(null)
+    setModal('edit')
+  }
+
+  function openDetail(row: AdminPalletizerRow) {
+    setSelected(row)
+    setModal('detail')
   }
 
   function handleSave() {
-    if (!actor) return
-    const payload = {
-      name: form.name,
+    if (!actor || !selected) return
+    const result = updateAdminPalletizer(actor, selected.id, {
+      name: selected.name,
       status: form.status,
       capacity: form.capacity,
       alert: form.alert.trim() || null,
       active: form.active,
-    }
-
-    const result =
-      modal === 'create'
-        ? createAdminPalletizer(actor, payload)
-        : editingId
-          ? updateAdminPalletizer(actor, editingId, payload)
-          : { ok: false as const, error: 'generic' }
-
+    })
     if (!result.ok) {
       setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
       return
     }
-
     setModal(null)
     onChanged()
   }
 
+  function confirmToggleAction() {
+    if (!actor || !confirmToggle) return
+    toggleAdminPalletizerActive(actor, confirmToggle.id)
+    setConfirmToggle(null)
+    onChanged()
+  }
+
   return (
-    <section className="admin-panel dash-card">
-      <div className="admin-panel__head">
-        <h2 className="admin-panel__title">{d.tabs.palletizers}</h2>
-        <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
-          {d.createPalletizer}
-        </button>
+    <section className="admin-section dash-card">
+      <div className="admin-section__intro">
+        <div className="admin-section__icon" aria-hidden="true">
+          <Package size={32} strokeWidth={1.75} />
+        </div>
+        <div>
+          <h2 className="admin-section__title">{d.tabs.palletizers}</h2>
+          <p className="admin-section__desc">{d.sectionPalletizersDesc}</p>
+        </div>
       </div>
-      <p className="admin-panel__hint">{d.palletizerHint}</p>
 
-      <div className="admin-table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>{d.colName}</th>
-              <th>{d.colTableStatus}</th>
-              <th>{d.colCapacity}</th>
-              <th>{d.colAlert}</th>
-              <th>{d.colActive}</th>
-              <th>{d.colActions}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                <td><strong>{row.name}</strong></td>
-                <td>{getStatusLabel(row.status, lang)}</td>
-                <td>{row.capacity}</td>
-                <td>{row.alert ?? '—'}</td>
-                <td>
+      <AdminSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder={d.searchPalletizers}
+        resultCount={filtered.length}
+      />
+
+      {filtered.length === 0 ? (
+        <AdminEmptyState />
+      ) : (
+        <ul className="admin-card-list">
+          {filtered.map((row) => (
+            <li key={row.id} className="admin-card">
+              <div className="admin-card__main">
+                <div className="admin-card__head">
+                  <strong className="admin-card__title">{row.name}</strong>
                   <span className={`admin-badge admin-badge--${row.active ? 'ok' : 'off'}`}>
-                    {row.active ? d.yes : d.no}
+                    {row.active ? d.statusActive : d.statusInactive}
                   </span>
-                </td>
-                <td>
-                  <div className="admin-actions">
-                    <button type="button" className="admin-btn" onClick={() => openEdit(row)}>{d.edit}</button>
-                    <button type="button" className="admin-btn" onClick={() => { if (actor) { toggleAdminPalletizerActive(actor, row.id); onChanged() } }}>
-                      {row.active ? d.deactivate : d.activate}
-                    </button>
-                    <button type="button" className="admin-btn admin-btn--danger" onClick={() => setConfirmConflict(row)}>
-                      {d.markConflict}
-                    </button>
-                    {row.status === 'conflict' && (
-                      <button type="button" className="admin-btn" onClick={() => { if (actor) { resolvePalletizerConflict(actor, row.id); onChanged() } }}>
-                        {d.resolveConflict}
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+                <div className="admin-card__tags">
+                  <span className="admin-badge admin-badge--warn">{getStatusLabel(row.status, lang)}</span>
+                </div>
+                {row.alert && <p className="admin-card__alert">{row.alert}</p>}
+                <p className="admin-card__hint">{d.palletizerSecondary}</p>
+              </div>
+              <div className="admin-card__actions">
+                <button type="button" className="admin-btn" onClick={() => openDetail(row)}>
+                  {d.viewDetail}
+                </button>
+                <button type="button" className="admin-btn" onClick={() => openEdit(row)}>
+                  {d.editMock}
+                </button>
+                <button type="button" className="admin-btn" onClick={() => setConfirmToggle(row)}>
+                  {row.active ? d.deactivate : d.activate}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      {modal && (
+      {modal === 'edit' && selected && (
         <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
           <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{modal === 'create' ? d.createPalletizer : d.editPalletizer}</h2>
+            <h2 className="order-modal__title">{d.editPalletizer}</h2>
             <div className="admin-form">
-              <div className="admin-form__row">
-                <label>{d.colName}</label>
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
               <div className="admin-form__grid">
                 <div className="admin-form__row">
                   <label>{d.colTableStatus}</label>
-                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as PlantPalletizerStatus })}>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value as PlantPalletizerStatus })}
+                  >
                     {STATUSES.map((s) => (
-                      <option key={s} value={s}>{getStatusLabel(s, lang)}</option>
+                      <option key={s} value={s}>
+                        {getStatusLabel(s, lang)}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div className="admin-form__row">
                   <label>{d.colCapacity}</label>
-                  <input type="number" min={1} value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} />
+                  <input
+                    type="number"
+                    min={1}
+                    value={form.capacity}
+                    onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
+                  />
                 </div>
               </div>
               <div className="admin-form__row">
@@ -177,32 +173,72 @@ export function PalletizersTab({ refreshKey, onChanged }: PalletizersTabProps) {
                 <input value={form.alert} onChange={(e) => setForm({ ...form, alert: e.target.value })} />
               </div>
               <label className="admin-form__check">
-                <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+                <input
+                  type="checkbox"
+                  checked={form.active}
+                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                />
                 {d.colActive}
               </label>
               {error && <p className="admin-form__error">{error}</p>}
+              <p className="admin-form__note">{d.palletizerSecondary}</p>
             </div>
             <div className="admin-modal__foot">
-              <button type="button" className="admin-btn" onClick={() => setModal(null)}>{d.cancel}</button>
-              <button type="button" className="admin-btn admin-btn--primary" onClick={handleSave}>{d.save}</button>
+              <button type="button" className="admin-btn" onClick={() => setModal(null)}>
+                {d.cancel}
+              </button>
+              <button type="button" className="admin-btn admin-btn--primary" onClick={handleSave}>
+                {d.save}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {confirmConflict && (
+      {modal === 'detail' && selected && (
+        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
+          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
+            <h2 className="order-modal__title">{d.palletizerDetail}</h2>
+            <dl className="order-modal__dl">
+              <div className="order-modal__row">
+                <dt>{d.colCode}</dt>
+                <dd>{selected.name}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colTableStatus}</dt>
+                <dd>{getStatusLabel(selected.status, lang)}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colAlert}</dt>
+                <dd>{selected.alert ?? '—'}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colCapacity}</dt>
+                <dd>{selected.capacity}</dd>
+              </div>
+              <div className="order-modal__row">
+                <dt>{d.colActive}</dt>
+                <dd>{selected.active ? d.yes : d.no}</dd>
+              </div>
+            </dl>
+            <p className="admin-form__note">{d.palletizerSecondary}</p>
+            <div className="admin-modal__foot">
+              <button type="button" className="admin-btn admin-btn--primary" onClick={() => setModal(null)}>
+                {d.close}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmToggle && (
         <AdminConfirmModal
-          title={d.confirmMarkConflict}
-          message={d.palletizerHint}
-          confirmLabel={d.confirm}
+          title={d.confirmTogglePalletizer}
+          message={d.confirmTogglePalletizerMsg}
+          confirmLabel={confirmToggle.active ? d.deactivate : d.activate}
           cancelLabel={d.cancel}
-          destructive
-          onConfirm={() => {
-            if (actor) markPalletizerConflict(actor, confirmConflict.id)
-            setConfirmConflict(null)
-            onChanged()
-          }}
-          onCancel={() => setConfirmConflict(null)}
+          onConfirm={confirmToggleAction}
+          onCancel={() => setConfirmToggle(null)}
         />
       )}
     </section>

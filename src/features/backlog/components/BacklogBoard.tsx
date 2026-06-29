@@ -183,7 +183,7 @@ export function BacklogBoard({
       plantTables,
       order,
       targetColumn,
-      user.name,
+      user,
       lang,
     )
 
@@ -211,7 +211,7 @@ export function BacklogBoard({
       plantTables,
       order,
       'pendiente_lanzamiento',
-      user.name,
+      user,
       lang,
     )
     if (!moveResult.success) {

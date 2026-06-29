@@ -6,13 +6,6 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-xl);
-  overflow: hidden;
-  background: linear-gradient(
-    160deg,
-    var(--color-brand-pale) 0%,
-    #f5fafb 45%,
-    var(--color-gray-100) 100%
-  );
 }
 
 .login-page__lang {
@@ -20,44 +13,6 @@
   top: var(--space-md);
   right: var(--space-md);
   z-index: 10;
-}
-
-.login-page__blobs {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.login-page__blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.55;
-}
-
-.login-page__blob--1 {
-  width: 420px;
-  height: 420px;
-  top: -120px;
-  right: -80px;
-  background: radial-gradient(circle, var(--color-brand-lighter) 0%, transparent 70%);
-}
-
-.login-page__blob--2 {
-  width: 360px;
-  height: 360px;
-  bottom: -100px;
-  left: -60px;
-  background: radial-gradient(circle, var(--color-brand-light) 0%, transparent 70%);
-}
-
-.login-page__blob--3 {
-  width: 280px;
-  height: 280px;
-  top: 40%;
-  left: 55%;
-  background: radial-gradient(circle, rgba(0, 160, 210, 0.28) 0%, transparent 70%);
 }
 
 .login-page__inner {

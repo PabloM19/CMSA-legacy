@@ -15,8 +15,11 @@ function productHaystack(product: MockProduct): string {
     product.nombre,
     product.producto,
     product.variedad,
-    product.tipo,
+    product.grupo,
+    product.calibre,
     product.formatoCaja,
+    product.uso,
+    product.tipo,
     product.descripcion ?? '',
   ]
     .join(' ')
