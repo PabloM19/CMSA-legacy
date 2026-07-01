@@ -117,6 +117,7 @@ export type AdminTabId =
   | 'tables'
   | 'palletizers'
   | 'alarms'
+  | 'production'
   | 'activity'
   | 'config'
   | 'audit'

@@ -9,8 +9,8 @@ export function AdminAccessDenied() {
       <h1 className="admin-denied__title">{t.admin.accessDeniedTitle}</h1>
       <p className="admin-denied__text">{t.admin.accessDeniedMessage}</p>
       <p style={{ marginTop: 'var(--space-lg)' }}>
-        <Link to="/dashboard" className="admin-btn admin-btn--primary">
-          {t.admin.backToDashboard}
+        <Link to="/plant-map" className="admin-btn admin-btn--primary">
+          {t.admin.backToPlantMap}
         </Link>
       </p>
     </div>

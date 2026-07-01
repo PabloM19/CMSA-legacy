@@ -10,6 +10,7 @@ interface BacklogColumnDrawerProps {
   onViewDetail: (order: BacklogOrder) => void
   onPrepare: (order: BacklogOrder) => void
   onConfirmRecipe: (order: BacklogOrder) => void
+  onWithdraw?: (order: BacklogOrder) => void
 }
 
 export function BacklogColumnDrawer({
@@ -19,6 +20,7 @@ export function BacklogColumnDrawer({
   onViewDetail,
   onPrepare,
   onConfirmRecipe,
+  onWithdraw,
 }: BacklogColumnDrawerProps) {
   const { t } = useLanguage()
   const d = t.backlog
@@ -59,6 +61,7 @@ export function BacklogColumnDrawer({
                 onViewDetail={onViewDetail}
                 onPrepare={onPrepare}
                 onConfirmRecipe={onConfirmRecipe}
+                onWithdraw={onWithdraw}
               />
             ))
           )}

@@ -64,6 +64,7 @@ const PROD_ES: Record<ProductionVisualState, StatusBadgeInfo> = {
   temp_blocked: { label: 'Bloqueo temporal', variant: 'blocked' },
   element_blocked: { label: 'Elemento bloqueado', variant: 'critical' },
   completed: { label: 'Acabado', variant: 'finished' },
+  withdrawn: { label: 'Retirado', variant: 'neutral' },
 }
 
 const PROD_EN: Record<ProductionVisualState, StatusBadgeInfo> = {
@@ -72,9 +73,13 @@ const PROD_EN: Record<ProductionVisualState, StatusBadgeInfo> = {
   temp_blocked: { label: 'Temporary block', variant: 'blocked' },
   element_blocked: { label: 'Element blocked', variant: 'critical' },
   completed: { label: 'Completed', variant: 'finished' },
+  withdrawn: { label: 'Withdrawn', variant: 'neutral' },
 }
 
 export function getOrderStatusBadge(order: BacklogOrder, lang: Lang): StatusBadgeInfo {
+  if (order.productionState === 'withdrawn') {
+    return lang === 'es' ? PROD_ES.withdrawn : PROD_EN.withdrawn
+  }
   if (order.column === 'finalizado' || order.productionState === 'completed') {
     return lang === 'es' ? PROD_ES.completed : PROD_EN.completed
   }

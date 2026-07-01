@@ -13,6 +13,7 @@ import { TabletPage } from '../features/tablet/TabletPage'
 import { MobilePage } from '../features/mobile/MobilePage'
 import { AdminPage } from '../features/admin/AdminPage'
 import { AlarmsPage } from '../features/alarms/AlarmsPage'
+import { ReferencesPage } from '../features/references/ReferencesPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
 
 export const router = createBrowserRouter([
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
               { path: '/mobile', element: <MobilePage /> },
               { path: '/admin', element: <AdminPage /> },
               { path: '/alarms', element: <AlarmsPage /> },
+              { path: '/references', element: <ReferencesPage /> },
               { path: '/profile', element: <ProfilePage /> },
             ],
           },

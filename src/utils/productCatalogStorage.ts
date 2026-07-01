@@ -9,6 +9,7 @@ export interface NewReferenceInput {
   variedad: string
   calibre: string
   formatoCaja: string
+  uso: string
   cajasHoraSugeridas: number
   activo: boolean
 }
@@ -35,11 +36,9 @@ export function getAllCatalogProducts(): MockProduct[] {
   return [...MOCK_PRODUCTS, ...readCustomProducts()]
 }
 
-export function saveCustomReference(input: NewReferenceInput): MockProduct {
-  const id = `custom-${Date.now()}`
-  const nombre = `Naranja ${input.variedad} calibre ${input.calibre}`
-
-  const product: MockProduct = {
+function buildProduct(id: string, input: NewReferenceInput): MockProduct {
+  const nombre = `Naranja ${input.variedad.trim()} calibre ${input.calibre.trim()}`
+  return {
     id,
     referenciaProducto: input.referenciaProducto.trim(),
     barcode: input.barcode.trim(),
@@ -49,16 +48,38 @@ export function saveCustomReference(input: NewReferenceInput): MockProduct {
     grupo: 'Custom',
     calibre: input.calibre.trim(),
     formatoCaja: input.formatoCaja.trim(),
-    uso: 'Mesa',
-    tipo: 'Mesa',
+    uso: input.uso.trim() || 'Mesa',
+    tipo: input.uso.trim() || 'Mesa',
     cajasHoraSugeridas: input.cajasHoraSugeridas,
-    descripcion: `Referencia mock añadida · ${input.referenciaProducto}`,
+    descripcion: `Referencia mock · ${input.referenciaProducto.trim()}`,
     activo: input.activo,
   }
+}
 
+export function saveCustomReference(input: NewReferenceInput): MockProduct {
+  const id = `custom-${Date.now()}`
+  const product = buildProduct(id, input)
   const existing = readCustomProducts()
   writeCustomProducts([product, ...existing])
   return product
+}
+
+export function updateCustomReference(id: string, input: NewReferenceInput): MockProduct | null {
+  const custom = readCustomProducts()
+  const idx = custom.findIndex((p) => p.id === id)
+  if (idx < 0) return null
+  const product = buildProduct(id, input)
+  custom[idx] = product
+  writeCustomProducts(custom)
+  return product
+}
+
+export function toggleCustomReferenceActive(id: string, activo: boolean): void {
+  const custom = readCustomProducts()
+  const idx = custom.findIndex((p) => p.id === id)
+  if (idx < 0) return
+  custom[idx] = { ...custom[idx], activo }
+  writeCustomProducts(custom)
 }
 
 export function referenceExists(referenciaProducto: string): boolean {

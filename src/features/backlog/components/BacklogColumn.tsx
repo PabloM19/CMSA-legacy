@@ -29,8 +29,7 @@ interface BacklogColumnProps {
   onViewDetail: (order: BacklogOrder) => void
   onPrepare: (order: BacklogOrder) => void
   onConfirmRecipe?: (order: BacklogOrder) => void
-  onMarkIncident?: (order: BacklogOrder) => void
-  onCancel?: (order: BacklogOrder) => void
+  onWithdraw?: (order: BacklogOrder) => void
 }
 
 export function BacklogColumn({
@@ -48,8 +47,7 @@ export function BacklogColumn({
   onViewDetail,
   onPrepare,
   onConfirmRecipe,
-  onMarkIncident,
-  onCancel,
+  onWithdraw,
 }: BacklogColumnProps) {
   const { t } = useLanguage()
   const d = t.backlog
@@ -103,8 +101,7 @@ export function BacklogColumn({
               onViewDetail={onViewDetail}
               onPrepare={onPrepare}
               onConfirmRecipe={onConfirmRecipe}
-              onMarkIncident={onMarkIncident}
-              onCancel={onCancel}
+              onWithdraw={onWithdraw}
             />
           ))}
           {showMoreFooter && (

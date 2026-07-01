@@ -42,6 +42,7 @@ interface BacklogBoardProps {
   onConfirmFinalize: (order: BacklogOrder) => void
   onViewDetail: (order: BacklogOrder) => void
   onConfirmRecipe: (order: BacklogOrder) => void
+  onWithdraw?: (order: BacklogOrder) => void
 }
 
 function findColumn(id: string, orders: BacklogOrder[]): BacklogColumnId | null {
@@ -81,6 +82,7 @@ export function BacklogBoard({
   onConfirmFinalize,
   onViewDetail,
   onConfirmRecipe,
+  onWithdraw,
 }: BacklogBoardProps) {
   const { user } = useAuth()
   const { t, lang } = useLanguage()
@@ -254,6 +256,7 @@ export function BacklogBoard({
                 onViewDetail={onViewDetail}
                 onPrepare={handlePrepare}
                 onConfirmRecipe={onConfirmRecipe}
+                onWithdraw={onWithdraw}
               />
             ) : (
               MAIN_BOARD_COLUMNS.map((columnId) => {
@@ -293,6 +296,7 @@ export function BacklogBoard({
                     onViewDetail={onViewDetail}
                     onPrepare={handlePrepare}
                     onConfirmRecipe={onConfirmRecipe}
+                onWithdraw={onWithdraw}
                   />
                 )
               })
@@ -328,6 +332,7 @@ export function BacklogBoard({
           onViewDetail={onViewDetail}
           onPrepare={handlePrepare}
           onConfirmRecipe={onConfirmRecipe}
+          onWithdraw={onWithdraw}
         />
       )}
 

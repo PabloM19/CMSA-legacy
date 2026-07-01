@@ -184,9 +184,9 @@ export function LoginPage() {
                 <ul className="login-card__help-list">
                   {getVisibleMockCredentials().map((cred) => (
                     <li key={cred.username}>
+                      {cred.roleLabel ?? cred.user.role}
+                      {' · '}
                       <code>{cred.username}</code> / <code>{cred.password}</code>
-                      {' → '}
-                      {cred.user.company} · {cred.roleLabel ?? cred.user.role}
                     </li>
                   ))}
                 </ul>

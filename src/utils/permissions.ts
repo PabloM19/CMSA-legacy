@@ -6,12 +6,13 @@ const OPERATOR_ROUTES = [
   '/orders/new',
   '/backlog',
   '/plant-map',
+  '/alarms',
   '/tablet',
   '/mobile',
   '/profile',
 ] as const
 
-const SUPERVISOR_EXTRA_ROUTES = ['/admin', '/alarms'] as const
+const SUPERVISOR_EXTRA_ROUTES = ['/admin', '/references'] as const
 
 export function normalizePath(path: string): string {
   return path.split('?')[0].replace(/\/$/, '') || '/'
@@ -38,7 +39,7 @@ export function getAdminTabsForUser(user: User): AdminTabId[] {
     return ['users', 'companies', 'references', 'tables', 'palletizers', 'alarms', 'activity']
   }
   if (user.role === 'supervisor') {
-    return ['references', 'alarms']
+    return ['references', 'alarms', 'production']
   }
   return []
 }
@@ -56,7 +57,15 @@ export function canAccessRoute(user: User, path: string): boolean {
 
   if (isSuperAdmin(user)) return true
 
-  if (normalized === '/admin' || normalized === '/alarms') {
+  if (normalized === '/admin') {
+    return isSupervisor(user)
+  }
+
+  if (normalized === '/alarms') {
+    return true
+  }
+
+  if (normalized === '/references') {
     return isSupervisor(user)
   }
 
@@ -79,9 +88,15 @@ export const NAV_ITEMS: { to: string; key: NavKey }[] = [
   { to: '/plant-map', key: 'plantMap' },
   { to: '/orders/new', key: 'newOrder' },
   { to: '/backlog', key: 'backlog' },
+  { to: '/references', key: 'references' },
   { to: '/alarms', key: 'alarms' },
   { to: '/admin', key: 'admin' },
+  { to: '/profile', key: 'profile' },
 ]
+
+export function canWithdrawProduction(user: User): boolean {
+  return isSupervisor(user)
+}
 
 export function getMobileNavItems(user: User) {
   const items: { to: string; key: NavKey }[] = [
@@ -98,10 +113,10 @@ export function getMobileNavItems(user: User) {
 
 export function getVisibleNavItems(user: User) {
   return NAV_ITEMS.filter((item) => {
-    if (item.key === 'alarms' || item.key === 'admin') {
+    if (item.key === 'admin' || item.key === 'references') {
       return isSupervisor(user)
     }
-    if (item.key === 'newOrder' || item.key === 'backlog') {
+    if (item.key === 'newOrder' || item.key === 'backlog' || item.key === 'alarms' || item.key === 'profile') {
       return canAccessRoute(user, item.to)
     }
     return canAccessRoute(user, item.to)

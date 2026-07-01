@@ -5,6 +5,7 @@ import { getCellAlarms, markAlarmReviewed } from '../../data/mockCellAlarms'
 import { useAuth } from '../auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { CellAlarm } from '../../types/cellAlarm'
+import { logAlarmReviewed } from '../../utils/activityLogActions'
 import { isSupervisor } from '../../utils/permissions'
 import './alarms.css'
 
@@ -33,6 +34,7 @@ export function AlarmsPage() {
   function handleMarkReviewed(alarm: CellAlarm) {
     if (!user || !isSupervisor(user)) return
     setAlarms(markAlarmReviewed(alarm.id))
+    logAlarmReviewed(user, alarm.id)
   }
 
   return (

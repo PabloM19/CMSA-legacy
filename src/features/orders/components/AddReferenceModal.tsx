@@ -1,25 +1,32 @@
 import { useState, type FormEvent } from 'react'
-import { FormField, Input } from '../../../components/ui/FormField'
+import { FormField, Input, Select } from '../../../components/ui/FormField'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { MockProduct } from '../../../data/mockProducts'
-import { referenceExists, saveCustomReference } from '../../../utils/productCatalogStorage'
+import {
+  referenceExists,
+  saveCustomReference,
+  updateCustomReference,
+} from '../../../utils/productCatalogStorage'
 
 interface AddReferenceModalProps {
   onClose: () => void
   onSaved: (product: MockProduct) => void
+  initial?: MockProduct
 }
 
-export function AddReferenceModal({ onClose, onSaved }: AddReferenceModalProps) {
+export function AddReferenceModal({ onClose, onSaved, initial }: AddReferenceModalProps) {
   const { t } = useLanguage()
   const d = t.newOrder
+  const isEdit = Boolean(initial?.id.startsWith('custom-'))
 
-  const [referencia, setReferencia] = useState('')
-  const [barcode, setBarcode] = useState('')
-  const [variedad, setVariedad] = useState('')
-  const [calibre, setCalibre] = useState('')
-  const [formatoCaja, setFormatoCaja] = useState('')
-  const [cajasHora, setCajasHora] = useState('500')
-  const [activo, setActivo] = useState(true)
+  const [referencia, setReferencia] = useState(initial?.referenciaProducto ?? '')
+  const [barcode, setBarcode] = useState(initial?.barcode ?? '')
+  const [variedad, setVariedad] = useState(initial?.variedad ?? '')
+  const [calibre, setCalibre] = useState(initial?.calibre ?? '')
+  const [formatoCaja, setFormatoCaja] = useState(initial?.formatoCaja ?? '')
+  const [uso, setUso] = useState(initial?.uso ?? 'Mesa')
+  const [cajasHora, setCajasHora] = useState(String(initial?.cajasHoraSugeridas ?? 500))
+  const [activo, setActivo] = useState(initial?.activo ?? true)
   const [error, setError] = useState<string | null>(null)
 
   function handleSubmit(e: FormEvent) {
@@ -31,7 +38,7 @@ export function AddReferenceModal({ onClose, onSaved }: AddReferenceModalProps) 
       return
     }
 
-    if (referenceExists(referencia)) {
+    if (!isEdit && referenceExists(referencia)) {
       setError(d.addReferenceDuplicate)
       return
     }
@@ -42,15 +49,21 @@ export function AddReferenceModal({ onClose, onSaved }: AddReferenceModalProps) 
       return
     }
 
-    const saved = saveCustomReference({
+    const payload = {
       referenciaProducto: referencia,
       barcode,
       variedad,
       calibre,
       formatoCaja,
+      uso,
       cajasHoraSugeridas: rate,
       activo,
-    })
+    }
+
+    const saved =
+      isEdit && initial
+        ? updateCustomReference(initial.id, payload) ?? saveCustomReference(payload)
+        : saveCustomReference(payload)
 
     onSaved(saved)
     onClose()
@@ -67,7 +80,7 @@ export function AddReferenceModal({ onClose, onSaved }: AddReferenceModalProps) 
       >
         <header className="order-modal__head">
           <h2 id="add-reference-title" className="order-modal__title">
-            {d.addReferenceTitle}
+            {isEdit ? d.editReferenceTitle : d.addReferenceTitle}
           </h2>
           <p className="order-modal__subtitle">{d.addReferenceSubtitle}</p>
         </header>
@@ -91,6 +104,13 @@ export function AddReferenceModal({ onClose, onSaved }: AddReferenceModalProps) 
             </FormField>
             <FormField label={`${d.boxFormat} *`} htmlFor="ref-formato">
               <Input id="ref-formato" value={formatoCaja} onChange={(e) => setFormatoCaja(e.target.value)} />
+            </FormField>
+            <FormField label={`${d.usage} *`} htmlFor="ref-uso">
+              <Select id="ref-uso" value={uso} onChange={(e) => setUso(e.target.value)}>
+                <option value="Mesa">Mesa</option>
+                <option value="Paletizador">Paletizador</option>
+                <option value="Mixto">Mixto</option>
+              </Select>
             </FormField>
             <FormField label={d.suggestedRate} htmlFor="ref-rate">
               <Input

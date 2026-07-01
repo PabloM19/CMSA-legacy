@@ -1,13 +1,15 @@
 # CMSA Wireframe — Fase 1
 
-Wireframe interactivo funcional para la aplicación interna de producción compartida entre **SUMO** y **MAF**. Esta fase no tiene backend real: todo funciona con datos mock para validar flujos, pantallas, estados visuales, permisos simulados y navegación.
+Wireframe interactivo funcional para la aplicación interna de producción compartida entre **SUMO** y **MAF**. Esta fase no tiene backend real: todo funciona con datos mock en `localStorage` para validar flujos, pantallas, estados visuales, permisos simulados y navegación.
+
+La pantalla principal operativa es **`/plant-map`**, accesible también **sin login** (vista pública de consulta).
 
 ## Stack
 
 - React 19 + TypeScript
 - Vite
 - react-router-dom
-- lucide-react (iconos puntuales)
+- lucide-react (iconos)
 - CSS propio (tokens + glassmorphism, sin librerías UI)
 
 ## Inicio rápido
@@ -17,7 +19,7 @@ npm install
 npm run dev
 ```
 
-Abre la URL que indique Vite (normalmente `http://localhost:5173`). La raíz redirige a `/login`.
+Abre la URL que indique Vite (normalmente `http://localhost:5173`). La raíz `/` redirige a **`/plant-map`**.
 
 Otros scripts:
 
@@ -25,77 +27,66 @@ Otros scripts:
 npm run build    # compilación de producción
 npm run preview  # previsualizar el build
 npm run lint     # ESLint
-npx tsx scripts/validation-flow-check.ts   # checks del flujo R/M + validación
-npx tsx scripts/plant-map-check.ts           # checks del pictograma y sincronización
+npx tsx scripts/validation-flow-check.ts   # checks flujo R/M + validación
+npx tsx scripts/plant-map-check.ts         # checks pictograma y sincronización
 ```
 
-## Estado de pantallas
+### Demo en consola del navegador
 
-| Ruta | Pantalla | Estado |
+Tras cargar la app en desarrollo:
+
+```js
+window.cmsaDemo?.seedDemoFull()      // escenario completo (cola, mapa, alarmas demo)
+window.cmsaDemo?.resetDemoClean()    // limpiar pedidos e incidencias
+window.cmsaDemo?.clearCmsaLocalStorage()
+```
+
+## Rutas y pantallas
+
+| Ruta | Pantalla | Acceso |
 |------|----------|--------|
-| `/login` | Inicio de sesión | ✅ Implementada |
-| `/dashboard` | Panel operativo PC | ✅ v1 mock |
-| `/orders/new` | Nueva orden | ✅ v1 mock |
-| `/backlog` | Backlog kanban | ✅ v1 mock + localStorage |
-| `/validation` | Validación de mesas | ✅ v1 mock + localStorage |
-| `/plant-map` | Mapa de planta (responsive) | ✅ v1 mock + localStorage |
-| `/tablet` | — | ↪ redirige a `/plant-map` |
-| `/mobile` | — | ↪ redirige a `/plant-map` |
-| `/admin` | Administración máster | ✅ CRUD mock + auditoría |
+| `/plant-map` | Mapa de planta (responsive) | **Público** + autenticado |
+| `/login` | Inicio de sesión | Público |
+| `/backlog` | Cola diaria (kanban) | Operarios + Supervisor + Super Admin |
+| `/orders/new` | Nuevo objetivo | Operarios + Supervisor + Super Admin |
+| `/alarms` | Alarmas operativas | Supervisor + Super Admin |
+| `/admin` | Administración | Supervisor (parcial) + Super Admin (completo) |
+| `/profile` | Perfil y preferencias | Autenticado |
+| `/tablet` | Vista tablet planta | Autenticado (según rol) |
+| `/mobile` | Vista móvil consulta | Autenticado (según rol) |
+| `/dashboard` | — | ↪ redirige a `/plant-map` |
+| `/validation` | — | ↪ redirige a `/plant-map` |
 
-## Login
+## Login y credenciales
 
-Pantalla centrada con glassmorphism, fondo claro y formas abstractas suaves.
+Pantalla centrada con glassmorphism. Selector **ES / EN** (preferencia en `localStorage`, clave `cmsa-auth` para sesión).
 
-**Idioma**
+Tras login correcto → **`/plant-map`** (todos los roles).
 
-- Selector **ES / EN** fijo arriba a la derecha (login) y en el header (app autenticada)
-- Preferencia guardada en `localStorage` (`cmsa-lang`) y aplicada en toda la app
-- Traduce login, sidebar, header y pantallas principales
+| Usuario | Contraseña | Empresa | Rol |
+|---------|------------|---------|-----|
+| `operario_sumo` | `1234` | SUMO | Operario |
+| `operario_maf` | `124` | MAF | Operario |
+| `usuario_supervisor` | `sup123` | GLOBAL | Supervisor |
+| `usuario_superadmin` | `admin123` | GLOBAL | Super Admin |
 
-**Comportamiento**
+Alias ocultos de compatibilidad: `usuario_sumo`, `usuario_maf`, `usuario_master` (mapean a cuentas existentes).
 
-- Autenticación simulada contra usuarios mock (delay de 600 ms).
-- Sesión persistida en `localStorage` bajo la clave `cmsa-auth`.
-- Redirección tras login correcto:
-  - `user` (SUMO / MAF) → `/dashboard`
-  - `master` → `/dashboard`
-  - `validator` → `/validation`
-- Mensaje de error claro si las credenciales no coinciden.
-- Botón de ayuda para mostrar credenciales mock durante desarrollo.
+## Roles y permisos
 
-**Credenciales de prueba**
+| Rol | Sidebar / rutas principales | Acciones destacadas |
+|-----|----------------------------|---------------------|
+| **Operario** (`user`, SUMO/MAF) | Mapa, nuevo objetivo, cola diaria | Ver alarmas en mapa; no marcar como revisadas |
+| **Supervisor** | + Alarmas, Admin (referencias y alarmas) | Marcar alarmas revisadas; incidencias tablet |
+| **Super Admin** | Admin completo | Todo lo anterior + usuarios, mesas, config, auditoría |
 
-| Usuario | Contraseña | Empresa | Rol | Destino |
-|---------|------------|---------|-----|---------|
-| `usuario_sumo` | `1234` | SUMO | user | `/dashboard` |
-| `usuario_maf` | `124` | MAF | user | `/dashboard` |
-| `usuario_master` | `master123` | MASTER | master | `/dashboard` |
-| `usuario_validador` | `val123` | CMSA | validator | `/validation` |
+**Guest (sin sesión):** mapa de planta, resumen, leyenda, tabla de alarmas activas (solo lectura), botón *Iniciar sesión*. Sin sidebar ni acciones operativas.
 
-## Sesión y rutas protegidas
-
-Autenticación mock con `AuthProvider` + hook `useAuth`. La sesión se persiste en `localStorage` (`cmsa-auth`).
-
-**Layout autenticado**
-
-- Header con nombre, empresa, rol, fecha actual y botón **Salir**
-- Color de acento según empresa: SUMO morado, MAF naranja, MASTER negro/gris, CMSA (validador) gris-azul
-- Sidebar muestra solo las rutas permitidas para el usuario activo
-
-**Permisos por rol**
-
-| Rol | Rutas accesibles |
-|-----|------------------|
-| `user` (SUMO / MAF) | `/dashboard`, `/orders/new`, `/backlog`, `/plant-map` |
-| `validator` | `/validation`, `/plant-map` |
-| `master` | Todas |
-
-Si no hay sesión → redirección a `/login`. Si la ruta no está permitida → redirección a la pantalla principal del rol (`/dashboard` o `/validation`).
+Lógica centralizada en `src/utils/permissions.ts`.
 
 ## Datos mock y persistencia
 
-Estado consolidado en `localStorage` bajo la clave **`cmsa-backlog-orders`**:
+Estado operativo consolidado en **`cmsa-backlog-orders`**:
 
 ```json
 {
@@ -105,130 +96,142 @@ Estado consolidado en `localStorage` bajo la clave **`cmsa-backlog-orders`**:
 }
 ```
 
-También se usa `cmsa-created-orders` para pedidos creados desde `/orders/new`.
+Otras claves relevantes:
 
-**Mesas de planta**
+| Clave | Uso |
+|-------|-----|
+| `cmsa-auth` | Sesión mock |
+| `cmsa-lang` | Idioma ES / EN |
+| `cmsa-created-orders` | Objetivos creados desde `/orders/new` |
+| `cmsa-cell-alarms` | Alarmas mock de celda (mapa + `/alarms`) |
+| `cmsa-admin-data` | CRUD admin |
+| `cmsa-tablet-overrides` | Overrides táctiles en planta |
+
+**Planta**
 
 - Automáticas: **R1–R9**
 - Manuales: **M1–M7**
-- Paletizadores: **P1–P8** (secundarios, mock estable)
+- Paletizadores: **P1–P8**
 
-Al mover un pedido a `pendiente_validacion`, se asignan mesas R y, si hace falta, M (`src/utils/tableAssignment.ts`). Backlog, validación y pictograma leen la misma fuente.
+Cola diaria, mapa y mesas comparten el mismo estado (`rebuildPlantTablesFromOrders` en `src/utils/plantSync.ts`).
 
-## Backlog (`/backlog`)
+## Cola diaria (`/backlog`)
 
-Kanban con columnas de estado, KPIs (incl. cola con desglose backlog / pend. lanzamiento), tarjetas de pedido y modal de detalle. Acciones simuladas: mover estado, lanzar a validación, etc. Sincronizado con mesas y validación vía storage.
+Tablero kanban de **objetivos** con tres columnas operativas:
 
-## Validación (`/validation`)
+1. **Por ordenar**
+2. **En preparación** (modal mock de preparación / confirmación de celda)
+3. **En producción**
 
-Flujo operativo para validadores y master:
+Vistas por chips: **Resumen** (entrada por defecto), **Vista completa**, **En curso**, **Acabados**.
 
-- Listado de pedidos pendientes de validación
-- Validar mesa individual, validar todas, marcar conflicto, resolver conflicto
-- Iniciar producción cuando todas las mesas están validadas
-- SUMO / MAF: solo lectura
+- KPIs superiores, drag & drop simulado, filtros por empresa (operarios ven solo los suyos)
+- Sincronización con mesas del pictograma vía `localStorage`
+- Validación de mesas integrada en el flujo de preparación (no hay pantalla `/validation` activa)
 
 ## Mapa de planta (`/plant-map`)
 
-Una sola ruta que **se adapta al ancho de pantalla** (hook `useBreakpoint`):
+Una sola ruta, layout según ancho (`useBreakpoint`):
 
-| Ancho | Layout |
+| Ancho | Vista |
 |-------|--------|
-| ≥1100px (escritorio) | Pictograma completo + leyenda + drawer lateral |
-| 768–1099px (tablet) | Pictograma táctil ampliado, KPIs, producción activa, alertas, drawer inferior con acciones mock |
-| &lt;768px (móvil) | Consulta compacta solo lectura: estado, capacidad, producción, alertas, minimapa |
+| ≥1100px | Escritorio: resumen, leyenda, pictograma, tabla de alarmas, drawers |
+| 768–1099px | Tablet: pictograma táctil, KPIs, producción activa, drawer inferior |
+| &lt;768px | Móvil autenticado: consulta compacta (solo lectura operativa) |
 
-No hay entradas separadas en el menú para tablet ni móvil. Las URLs `/tablet` y `/mobile` redirigen a `/plant-map` por compatibilidad.
+**Distribución fija (izquierda → derecha)**
 
-**Distribución fija del pictograma (izquierda → derecha)**
+- **Norte:** `M3 M2 M1 R9 R8 R7 R6 R5 R4 R3 R2 R1`
+- **Sur:** `M7 M6 M5 M4 P8 P7 P6 P5 P4 P3 P2 P1`
 
-- Fila superior: `M3 M2 M1 R9 R8 R7 R6 R5 R4 R3 R2 R1`
-- Fila inferior: `M7 M6 M5 M4 P8 P7 P6 P5 P4 P3 P2 P1`
+**Resumen superior:** mesas libres, ocupadas (chips SUMO/MAF), preparación, espera, bloqueos/incidencias, alarmas activas.
 
-**Estados visuales**
+**Celdas (R/M/P)**
 
-- Libre, reservada / pendiente validación, ocupada, en espera, bloqueada, conflicto
-- Borde de empresa: SUMO morado, MAF naranja (degradado suave, no fondo saturado)
-- Velocidad mock: lento / normal / rápido
-- Click en mesa R/M → drawer con detalle de pedido; paletizadores con detalle básico
+- Franja superior de empresa: **SUMO morado**, **MAF naranja**, libre neutra (6px)
+- Fondo según estado: producción (verde), espera (amarillo), bloqueo/incidencia (rojo), preparación (violeta), libre (neutro)
+- Código + icono de **velocidad** arriba a la derecha (si aplica)
+- ETA solo si existe; **% ocupación** en celdas ocupadas
+- Iconos de **estado/alarma** abajo (aviso, pausa, bloqueo, etc.)
+- Click → drawer de celda con objetivo, ETA, ocupación y alarma vinculada
 
-**Tablet (768–1099px)**
+**Alarmas activas (debajo del mapa)**
 
-- Pantalla de **supervisión táctil en planta**, no un dashboard reducido.
-- **Pictograma grande** como elemento principal (mesas R/M, paletizadores P, estados, colores SUMO/MAF, iconos velocidad/warning/pausa).
-- Franja de resumen: estado general, producción activa, mesas ocupadas/libres, alertas, próximos fin.
-- **Drawer inferior** al tocar un elemento: detalle completo + acciones de emergencia según rol (con confirmación).
-- Producción activa en **cards horizontales**; alertas tocables para ir al elemento.
-- **Roles:** `master` parada/reanudación/incidencia; `validator` incidencia; SUMO/MAF solo consulta en acciones críticas.
-- **Persistencia:** overrides en `cmsa-tablet-overrides`.
+Tabla con buscador en tiempo real y columnas: Hora, Objetivo, Empresa, Celda, Tipo, Severidad, Estado, Acción.
 
-**Móvil (&lt;768px)**
+Objetivos demo con alarma (naranja):
 
-- Shell propio con **menú hamburguesa** (sin sidebar de escritorio).
-- Monitorización rápida **solo consulta**: estado general, capacidad SUMO/MAF (%), producción activa, próximas finalizaciones, alertas, resumen de mesas (incl. manuales/automáticas) y barras de ocupación R/M/P.
-- **Sin botones operativos** en la vista de monitor. Navegación móvil limitada (operarios → solo mapa; validador/master → rutas adicionales según rol).
-- Footer: *Vista solo consulta — acciones en PC/tablet*.
+| Referencia | Celda | Tipo |
+|------------|-------|------|
+| `ALM-SUMO-EXCESO-001` | R4 | Exceso de cajas |
+| `ALM-MAF-FALTA-001` | R6 | Falta de cajas |
+| `ALM-SUMO-BLOQ-001` | M2 | Bloqueo por incidencia |
 
-Componentes: `PlantMapPage` (orquestador), `PlantMapDesktopView`, `PlantMapTabletView`, `PlantMapMobileView`, `PlantLayout`, `PlantElementCard`, `PlantLegend`, `PlantElementDrawer`.
+Supervisor / Super Admin pueden **marcar como revisada**. Reasignación de destino: placeholder deshabilitado (pendiente reunión cliente).
 
-## Administración máster (`/admin`)
+Página dedicada: **`/alarms`** (mismo mock, listado ampliado).
 
-Solo **`usuario_master`**. SUMO, MAF y validador ven pantalla de acceso denegado si entran por URL.
+## Nuevo objetivo (`/orders/new`)
 
-Persistencia en `localStorage` (`cmsa-admin-data`). Mesas y paletizadores se sincronizan con `cmsa-backlog-orders`.
+Formulario mock por pasos: catálogo de productos (naranjas), cálculo de mesas/ETA, confirmación y persistencia en cola diaria.
 
-Pestañas: **Usuarios · Empresas · Mesas · Paletizadores · Configuración · Auditoría**
+## Administración (`/admin`)
 
-- CRUD visual mock con modales y confirmaciones en acciones críticas
-- Desactivar en lugar de borrar (usuarios, empresas, mesas, paletizadores)
-- Liberar/bloquear mesas con confirmación (solo máster)
-- Configuración de producción simulada (velocidades, capas, umbrales, capacidades SUMO/MAF)
-- Auditoría mock con filtros por entidad
+Filtrada por rol:
+
+- **Supervisor:** referencias de producto, alarmas
+- **Super Admin:** usuarios, empresas, mesas, paletizadores, referencias, alarmas, auditoría
+
+Persistencia en `cmsa-admin-data`. Cambios de mesas se reflejan en el mapa.
+
+## Perfil (`/profile`)
+
+Avatar mock, datos de contacto, idioma, tema claro/oscuro, cambio de contraseña simulado.
 
 ## Estructura del proyecto
 
 ```
 src/
-├── app/                    # App y rutas
+├── app/                    # Router, providers, redirects
 ├── components/
-│   ├── layout/             # Sidebar, header, layout interno
-│   └── ui/                 # Componentes reutilizables
+│   ├── layout/             # Sidebar, header, PlantMapShell, PublicLayout
+│   └── ui/
 ├── features/
 │   ├── auth/
-│   ├── dashboard/
-│   ├── orders/
-│   ├── backlog/
-│   ├── validation/
-│   └── plant-map/
-├── data/                   # Mocks y layout de planta
+│   ├── backlog/            # Cola diaria
+│   ├── orders/             # Nuevo objetivo
+│   ├── plant-map/          # Pictograma + alarmas en mapa
+│   ├── alarms/
+│   ├── admin/
+│   ├── profile/
+│   ├── tablet/
+│   └── mobile/
+├── data/                   # Mocks (pedidos, planta, alarmas, usuarios)
 ├── i18n/                   # ES / EN
-├── styles/                 # tokens.css, globals.css
+├── styles/
 ├── types/
-└── utils/                  # Auth, backlogStorage, tableAssignment, plantMapHelpers…
+└── utils/                  # Storage, permisos, plantSync, demoSeed…
 ```
 
 ## Diseño
 
-Identidad visual alineada al manual de marca **CMSA** (Pantone Process Cyan). Tokens en `src/styles/tokens.css`.
+Identidad **CMSA** (Process Cyan `#00A0D2`). Tokens en `src/styles/tokens.css`.
 
-- **CMSA (marca principal)**: Process Cyan `#00A0D2` — botones, navegación activa, acentos, fondos suaves
-- **Logos**: `public/logos/` — fondo blanco en login/sidebar; variante fondo azul disponible vía `<CmsaLogo variant="dark" />`
-- **SUMO / MAF**: acentos secundarios en badge de header y borde izquierdo de mesas en pictograma
-- **MASTER**: negro / gris en badge de header
-- Glassmorphism: fondos translúcidos, blur, bordes y sombras en tonos cyan
+- **SUMO:** morado · **MAF:** naranja · **GLOBAL/CMSA:** cyan / gris
+- Glassmorphism, sidebar colapsable con tooltips, menú de usuario en header
+- Logos en `public/logos/`
 
-## Alcance de Fase 1
+## Alcance Fase 1
 
-- ✅ Setup inicial, routing y layout base
-- ✅ Login con auth mock e i18n ES/EN
-- ✅ Sesión mock, rutas protegidas y permisos por rol
-- ✅ Dashboard operativo PC v1 (KPIs, pedidos, producción activa, alertas)
-- ✅ Nueva orden v1 (formulario, cálculo mock, modal confirmación, localStorage)
-- ✅ Backlog kanban v1 con storage consolidado y asignación mock R/M
-- ✅ Validación de mesas v1 (conflictos, iniciar producción)
-- ✅ Mapa de planta responsive v1 (escritorio / tablet / móvil según ancho, una sola ruta)
-- ✅ Administración máster v1 (CRUD mock usuarios, empresas, mesas, paletizadores, config, auditoría)
+- ✅ Mapa de planta público + operativo con alarmas mock y resumen
+- ✅ Cola diaria 3 columnas + vistas Resumen / En curso / Acabados
+- ✅ Nuevo objetivo con catálogo mock
+- ✅ Auth mock, roles (operario, supervisor, super admin), i18n ES/EN
+- ✅ Admin filtrado por rol, perfil, alarmas
+- ✅ Tablet / móvil como vistas de consulta o supervisión
 - ❌ Backend, API real, Firebase
+- ❌ Reasignación de destino entre celdas (pendiente definición cliente)
+- ❌ Lógica real de alarmas / timeouts de preparación
 - ❌ Recuperación de contraseña real
 
 ---

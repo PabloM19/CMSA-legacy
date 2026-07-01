@@ -115,7 +115,7 @@ function baseOrder(
           : 'automatic'
         : 'none',
     validationTables: partial.validationTables ?? [],
-    auditTrail: partial.auditTrail ?? [audit('Pedido creado'), audit('Pedido demo cargado')],
+    auditTrail: partial.auditTrail ?? [audit('Objetivo creado'), audit('Objetivo demo cargado')],
   }
 }
 

@@ -4,6 +4,8 @@ import { getCellAlarms, markAlarmReviewed } from '../../../data/mockCellAlarms'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { CellAlarm } from '../../../types/cellAlarm'
+import { logAlarmReviewed } from '../../../utils/activityLogActions'
+import { isSupervisor } from '../../../utils/permissions'
 import { getState } from '../../../utils/backlogStorage'
 import { buildPlantElementMap } from '../../../utils/plantMapHelpers'
 import { computePlantMapSummaryStats } from '../../../utils/plantMapSummaryHelpers'
@@ -52,8 +54,10 @@ export function PlantMapDesktopView() {
   )
 
   function handleMarkReviewed(alarm: CellAlarm) {
+    if (!user || !isSupervisor(user)) return
     const next = markAlarmReviewed(alarm.id)
     setAlarms(next)
+    logAlarmReviewed(user, alarm.id)
     if (selectedAlarm?.id === alarm.id) {
       setSelectedAlarm(next.find((item) => item.id === alarm.id) ?? null)
     }

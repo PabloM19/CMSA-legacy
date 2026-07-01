@@ -38,6 +38,22 @@ export function logOrderCreated(actor: User, reference: string, company: string)
   logActivity(actor, 'Objetivo creado', 'pedido', `${reference} · ${company}`)
 }
 
+export function logReferenceCreated(actor: User, reference: string): void {
+  logActivity(actor, 'Referencia creada', 'configuracion', reference)
+}
+
+export function logAlarmReviewed(actor: User, alarmId: string): void {
+  logActivity(actor, 'Alarma marcada como revisada', 'sistema', alarmId)
+}
+
+export function logOrderWithdrawn(actor: User, reference: string, detail: string): void {
+  logActivity(actor, 'Objetivo retirado de producción', 'pedido', `${reference} · ${detail}`)
+}
+
+export function logRecipeConfirmed(actor: User, reference: string): void {
+  logActivity(actor, 'Receta confirmada', 'pedido', reference)
+}
+
 export function logTableValidated(actor: User, orderReference: string, tableName: string): void {
   logActivity(actor, 'Mesa validada', 'validacion', `${orderReference} · ${tableName}`)
 }

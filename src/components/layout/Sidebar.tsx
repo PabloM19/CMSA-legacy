@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   Bell,
+  BookOpen,
   ListOrdered,
   Map,
   Menu,
   PanelLeftClose,
   PlusCircle,
   ShieldCheck,
+  UserCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { CmsaLogo } from '../ui/CmsaLogo'
@@ -22,8 +24,10 @@ const NAV_ICONS: Record<NavKey, LucideIcon> = {
   newOrder: PlusCircle,
   backlog: ListOrdered,
   plantMap: Map,
+  references: BookOpen,
   alarms: Bell,
   admin: ShieldCheck,
+  profile: UserCircle,
   tablet: Map,
   mobile: Map,
 }

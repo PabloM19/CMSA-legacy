@@ -8,6 +8,7 @@ import { getColumnStatusBadge } from '../../../utils/statusBadge'
 interface OrderDetailModalProps {
   order: BacklogOrder
   onClose: () => void
+  onWithdraw?: () => void
   onMarkIncident?: () => void
   onCancel?: () => void
   onValidateTables?: () => void
@@ -16,6 +17,7 @@ interface OrderDetailModalProps {
 export function OrderDetailModal({
   order,
   onClose,
+  onWithdraw,
   onMarkIncident,
   onCancel,
   onValidateTables,
@@ -121,6 +123,11 @@ export function OrderDetailModal({
             <button type="button" className="order-btn order-btn--ghost" onClick={onValidateTables}>
               {d.validateTables}
               <span className="backlog-card__demo-tag">{d.demo}</span>
+            </button>
+          )}
+          {onWithdraw && (
+            <button type="button" className="order-btn order-btn--danger" onClick={onWithdraw}>
+              {d.withdrawAction}
             </button>
           )}
           {user?.role === 'superadmin' && onMarkIncident && (

@@ -9,7 +9,9 @@ import type { PlantTable } from '../../types/plant'
 import { executeColumnMove } from '../../utils/backlogMove'
 import { getState, saveOrdersAndPlant } from '../../utils/backlogStorage'
 import { confirmRecipeForOrder } from '../../utils/preparationHelpers'
-import { isSupervisor } from '../../utils/permissions'
+import { canWithdrawProduction, isSupervisor } from '../../utils/permissions'
+import { logOrderWithdrawn, logRecipeConfirmed } from '../../utils/activityLogActions'
+import { withdrawOrderFromProduction, type WithdrawReason } from '../../utils/withdrawProduction'
 import { BacklogBoard } from './components/BacklogBoard'
 import { BacklogBoardSkeleton } from './components/BacklogBoardSkeleton'
 import { BacklogHelpNote } from './components/BacklogHelpNote'
@@ -18,6 +20,7 @@ import { BacklogQuickActions } from './components/BacklogQuickActions'
 import { BacklogToast } from './components/BacklogToast'
 import { BacklogViewControls } from './components/BacklogViewControls'
 import { OrderDetailModal } from './components/OrderDetailModal'
+import { WithdrawProductionModal } from './components/WithdrawProductionModal'
 import { useBacklogView } from './hooks/useBacklogView'
 import '../dashboard/dashboard.css'
 import './backlog.css'
@@ -37,6 +40,7 @@ export function BacklogPage() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [detailOrder, setDetailOrder] = useState<BacklogOrder | null>(null)
   const [confirm, setConfirm] = useState<ConfirmState | null>(null)
+  const [withdrawOrder, setWithdrawOrder] = useState<BacklogOrder | null>(null)
   const [toast, setToast] = useState<{
     message: string
     type: 'error' | 'success' | 'info'
@@ -82,6 +86,7 @@ export function BacklogPage() {
       orders.map((o) => (o.id === order.id ? nextOrder : o)),
       nextPlant,
     )
+    logRecipeConfirmed(user, order.reference)
     showToast(d.confirmRecipeSuccess, 'success')
     setDetailOrder((current) => (current?.id === order.id ? nextOrder : current))
   }
@@ -146,6 +151,47 @@ export function BacklogPage() {
     return d.confirmCancel
   }
 
+  function handleWithdraw(order: BacklogOrder) {
+    if (!user || !canWithdrawProduction(user)) {
+      showToast(d.noPermission, 'error')
+      return
+    }
+    setWithdrawOrder(order)
+  }
+
+  const REASON_LABELS_ES: Record<WithdrawReason, string> = {
+    incident: 'Incidencia operativa',
+    reference_error: 'Error de referencia',
+    supervisor_decision: 'Decisión de supervisor',
+    other: 'Otro',
+  }
+
+  const REASON_LABELS_EN: Record<WithdrawReason, string> = {
+    incident: 'Operational incident',
+    reference_error: 'Reference error',
+    supervisor_decision: 'Supervisor decision',
+    other: 'Other',
+  }
+
+  function handleWithdrawConfirm(reason: WithdrawReason, comment: string) {
+    if (!user || !withdrawOrder) return
+    const labels = lang === 'es' ? REASON_LABELS_ES : REASON_LABELS_EN
+    const reasonLabel = labels[reason]
+    const fullReason = comment ? `${reasonLabel} — ${comment}` : reasonLabel
+    const result = withdrawOrderFromProduction(
+      orders,
+      plantTables,
+      withdrawOrder.id,
+      fullReason,
+      user.name,
+    )
+    persist(result.orders, result.plantTables)
+    logOrderWithdrawn(user, withdrawOrder.reference, fullReason)
+    setWithdrawOrder(null)
+    setDetailOrder(null)
+    showToast(d.withdrawSuccess, 'success')
+  }
+
   function handleRefresh() {
     const state = getState()
     persist(state.orders, state.plantTables)
@@ -200,6 +246,7 @@ export function BacklogPage() {
           onConfirmFinalize={handleConfirmFinalize}
           onViewDetail={setDetailOrder}
           onConfirmRecipe={handleConfirmRecipe}
+          onWithdraw={handleWithdraw}
         />
       )}
 
@@ -213,6 +260,11 @@ export function BacklogPage() {
         <OrderDetailModal
           order={detailOrder}
           onClose={() => setDetailOrder(null)}
+          onWithdraw={
+            canWithdrawProduction(user) && detailOrder.column === 'en_produccion'
+              ? () => handleWithdraw(detailOrder)
+              : undefined
+          }
           onMarkIncident={
             user.role === 'superadmin' && detailOrder.column !== 'finalizado'
               ? () => handleMarkIncident(detailOrder)
@@ -223,6 +275,14 @@ export function BacklogPage() {
               ? () => handleCancel(detailOrder)
               : undefined
           }
+        />
+      )}
+
+      {withdrawOrder && (
+        <WithdrawProductionModal
+          order={withdrawOrder}
+          onClose={() => setWithdrawOrder(null)}
+          onConfirm={handleWithdrawConfirm}
         />
       )}
 

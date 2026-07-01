@@ -26,6 +26,7 @@ export type ProductionVisualState =
   | 'temp_blocked'
   | 'element_blocked'
   | 'completed'
+  | 'withdrawn'
 
 export type ValidationTableStatus = 'pendiente' | 'validada' | 'conflicto' | 'parada'
 export type ValidationTableType = 'automatic' | 'manual'

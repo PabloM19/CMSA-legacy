@@ -7,7 +7,7 @@ import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../../types/backlog'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
-import { isSupervisor } from '../../../utils/permissions'
+import { canWithdrawProduction, isSupervisor } from '../../../utils/permissions'
 import { formatTableList, resolveAssignedTableIds } from '../../../utils/backlogStorage'
 import { getOrderStatusBadge } from '../../../utils/statusBadge'
 
@@ -19,8 +19,7 @@ interface BacklogOrderCardProps {
   onViewDetail: (order: BacklogOrder) => void
   onPrepare?: (order: BacklogOrder) => void
   onConfirmRecipe?: (order: BacklogOrder) => void
-  onMarkIncident?: (order: BacklogOrder) => void
-  onCancel?: (order: BacklogOrder) => void
+  onWithdraw?: (order: BacklogOrder) => void
 }
 
 export function BacklogOrderCard(props: BacklogOrderCardProps) {
@@ -39,6 +38,7 @@ function BacklogOrderCardContent({
   onViewDetail,
   onPrepare,
   onConfirmRecipe,
+  onWithdraw,
 }: {
   order: BacklogOrder
   compact?: boolean
@@ -47,6 +47,7 @@ function BacklogOrderCardContent({
   onViewDetail: (order: BacklogOrder) => void
   onPrepare?: (order: BacklogOrder) => void
   onConfirmRecipe?: (order: BacklogOrder) => void
+  onWithdraw?: (order: BacklogOrder) => void
 }) {
   const { user } = useAuth()
   const { t, lang } = useLanguage()
@@ -139,6 +140,19 @@ function BacklogOrderCardContent({
 
       <div className="backlog-card__actions">
         {renderPrimaryAction()}
+        {order.column === 'en_produccion' &&
+          !completed &&
+          onWithdraw &&
+          user &&
+          canWithdrawProduction(user) && (
+            <button
+              type="button"
+              className="backlog-card__btn backlog-card__btn--danger"
+              onClick={() => onWithdraw(order)}
+            >
+              {d.withdrawAction}
+            </button>
+          )}
         <button type="button" className="backlog-card__btn" onClick={() => onViewDetail(order)}>
           {d.viewDetail}
         </button>

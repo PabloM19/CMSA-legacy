@@ -20,7 +20,8 @@ import {
 } from '../../utils/newOrderViewHelpers'
 import { generateOrderId, generateOrderReference, saveCreatedOrder } from '../../utils/orderStorage'
 import { mergeCreatedOrder } from '../../utils/backlogStorage'
-import { logOrderCreated } from '../../utils/activityLogActions'
+import { logOrderCreated, logReferenceCreated } from '../../utils/activityLogActions'
+import { BacklogToast } from '../backlog/components/BacklogToast'
 import { isSupervisor } from '../../utils/permissions'
 import type { MockProduct } from '../../data/mockProducts'
 import { AddReferenceModal } from './components/AddReferenceModal'
@@ -82,6 +83,9 @@ export function NewOrderPage() {
   const [showAddReference, setShowAddReference] = useState(false)
   const [catalogVersion, setCatalogVersion] = useState(0)
   const [stepHint, setStepHint] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(
+    null,
+  )
 
   const companyLocked = user?.role === 'user'
   const canAddReference = user ? isSupervisor(user) : false
@@ -383,12 +387,22 @@ export function NewOrderPage() {
         />
       )}
 
-      {showAddReference && (
+      {showAddReference && user && (
         <AddReferenceModal
           onClose={() => setShowAddReference(false)}
-          onSaved={() => setCatalogVersion((v) => v + 1)}
+          onSaved={(product) => {
+            setCatalogVersion((v) => v + 1)
+            logReferenceCreated(user, product.referenciaProducto)
+            setToast({ message: d.addReferenceSuccess, type: 'success' })
+          }}
         />
       )}
+
+      <BacklogToast
+        message={toast?.message ?? null}
+        type={toast?.type}
+        onClear={() => setToast(null)}
+      />
     </div>
   )
 }
