@@ -206,7 +206,7 @@ export function ValidationPage() {
         orders,
         plantTables,
         order,
-        'en_ejecucion',
+        'en_produccion',
         user,
         lang,
       )

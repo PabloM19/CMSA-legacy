@@ -1,6 +1,6 @@
 import { CompanyBadge } from '../../../components/ui/StatusBadge'
 import { FormField, Input, Select } from '../../../components/ui/FormField'
-import { findProductById } from '../../../data/mockProducts'
+import { findProductById } from '../../../utils/productSearch'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { MockProduct } from '../../../data/mockProducts'
 import type { NewOrderFormData, NewOrderFormErrors, OrderCompany } from '../../../types/newOrder'
@@ -110,12 +110,18 @@ export function NewOrderStep1({
           />
         </FormField>
 
-        <FormField label={d.type} htmlFor="type" hint={fromCatalog ? d.autofilledHint : undefined}>
+        <FormField
+          label={d.barcode}
+          htmlFor="barcode"
+          hint={fromCatalog ? d.autofilledHint : undefined}
+        >
           <Input
-            id="type"
+            id="barcode"
+            readOnly={fromCatalog}
             className={fromCatalog ? 'order-field__input--catalog' : ''}
-            value={form.type}
-            onChange={(e) => onChange('type', e.target.value)}
+            value={form.barcode}
+            placeholder={d.barcodePlaceholder}
+            onChange={(e) => onChange('barcode', e.target.value)}
           />
         </FormField>
 

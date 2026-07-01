@@ -65,10 +65,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--app-surface-glass-strong);
   color: var(--color-gray-700);
 }
 
@@ -86,7 +86,7 @@
 }
 
 .dash-hero__title {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: -0.02em;
@@ -166,7 +166,7 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   background: var(--color-brand-pale);
   color: var(--color-brand-deep);
 }
@@ -198,7 +198,7 @@
   padding: var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-white);
+  background: var(--color-surface);
 }
 
 .dash-attention__item--critical,
@@ -249,13 +249,15 @@
   color: var(--color-brand-deep);
   text-decoration: none;
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-button);
   background: var(--color-brand-pale);
   white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
 }
 
 .dash-attention__action:hover {
   background: var(--color-brand-muted);
+  color: var(--color-brand-deep);
 }
 
 .dash-attention__empty {
@@ -278,7 +280,7 @@
   padding: var(--space-5);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
-  background: var(--color-white);
+  background: var(--color-surface);
 }
 
 .dash-active-cards__head {
@@ -315,6 +317,12 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+}
+
+.dash-active-cards__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .dash-active-cards__meta strong {
@@ -363,7 +371,7 @@
   padding: var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-white);
+  background: var(--color-surface);
 }
 
 .dash-relevant__head {
@@ -416,7 +424,7 @@
   gap: var(--space-1);
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--color-white);
+  background: var(--color-surface);
   border: 1px solid var(--color-gray-100);
 }
 
@@ -447,7 +455,7 @@
   padding: var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-white);
+  background: var(--color-surface);
 }
 
 .dash-capacity__head {

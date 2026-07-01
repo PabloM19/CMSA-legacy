@@ -62,10 +62,11 @@ export function getCardStatusSoftLabel(
   const map: Partial<Record<string, string>> = {
     waiting: d.iconWaitShort,
     blocked: d.iconBlockedShort,
-    conflict: d.iconWarningShort,
+    conflict: d.legendConflict,
     validated: d.iconValidatedShort,
+    preparing: d.legendPreparing,
     pending_validation: d.legendPending,
-    reserved: d.legendPending,
+    reserved: d.legendPreparing,
   }
   return map[status] ?? ''
 }

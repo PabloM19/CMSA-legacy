@@ -1,20 +1,20 @@
-import { ClipboardCheck, Map, Plus, RefreshCw } from 'lucide-react'
+import { Map, Plus, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
+import type { User } from '../../../types/auth'
 import { canAccessRoute } from '../../../utils/permissions'
 
-type ActionId = 'newOrder' | 'validation' | 'plantMap' | 'refresh'
+type ActionId = 'newOrder' | 'plantMap' | 'refresh'
 
 interface BacklogQuickActionsProps {
   onRefresh: () => void
 }
 
-function isVisible(id: ActionId, role: string): boolean {
+function isVisible(id: ActionId, user: User): boolean {
   if (id === 'refresh') return true
-  if (role === 'master') return true
-  if (role === 'validator') return id === 'validation' || id === 'plantMap'
-  if (role === 'user') return id === 'newOrder' || id === 'plantMap'
+  if (id === 'newOrder') return canAccessRoute(user, '/orders/new')
+  if (id === 'plantMap') return canAccessRoute(user, '/plant-map')
   return false
 }
 
@@ -41,20 +41,13 @@ export function BacklogQuickActions({ onRefresh }: BacklogQuickActionsProps) {
       hint: d.actionPlantHint,
     },
     {
-      id: 'validation' as const,
-      to: '/validation',
-      icon: ClipboardCheck,
-      label: d.actionValidation,
-      hint: d.actionValidationHint,
-    },
-    {
       id: 'refresh' as const,
       icon: RefreshCw,
       label: d.actionRefresh,
       hint: d.actionRefreshHint,
       onClick: onRefresh,
     },
-  ].filter((def) => isVisible(def.id, user.role))
+  ].filter((def) => isVisible(def.id, user))
 
   return (
     <section className="dash-quick">

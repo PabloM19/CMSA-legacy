@@ -257,7 +257,7 @@
   scroll-snap-align: start;
   padding: var(--space-md);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--app-surface-glass-strong);
   border: 1px solid rgba(0, 0, 0, 0.06);
   font-size: 0.8125rem;
 }
@@ -330,7 +330,7 @@
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-left-width: 3px;
   border-left-color: var(--color-gray-300);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--app-surface-glass-strong);
   font-size: 0.8125rem;
   text-align: left;
   cursor: default;

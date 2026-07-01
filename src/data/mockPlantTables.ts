@@ -35,7 +35,32 @@ export function applyUnassignedTableDemos(tables: PlantTable[]): PlantTable[] {
   })
 }
 
-/** Estado inicial de la planta mock (R1-R9, M1-M7). */
+/** Mesas base libres — demo limpia sin pedidos asignados. */
+export function createCleanPlantTables(): PlantTable[] {
+  const automatic = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9'].map((id) => ({
+    id,
+    name: id,
+    type: 'automatic' as const,
+    status: 'free' as const,
+    company: null,
+    orderId: null,
+    speedStatus: 'normal' as const,
+    alert: null,
+  }))
+  const manual = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7'].map((id) => ({
+    id,
+    name: id,
+    type: 'manual' as const,
+    status: 'free' as const,
+    company: null,
+    orderId: null,
+    speedStatus: null,
+    alert: null,
+  }))
+  return [...automatic, ...manual]
+}
+
+/** Estado inicial legacy de planta (referencia histórica). */
 export function createSeedPlantTables(): PlantTable[] {
   return [
     { id: 'R1', name: 'R1', type: 'automatic', status: 'pending_validation', company: 'SUMO', orderId: 'bk-3', speedStatus: 'normal', alert: null },
@@ -55,6 +80,11 @@ export function createSeedPlantTables(): PlantTable[] {
     { id: 'M6', name: 'M6', type: 'manual', status: 'free', company: null, orderId: null, speedStatus: null, alert: null },
     { id: 'M7', name: 'M7', type: 'manual', status: 'free', company: null, orderId: null, speedStatus: null, alert: null },
   ]
+}
+
+/** Paletizadores P1-P8 en estado base (inactivos, sin alertas). */
+export function createCleanPalletizers(): PlantPalletizerElement[] {
+  return ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'].map((id) => palletizer(id))
 }
 
 /** Paletizadores P1-P8 — fila secundaria, estados mock estables. */

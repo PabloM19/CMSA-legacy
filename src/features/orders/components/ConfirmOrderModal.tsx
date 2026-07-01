@@ -1,8 +1,8 @@
-import { AlertTriangle, LayoutGrid, Gauge, Clock } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { CompanyBadge } from '../../../components/ui/StatusBadge'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { NewOrderFormData, OrderCalculation } from '../../../types/newOrder'
-import { getAssignmentDisplayType } from '../../../utils/newOrderViewHelpers'
+import { BarcodeDisplay } from './BarcodeDisplay'
 
 interface ConfirmOrderModalProps {
   form: NewOrderFormData
@@ -24,113 +24,97 @@ export function ConfirmOrderModal({
   const { t } = useLanguage()
   const d = t.newOrder
 
-  const assignmentType = getAssignmentDisplayType(calculation)
-  const assignmentLabel =
-    assignmentType === 'automatic'
-      ? d.assignmentAutomatic
-      : assignmentType === 'manual'
-        ? d.assignmentManual
-        : d.assignmentMixed
+  const productLine =
+    form.productName.trim() || (form.product.trim() && form.variety.trim()
+      ? `${form.product} · ${form.variety}`
+      : '—')
 
   return (
     <div className="order-modal-overlay" role="presentation" onClick={onModify}>
       <div
-        className={`order-modal order-modal--wizard order-card--${form.company.toLowerCase()}`}
+        className="order-modal order-modal--wizard order-modal--neutral order-modal--compact"
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-order-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="order-modal__head">
+        <header className="order-modal__head order-modal__head--compact">
           <h2 id="confirm-order-title" className="order-modal__title">
             {d.confirmTitle}
           </h2>
-          <p className="order-modal__subtitle">{d.step4Desc}</p>
         </header>
 
-        <div className="order-modal__body">
-          <section className="order-modal__hero dash-card">
-            <div className="order-modal__hero-main">
-              <span className="order-modal__ref">{form.productReference || form.productName}</span>
-              <CompanyBadge company={form.company} />
+        <div className="order-modal__body order-modal__body--compact">
+          <dl className="order-modal__grid-compact">
+            <div className="order-modal__grid-item">
+              <dt>{d.productReference}</dt>
+              <dd>{form.productReference || '—'}</dd>
             </div>
-            <p className="order-modal__product">
-              {form.productName || `${form.product} · ${form.variety}`}
-            </p>
-            {form.productReference && form.productName && (
-              <p className="order-modal__product-sub">
-                {form.product} · {form.variety}
-              </p>
-            )}
-          </section>
-
-          <div className="order-modal__impact-grid">
-            <article className="order-modal__impact-card">
-              <LayoutGrid size={18} aria-hidden="true" />
-              <span>{d.requiredTables}</span>
-              <strong>{calculation.requiredTables}</strong>
-            </article>
-            <article className="order-modal__impact-card">
-              <Clock size={18} aria-hidden="true" />
-              <span>{d.estimatedEnd}</span>
-              <strong>{calculation.estimatedEnd}</strong>
-            </article>
-            <article className="order-modal__impact-card">
-              <Gauge size={18} aria-hidden="true" />
-              <span>{d.capacityConsumed}</span>
-              <strong>{calculation.capacityConsumed}%</strong>
-            </article>
-          </div>
-
-          <dl className="order-modal__dl">
-            <div className="order-modal__row">
+            <div className="order-modal__grid-item">
+              <dt>{d.company}</dt>
+              <dd>
+                <CompanyBadge company={form.company} />
+              </dd>
+            </div>
+            <div className="order-modal__grid-item order-modal__grid-item--full">
+              <dt>{d.barcode}</dt>
+              <dd>
+                {form.barcode ? (
+                  <BarcodeDisplay value={form.barcode} />
+                ) : (
+                  '—'
+                )}
+              </dd>
+            </div>
+            <div className="order-modal__grid-item order-modal__grid-item--full">
+              <dt>{d.product}</dt>
+              <dd>{productLine}</dd>
+            </div>
+            <div className="order-modal__grid-item">
               <dt>{d.boxes}</dt>
               <dd>{boxes.toLocaleString()}</dd>
             </div>
-            <div className="order-modal__row">
+            <div className="order-modal__grid-item">
               <dt>{d.boxesPerHour}</dt>
               <dd>{boxesPerHour.toLocaleString()}</dd>
             </div>
-            <div className="order-modal__row">
-              <dt>{d.assignmentType}</dt>
-              <dd>{assignmentLabel}</dd>
+            <div className="order-modal__grid-item">
+              <dt>{d.requiredTables}</dt>
+              <dd>{calculation.requiredTables}</dd>
             </div>
-            <div className="order-modal__row">
+            <div className="order-modal__grid-item">
               <dt>{d.eta}</dt>
               <dd>{calculation.eta}</dd>
             </div>
+            <div className="order-modal__grid-item order-modal__grid-item--full">
+              <dt>{d.estimatedEnd}</dt>
+              <dd>{calculation.estimatedEnd}</dd>
+            </div>
           </dl>
 
-          <section className="order-modal__section">
-            <h3 className="order-modal__section-title">{d.alerts}</h3>
-            {calculation.alerts.length === 0 ? (
-              <p className="order-modal__no-alerts">{d.noAlerts}</p>
-            ) : (
-              <ul className="order-modal__alerts">
-                {calculation.alerts.map((alert) => (
-                  <li
-                    key={alert.message}
-                    className={`order-modal__alert order-modal__alert--${alert.type}`}
-                  >
-                    <AlertTriangle size={14} aria-hidden="true" />
-                    {alert.message}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <p className="order-modal__notice">{d.criticalNotice}</p>
+          {calculation.alerts.length > 0 && (
+            <ul className="order-modal__alerts order-modal__alerts--compact">
+              {calculation.alerts.map((alert) => (
+                <li
+                  key={alert.message}
+                  className={`order-modal__alert order-modal__alert--${alert.type}`}
+                >
+                  <AlertTriangle size={14} aria-hidden="true" />
+                  {alert.message}
+                </li>
+              ))}
+            </ul>
+          )}
 
           {calculation.blocked && (
             <p className="order-modal__blocked" role="alert">
               <strong>{d.acceptBlocked}</strong>
-              <span>{d.acceptBlockedHint}</span>
+              <span>{calculation.blockReason ?? d.acceptBlockedHint}</span>
             </p>
           )}
         </div>
 
-        <div className="order-modal__actions">
+        <div className="order-modal__actions order-modal__actions--sticky">
           <button type="button" className="order-btn order-btn--ghost order-btn--large" onClick={onModify}>
             {d.modify}
           </button>

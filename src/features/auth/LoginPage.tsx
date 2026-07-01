@@ -2,13 +2,12 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CmsaLogo } from '../../components/ui/CmsaLogo'
+import { CmsaBackgroundDecor } from '../../components/layout/CmsaBackgroundDecor'
 import { LangSwitcher } from '../../components/ui/LangSwitcher'
-import { mockCredentials } from '../../data/mockUsers'
+import { getVisibleMockCredentials } from '../../data/mockUsers'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { authenticate, getPostLoginPath } from '../../utils/auth'
 import { useAuth } from './AuthContext'
-import { CmsaBackgroundDecor } from '../../components/layout/CmsaBackgroundDecor'
 import './login.css'
 
 const LOGIN_DELAY_MS = 600
@@ -100,9 +99,6 @@ export function LoginPage() {
 
       <div className="login-page__inner">
         <header className="login-page__heading">
-          <div className="login-page__logo-wrap">
-            <CmsaLogo variant="light" size="lg" />
-          </div>
           <h1 className="login-page__title">{copy.title}</h1>
           <p className="login-page__subtitle">{copy.subtitle}</p>
         </header>
@@ -186,11 +182,11 @@ export function LoginPage() {
               <div className="login-card__help-panel">
                 <p className="login-card__help-title">{copy.helpTitle}</p>
                 <ul className="login-card__help-list">
-                  {mockCredentials.map((cred) => (
+                  {getVisibleMockCredentials().map((cred) => (
                     <li key={cred.username}>
                       <code>{cred.username}</code> / <code>{cred.password}</code>
                       {' → '}
-                      {cred.user.company} · {cred.user.role}
+                      {cred.user.company} · {cred.roleLabel ?? cred.user.role}
                     </li>
                   ))}
                 </ul>

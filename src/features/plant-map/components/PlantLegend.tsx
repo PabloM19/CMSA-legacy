@@ -1,84 +1,117 @@
 import {
   AlertTriangle,
-  Check,
-  Clock,
-  OctagonAlert,
-  Pause,
+  Ban,
+  Lock,
+  PauseCircle,
+  TrendingDown,
+  TrendingUp,
 } from 'lucide-react'
 import { useLanguage } from '../../../i18n/LanguageContext'
 
-const ICON_LEGEND_SIZE = 18
+const ICON_SIZE = 14
 
 export function PlantLegend() {
   const { t } = useLanguage()
   const d = t.plantMap
 
-  const colorItems = [
-    { className: 'plant-legend__swatch plant-legend__swatch--sumo', label: d.legendSumo },
-    { className: 'plant-legend__swatch plant-legend__swatch--maf', label: d.legendMaf },
-    { className: 'plant-legend__swatch plant-legend__swatch--free', label: d.legendFree },
-    { className: 'plant-legend__swatch plant-legend__swatch--pending', label: d.legendPending },
-    { className: 'plant-legend__swatch plant-legend__swatch--occupied', label: d.legendOccupied },
-    { className: 'plant-legend__swatch plant-legend__swatch--waiting', label: d.iconWaitShort },
-    { className: 'plant-legend__swatch plant-legend__swatch--blocked', label: d.iconBlockedShort },
+  const companyItems = [
+    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--sumo', label: d.legendSumoStripe },
+    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--maf', label: d.legendMafStripe },
   ]
 
-  const iconItems = [
-    { key: 'slow', content: <span className="plant-legend__emoji" aria-hidden="true">🐢</span>, label: d.iconSlowLong },
-    { key: 'fast', content: <span className="plant-legend__emoji" aria-hidden="true">🐇</span>, label: d.iconFastLong },
+  const colorItems = [
+    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--occupied', label: d.legendOccupied },
+    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--waiting', label: d.legendColorWaiting },
+    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--blocked', label: d.legendColorBlocked },
     {
-      key: 'warn',
-      content: <AlertTriangle size={ICON_LEGEND_SIZE} aria-hidden="true" />,
-      label: d.iconWarningLong,
+      className: 'plant-legend__chip-swatch plant-legend__chip-swatch--critical',
+      label: d.legendColorCriticalBlink,
+    },
+    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--preparing', label: d.legendColorPreparing },
+    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--free', label: d.legendFree },
+  ]
+
+  const topIcons = [
+    {
+      key: 'slow',
+      icon: <TrendingDown size={ICON_SIZE} aria-hidden="true" />,
+      label: d.legendIconSlow,
     },
     {
-      key: 'wait',
-      content: <Pause size={ICON_LEGEND_SIZE} aria-hidden="true" />,
-      label: d.iconWaitLong,
+      key: 'fast',
+      icon: <TrendingUp size={ICON_SIZE} aria-hidden="true" />,
+      label: d.legendIconFast,
+    },
+  ]
+
+  const bottomIcons = [
+    {
+      key: 'alarm',
+      icon: <AlertTriangle size={ICON_SIZE} aria-hidden="true" />,
+      label: d.legendIconAlarm,
     },
     {
-      key: 'check',
-      content: <Check size={ICON_LEGEND_SIZE} aria-hidden="true" />,
-      label: d.iconCheckLegend,
+      key: 'pause',
+      icon: <PauseCircle size={ICON_SIZE} aria-hidden="true" />,
+      label: d.legendIconPause,
+    },
+    {
+      key: 'lock',
+      icon: <Lock size={ICON_SIZE} aria-hidden="true" />,
+      label: d.legendIconLock,
     },
     {
       key: 'block',
-      content: <OctagonAlert size={ICON_LEGEND_SIZE} aria-hidden="true" />,
-      label: d.iconBlockedLong,
-    },
-    {
-      key: 'clock',
-      content: <Clock size={ICON_LEGEND_SIZE} aria-hidden="true" />,
-      label: d.iconClockLong,
+      icon: <Ban size={ICON_SIZE} aria-hidden="true" />,
+      label: d.legendConflict,
     },
   ]
 
   return (
-    <section className="plant-legend dash-card" aria-label={d.legendTitle}>
-      <div className="plant-legend__section">
-        <h2 className="plant-legend__title">{d.colorLegendTitle}</h2>
-        <ul className="plant-legend__list">
-          {colorItems.map((item) => (
-            <li key={item.label} className="plant-legend__item">
-              <span className={item.className} aria-hidden="true" />
-              <span>{item.label}</span>
-            </li>
-          ))}
-        </ul>
+    <section className="plant-legend plant-legend--compact dash-card" aria-label={d.legendTitle}>
+      <h2 className="plant-legend__compact-title">{d.legendTitle}</h2>
+      <p className="plant-legend__placement-note">{d.legendIconPlacementNote}</p>
+
+      <div className="plant-legend__compact-row">
+        {companyItems.map((item) => (
+          <span key={item.label} className="plant-legend__chip">
+            <span className={item.className} aria-hidden="true" />
+            {item.label}
+          </span>
+        ))}
       </div>
 
-      <div className="plant-legend__section plant-legend__section--icons">
-        <h2 className="plant-legend__title">{d.iconLegendTitle}</h2>
-        <ul className="plant-legend__icon-list">
-          {iconItems.map((item) => (
-            <li key={item.key} className="plant-legend__icon-item">
-              <span className="plant-legend__icon-mark" aria-hidden="true">
-                {item.content}
-              </span>
-              <span className="plant-legend__icon-text">{item.label}</span>
-            </li>
-          ))}
-        </ul>
+      <div className="plant-legend__compact-row">
+        {colorItems.map((item) => (
+          <span key={item.label} className="plant-legend__chip">
+            <span className={item.className} aria-hidden="true" />
+            {item.label}
+          </span>
+        ))}
+      </div>
+
+      <div className="plant-legend__compact-row plant-legend__compact-row--icons">
+        <span className="plant-legend__icon-group-label">{d.legendIconsTopLabel}</span>
+        {topIcons.map((item) => (
+          <span key={item.key} className="plant-legend__chip plant-legend__chip--icon">
+            <span className="plant-legend__chip-icon" aria-hidden="true">
+              {item.icon}
+            </span>
+            {item.label}
+          </span>
+        ))}
+      </div>
+
+      <div className="plant-legend__compact-row plant-legend__compact-row--icons">
+        <span className="plant-legend__icon-group-label">{d.legendIconsBottomLabel}</span>
+        {bottomIcons.map((item) => (
+          <span key={item.key} className="plant-legend__chip plant-legend__chip--icon">
+            <span className="plant-legend__chip-icon" aria-hidden="true">
+              {item.icon}
+            </span>
+            {item.label}
+          </span>
+        ))}
       </div>
     </section>
   )

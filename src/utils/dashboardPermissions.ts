@@ -5,7 +5,7 @@ import type { Company } from '../types/auth'
 type OrderCompany = Extract<Company, 'SUMO' | 'MAF'>
 
 export function canActOnOrder(user: User, orderCompany: OrderCompany): boolean {
-  if (user.role === 'master') return true
+  if (user.role === 'superadmin' || user.role === 'supervisor') return true
   if (user.role !== 'user') return false
   return user.company === orderCompany
 }
@@ -17,7 +17,7 @@ export function getActionDisabledReason(
 ): string | null {
   if (canActOnOrder(user, orderCompany)) return null
 
-  if (user.role === 'master') return null
+  if (user.role === 'superadmin') return null
 
   if (user.company === 'SUMO' && orderCompany === 'MAF') {
     return lang === 'es'

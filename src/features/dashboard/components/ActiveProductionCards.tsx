@@ -1,8 +1,17 @@
-import { AlertTriangle, Clock } from 'lucide-react'
+import {
+  Activity,
+  AlertTriangle,
+  CalendarClock,
+  CheckCircle2,
+  Clock,
+  LayoutGrid,
+  Package,
+  PauseCircle,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { CompanyBadge, StatusBadge } from '../../../components/ui/StatusBadge'
 import { useLanguage } from '../../../i18n/LanguageContext'
-import type { ActiveProductionItem, DashboardOrder } from '../../../types/dashboard'
+import type { ActiveProductionItem, DashboardOrder, DashboardOrderStatus } from '../../../types/dashboard'
 import { enrichProductionItem } from '../../../utils/dashboardHelpers'
 import { getDashboardOrderStatusBadge } from '../../../utils/statusBadge'
 
@@ -10,6 +19,21 @@ interface ActiveProductionCardsProps {
   items: ActiveProductionItem[]
   orders: DashboardOrder[]
   maxItems?: number
+}
+
+function StatusIcon({ status }: { status: DashboardOrderStatus }) {
+  switch (status) {
+    case 'active':
+      return <Activity size={14} aria-hidden="true" />
+    case 'finishing':
+      return <CheckCircle2 size={14} aria-hidden="true" />
+    case 'delayed':
+      return <AlertTriangle size={14} aria-hidden="true" />
+    case 'validation':
+      return <PauseCircle size={14} aria-hidden="true" />
+    default:
+      return <PauseCircle size={14} aria-hidden="true" />
+  }
 }
 
 export function ActiveProductionCards({
@@ -30,6 +54,7 @@ export function ActiveProductionCards({
       <div className="dash-active-cards__grid">
         {visible.map((item) => {
           const enriched = enrichProductionItem(item, orders)
+          const order = orders.find((o) => o.reference === item.reference)
           const statusBadge = enriched.status
             ? getDashboardOrderStatusBadge(enriched.status, lang)
             : null
@@ -58,7 +83,8 @@ export function ActiveProductionCards({
               </p>
 
               <div className="dash-active-cards__meta">
-                <span>
+                <span className="dash-active-cards__meta-item">
+                  <LayoutGrid size={14} aria-hidden="true" />
                   {d.tables}: <strong>{item.occupiedTables.join(', ')}</strong>
                 </span>
                 <span className="dash-active-cards__meta-item">
@@ -66,14 +92,30 @@ export function ActiveProductionCards({
                   {d.remaining}: <strong>{item.remainingMinutes} {d.minutes}</strong>
                 </span>
                 {enriched.estimatedEnd && (
-                  <span>
+                  <span className="dash-active-cards__meta-item">
+                    <CalendarClock size={14} aria-hidden="true" />
                     {d.endTime}: <strong>{enriched.estimatedEnd}</strong>
                   </span>
                 )}
+                {order && (
+                  <>
+                    <span className="dash-active-cards__meta-item">
+                      <Package size={14} aria-hidden="true" />
+                      {d.colBoxes}: <strong>{order.boxes}</strong>
+                    </span>
+                    <span className="dash-active-cards__meta-item">
+                      <Activity size={14} aria-hidden="true" />
+                      {d.colRate}: <strong>{order.boxesPerHour}</strong>
+                    </span>
+                  </>
+                )}
               </div>
 
-              {statusBadge && (
-                <StatusBadge label={statusBadge.label} variant={statusBadge.variant} />
+              {statusBadge && enriched.status && (
+                <span className="dash-active-cards__status">
+                  <StatusIcon status={enriched.status} />
+                  <StatusBadge label={statusBadge.label} variant={statusBadge.variant} />
+                </span>
               )}
 
               {item.alert && (
@@ -93,7 +135,7 @@ export function ActiveProductionCards({
 
       {hasMore && (
         <Link to="/backlog" className="dash-active-cards__more">
-          {d.viewAllBacklog}
+          {d.viewAllQueue}
         </Link>
       )}
     </section>

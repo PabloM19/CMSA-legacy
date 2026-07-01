@@ -93,7 +93,7 @@ export function syncOrderValidationState(order: BacklogOrder, lang: Lang = 'es')
   } else if (
     !allValidated &&
     tables.length > 0 &&
-    order.column === 'pendiente_validacion'
+    order.column === 'en_preparacion'
   ) {
     alerts = [...alerts, lang === 'es' ? PENDING_ALERT_ES : PENDING_ALERT_EN]
   }
@@ -121,7 +121,7 @@ export function normalizeOrderValidation(order: BacklogOrder, lang: Lang = 'es')
     auditTrail: [...order.auditTrail],
   }
 
-  if (updated.column === 'pendiente_validacion') {
+  if (updated.column === 'en_preparacion') {
     if (updated.validationTables.length === 0) {
       updated.validationTables = createValidationTables(updated)
       updated.assignedTableIds = updated.validationTables
@@ -165,7 +165,7 @@ export function normalizeOrdersValidation(orders: BacklogOrder[], lang: Lang = '
 }
 
 export function computeValidationKpis(orders: BacklogOrder[]) {
-  const pendingOrders = orders.filter((o) => o.column === 'pendiente_validacion')
+  const pendingOrders = orders.filter((o) => o.column === 'en_preparacion')
   let pendingTables = 0
   let validatedTables = 0
   let activeConflicts = 0
@@ -187,7 +187,7 @@ export function computeValidationKpis(orders: BacklogOrder[]) {
 
 export function getPendingValidationOrders(orders: BacklogOrder[]): BacklogOrder[] {
   return orders
-    .filter((o) => o.column === 'pendiente_validacion')
+    .filter((o) => o.column === 'en_preparacion')
     .sort((a, b) => a.priority - b.priority)
 }
 

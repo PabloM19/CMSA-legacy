@@ -17,7 +17,7 @@ import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogColumnId, BacklogOrder } from '../../../types/backlog'
 import type { PlantTable } from '../../../types/plant'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
-import { evaluateMove } from '../../../utils/backlogRules'
+import { evaluateMove, MAIN_BOARD_COLUMNS } from '../../../utils/backlogRules'
 import { executeColumnMove } from '../../../utils/backlogMove'
 import { filterOrdersForView } from '../../../utils/backlogViewFilters'
 import {
@@ -28,6 +28,7 @@ import {
 import { BACKLOG_COLUMNS, BacklogColumn } from './BacklogColumn'
 import { BacklogColumnDrawer } from './BacklogColumnDrawer'
 import { BacklogBoardScrollArea } from './BacklogBoardScrollArea'
+import { PrepareObjectiveModal } from './PrepareObjectiveModal'
 
 interface BacklogBoardProps {
   orders: BacklogOrder[]
@@ -38,23 +39,33 @@ interface BacklogBoardProps {
   onDragStart: (id: string | null) => void
   onOrdersChange: (orders: BacklogOrder[], plantTables: PlantTable[]) => void
   onToast: (message: string, type: 'error' | 'success' | 'info') => void
-  onConfirmIncident: (order: BacklogOrder) => void
   onConfirmFinalize: (order: BacklogOrder) => void
   onViewDetail: (order: BacklogOrder) => void
-  onSendValidation: (order: BacklogOrder) => void
-  onMarkIncident: (order: BacklogOrder) => void
-  onCancel: (order: BacklogOrder) => void
-  onValidateTables: (order: BacklogOrder) => void
+  onConfirmRecipe: (order: BacklogOrder) => void
 }
 
 function findColumn(id: string, orders: BacklogOrder[]): BacklogColumnId | null {
   if (BACKLOG_COLUMNS.includes(id as BacklogColumnId)) return id as BacklogColumnId
-  return orders.find((o) => o.id === id)?.column ?? null
+  const order = orders.find((o) => o.id === id)
+  if (!order) return null
+  if (order.column === 'finalizado') return 'en_produccion'
+  return order.column
 }
 
 function sortColumnOrders(orders: BacklogOrder[], columnId: BacklogColumnId): BacklogOrder[] {
+  if (columnId === 'en_produccion') {
+    return orders
+      .filter((o) => o.column === 'en_produccion')
+      .sort((a, b) => a.priority - b.priority)
+  }
   return orders
     .filter((o) => o.column === columnId)
+    .sort((a, b) => a.priority - b.priority)
+}
+
+function sortCompletedOrders(orders: BacklogOrder[]): BacklogOrder[] {
+  return orders
+    .filter((o) => o.column === 'finalizado')
     .sort((a, b) => a.priority - b.priority)
 }
 
@@ -67,19 +78,16 @@ export function BacklogBoard({
   onDragStart,
   onOrdersChange,
   onToast,
-  onConfirmIncident,
   onConfirmFinalize,
   onViewDetail,
-  onSendValidation,
-  onMarkIncident,
-  onCancel,
-  onValidateTables,
+  onConfirmRecipe,
 }: BacklogBoardProps) {
   const { user } = useAuth()
   const { t, lang } = useLanguage()
   const d = t.backlog
 
-  const [drawerColumn, setDrawerColumn] = useState<BacklogColumnId | null>(null)
+  const [drawerColumn, setDrawerColumn] = useState<BacklogColumnId | 'finalizado' | null>(null)
+  const [prepareOrder, setPrepareOrder] = useState<BacklogOrder | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -91,23 +99,29 @@ export function BacklogBoard({
     [orders, viewMode, user],
   )
 
+  const completedOrders = useMemo(
+    () => sortCompletedOrders(filteredOrders),
+    [filteredOrders],
+  )
+
   const visibleLimit = resolveVisibleLimit(viewMode, density)
   const scrollable = viewMode === 'full'
   const compactCards = viewMode !== 'full'
   const isSummaryMode = viewMode === 'summary'
 
+  const isCompletedView = viewMode === 'completed'
+  const isInProgressView = viewMode === 'in_progress'
+
   const boardEmpty =
-    (viewMode === 'attention' || viewMode === 'mine') && filteredOrders.length === 0
+    (isInProgressView || isCompletedView) && filteredOrders.length === 0
 
   const emptyBoardMessage =
-    viewMode === 'attention' ? d.emptyAttention : viewMode === 'mine' ? d.emptyMine : ''
+    isInProgressView ? d.emptyInProgress : isCompletedView ? d.emptyCompleted : ''
 
   const columnEmptyMessage =
-    viewMode === 'attention'
-      ? d.emptyAttentionColumn
-      : viewMode === 'mine'
-        ? d.emptyMineColumn
-        : undefined
+    isInProgressView ? d.emptyInProgressColumn : undefined
+
+  const showCompletedInProduction = !isCompletedView && !isInProgressView
 
   const activeOrder = activeDragId ? orders.find((o) => o.id === activeDragId) : null
 
@@ -130,41 +144,39 @@ export function BacklogBoard({
     const targetColumn = findColumn(overId, orders)
     if (!targetColumn) return
 
-    if (targetColumn === order.column) {
-      const colOrders = orders
-        .filter((o) => o.column === targetColumn)
-        .sort((a, b) => a.priority - b.priority)
+    const effectiveTarget =
+      targetColumn === 'en_produccion' && order.column === 'finalizado'
+        ? order.column
+        : targetColumn
 
-      const oldIndex = colOrders.findIndex((o) => o.id === activeId)
-      let newIndex = colOrders.findIndex((o) => o.id === overId)
-      if (newIndex === -1) newIndex = colOrders.length - 1
+    if (effectiveTarget === order.column || (order.column === 'finalizado' && targetColumn === 'en_produccion')) {
+      if (order.column !== 'finalizado' && targetColumn === order.column) {
+        const colOrders = sortColumnOrders(orders, targetColumn)
+        const oldIndex = colOrders.findIndex((o) => o.id === activeId)
+        let newIndex = colOrders.findIndex((o) => o.id === overId)
+        if (newIndex === -1) newIndex = colOrders.length - 1
+        if (oldIndex === -1 || oldIndex === newIndex) return
 
-      if (oldIndex === -1 || oldIndex === newIndex) return
+        if (!canActOnOrder(user, order.company)) {
+          onToast(d.noPermission, 'error')
+          return
+        }
 
-      if (!canActOnOrder(user, order.company)) {
-        onToast(
-          lang === 'es'
-            ? 'Acción no permitida para tu empresa.'
-            : 'Action not allowed for your company.',
-          'error',
-        )
-        return
+        const reordered = arrayMove(colOrders, oldIndex, newIndex)
+        const next = orders.map((o) => {
+          if (o.column !== targetColumn) return o
+          const idx = reordered.findIndex((r) => r.id === o.id)
+          return idx >= 0 ? { ...o, priority: idx + 1 } : o
+        })
+        onOrdersChange(next, plantTables)
       }
-
-      const reordered = arrayMove(colOrders, oldIndex, newIndex)
-      const next = orders.map((o) => {
-        if (o.column !== targetColumn) return o
-        const idx = reordered.findIndex((r) => r.id === o.id)
-        return idx >= 0 ? { ...o, priority: idx + 1 } : o
-      })
-      onOrdersChange(next, plantTables)
       return
     }
 
-    const result = evaluateMove(user, order, targetColumn, lang)
+    const result = evaluateMove(user, order, effectiveTarget, lang)
 
-    if (result.needsConfirm && result.confirmAction === 'incident') {
-      onConfirmIncident(order)
+    if (result.needsPrepareModal) {
+      setPrepareOrder(order)
       return
     }
 
@@ -182,7 +194,7 @@ export function BacklogBoard({
       orders,
       plantTables,
       order,
-      targetColumn,
+      effectiveTarget,
       user,
       lang,
     )
@@ -193,33 +205,18 @@ export function BacklogBoard({
     }
 
     onOrdersChange(moveResult.orders, moveResult.plantTables)
-
-    if (result.message) {
-      onToast(result.message, result.toastType ?? 'success')
-    }
+    if (result.message) onToast(result.message, result.toastType ?? 'success')
   }
 
   function handlePrepare(order: BacklogOrder) {
-    if (!user) return
-    const result = evaluateMove(user, order, 'pendiente_lanzamiento', lang)
-    if (!result.ok) {
-      onToast(result.message ?? '', result.toastType ?? 'error')
-      return
-    }
-    const moveResult = executeColumnMove(
-      orders,
-      plantTables,
-      order,
-      'pendiente_lanzamiento',
-      user,
-      lang,
-    )
-    if (!moveResult.success) {
-      onToast(moveResult.message ?? '', 'error')
-      return
-    }
-    onOrdersChange(moveResult.orders, moveResult.plantTables)
-    if (result.message) onToast(result.message, result.toastType ?? 'success')
+    setPrepareOrder(order)
+  }
+
+  function handlePrepareConfirm(nextOrder: BacklogOrder, nextPlant: PlantTable[]) {
+    const nextOrders = orders.map((o) => (o.id === nextOrder.id ? nextOrder : o))
+    onOrdersChange(nextOrders, nextPlant)
+    setPrepareOrder(null)
+    onToast(d.prepareSuccess, 'success')
   }
 
   return (
@@ -235,39 +232,71 @@ export function BacklogBoard({
         onDragEnd={handleDragEnd}
       >
         <BacklogBoardScrollArea hidden={boardEmpty}>
-          <div className={`backlog-board${boardEmpty ? ' backlog-board--hidden' : ''}`}>
-            {BACKLOG_COLUMNS.map((columnId) => {
-              const columnOrders = sortColumnOrders(filteredOrders, columnId)
-              const allInColumn = sortColumnOrders(orders, columnId)
-              const sourceForLimit = isSummaryMode ? allInColumn : columnOrders
+          <div
+            className={`backlog-board${boardEmpty ? ' backlog-board--hidden' : ''}${isCompletedView ? ' backlog-board--completed-only' : ''}`}
+          >
+            {isCompletedView ? (
+              <BacklogColumn
+                key="finalizado"
+                columnId="finalizado"
+                orders={completedOrders}
+                allOrdersInColumn={completedOrders}
+                visibleLimit={visibleLimit}
+                scrollable={scrollable}
+                compactCards={compactCards}
+                summaryMode={isSummaryMode}
+                emptyMessage={d.emptyCompleted}
+                onViewAll={
+                  visibleLimit != null && completedOrders.length > visibleLimit
+                    ? () => setDrawerColumn('finalizado')
+                    : undefined
+                }
+                onViewDetail={onViewDetail}
+                onPrepare={handlePrepare}
+                onConfirmRecipe={onConfirmRecipe}
+              />
+            ) : (
+              MAIN_BOARD_COLUMNS.map((columnId) => {
+                const columnOrders = sortColumnOrders(filteredOrders, columnId)
+                const allInColumn = sortColumnOrders(orders, columnId)
+                const sourceForLimit = isSummaryMode ? allInColumn : columnOrders
 
-              return (
-                <BacklogColumn
-                  key={columnId}
-                  columnId={columnId}
-                  orders={columnOrders}
-                  allOrdersInColumn={sourceForLimit}
-                  visibleLimit={visibleLimit}
-                  scrollable={scrollable}
-                  compactCards={compactCards}
-                  summaryMode={isSummaryMode}
-                  emptyMessage={columnEmptyMessage}
-                  onViewAll={
-                    isSummaryMode &&
-                    visibleLimit != null &&
-                    sourceForLimit.length > visibleLimit
-                      ? () => setDrawerColumn(columnId)
-                      : undefined
-                  }
-                  onViewDetail={onViewDetail}
-                  onSendValidation={onSendValidation}
-                  onPrepare={handlePrepare}
-                  onMarkIncident={onMarkIncident}
-                  onCancel={onCancel}
-                  onValidateTables={onValidateTables}
-                />
-              )
-            })}
+                return (
+                  <BacklogColumn
+                    key={columnId}
+                    columnId={columnId}
+                    orders={columnOrders}
+                    completedOrders={
+                      showCompletedInProduction && columnId === 'en_produccion'
+                        ? completedOrders
+                        : []
+                    }
+                    allOrdersInColumn={sourceForLimit}
+                    visibleLimit={visibleLimit}
+                    scrollable={scrollable}
+                    compactCards={compactCards}
+                    summaryMode={isSummaryMode}
+                    emptyMessage={columnEmptyMessage}
+                    onViewAll={
+                      visibleLimit != null && sourceForLimit.length > visibleLimit
+                        ? () => setDrawerColumn(columnId)
+                        : undefined
+                    }
+                    onViewAllCompleted={
+                      showCompletedInProduction &&
+                      columnId === 'en_produccion' &&
+                      visibleLimit != null &&
+                      completedOrders.length > visibleLimit
+                        ? () => setDrawerColumn('finalizado')
+                        : undefined
+                    }
+                    onViewDetail={onViewDetail}
+                    onPrepare={handlePrepare}
+                    onConfirmRecipe={onConfirmRecipe}
+                  />
+                )
+              })
+            )}
           </div>
         </BacklogBoardScrollArea>
 
@@ -284,15 +313,30 @@ export function BacklogBoard({
 
       {drawerColumn && (
         <BacklogColumnDrawer
-          columnId={drawerColumn}
-          orders={sortColumnOrders(
-            viewMode === 'summary' ? orders : filteredOrders,
-            drawerColumn,
-          )}
+          columnId={drawerColumn === 'finalizado' ? 'finalizado' : drawerColumn}
+          orders={
+            drawerColumn === 'finalizado'
+              ? sortCompletedOrders(
+                  viewMode === 'summary' || viewMode === 'full' ? orders : filteredOrders,
+                )
+              : sortColumnOrders(
+                  viewMode === 'summary' || viewMode === 'full' ? orders : filteredOrders,
+                  drawerColumn,
+                )
+          }
           onClose={() => setDrawerColumn(null)}
           onViewDetail={onViewDetail}
-          onSendValidation={onSendValidation}
           onPrepare={handlePrepare}
+          onConfirmRecipe={onConfirmRecipe}
+        />
+      )}
+
+      {prepareOrder && (
+        <PrepareObjectiveModal
+          order={prepareOrder}
+          plantTables={plantTables}
+          onClose={() => setPrepareOrder(null)}
+          onConfirm={handlePrepareConfirm}
         />
       )}
     </>

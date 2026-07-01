@@ -183,8 +183,8 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
                     onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
                   >
                     <option value="user">{t.roles.user}</option>
-                    <option value="validator">{t.roles.validator}</option>
-                    <option value="master">{t.roles.master}</option>
+                    <option value="supervisor">{t.roles.supervisor}</option>
+                    <option value="superadmin">{t.roles.superadmin}</option>
                   </select>
                 </div>
                 <div className="admin-form__row">

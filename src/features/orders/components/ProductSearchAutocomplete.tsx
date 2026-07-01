@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react'
+import { RefreshCw, Search, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { FormField, Input } from '../../../components/ui/FormField'
 import { useLanguage } from '../../../i18n/LanguageContext'
@@ -107,11 +107,16 @@ export function ProductSearchAutocomplete({
               setPendingFocus(true)
             }}
           >
+            <RefreshCw size={14} strokeWidth={2} aria-hidden="true" />
             {d.changeProduct}
           </button>
         </div>
         <p className="product-selected__ref">{selectedProduct.referenciaProducto}</p>
         <p className="product-selected__name">{selectedProduct.nombre}</p>
+        <div className="product-selected__barcode">
+          <span className="product-selected__barcode-label">{d.barcode}</span>
+          <span className="product-selected__barcode-value">{selectedProduct.barcode}</span>
+        </div>
         <p className="product-selected__meta">
           {selectedProduct.producto} · {selectedProduct.variedad} · {selectedProduct.calibre} ·{' '}
           {selectedProduct.uso} · {selectedProduct.formatoCaja}

@@ -2,11 +2,8 @@ import type { Lang } from '../i18n/translations'
 import type { User } from '../types/auth'
 import type { BacklogColumnId, BacklogOrder } from '../types/backlog'
 import { canActOnOrder } from './dashboardPermissions'
-import {
-  canStartProduction,
-  hasTableConflicts,
-  resetValidationTables,
-} from './validationHelpers'
+import { isSupervisor } from './permissions'
+import { resetValidationTables } from './validationHelpers'
 
 export type BacklogToastType = 'error' | 'success' | 'info'
 
@@ -15,15 +12,20 @@ export interface BacklogMoveResult {
   message?: string
   toastType?: BacklogToastType
   needsConfirm?: boolean
+  needsPrepareModal?: boolean
   confirmAction?: 'incident' | 'cancel' | 'finalize'
 }
 
+export const MAIN_BOARD_COLUMNS: BacklogColumnId[] = [
+  'en_backlog',
+  'en_preparacion',
+  'en_produccion',
+]
+
 const COLUMN_ORDER: BacklogColumnId[] = [
   'en_backlog',
-  'pendiente_lanzamiento',
-  'pendiente_validacion',
-  'en_ejecucion',
-  'bloqueado',
+  'en_preparacion',
+  'en_produccion',
   'finalizado',
 ]
 
@@ -31,12 +33,7 @@ export function getColumnIndex(col: BacklogColumnId): number {
   return COLUMN_ORDER.indexOf(col)
 }
 
-const MAIN_FLOW: BacklogColumnId[] = [
-  'en_backlog',
-  'pendiente_lanzamiento',
-  'pendiente_validacion',
-  'en_ejecucion',
-]
+const MAIN_FLOW: BacklogColumnId[] = ['en_backlog', 'en_preparacion', 'en_produccion']
 
 function isMainFlowColumn(col: BacklogColumnId): boolean {
   return MAIN_FLOW.includes(col)
@@ -49,7 +46,6 @@ export function isValidTransition(
 ): boolean {
   if (from === to) return true
 
-  // Master: puede retroceder dentro del flujo principal
   if (
     isMaster &&
     isMainFlowColumn(from) &&
@@ -59,17 +55,14 @@ export function isValidTransition(
     return true
   }
 
-  // Master: recuperar pedidos desde finalizado o bloqueado al flujo principal
-  if (isMaster && (from === 'finalizado' || from === 'bloqueado') && isMainFlowColumn(to)) {
+  if (isMaster && from === 'finalizado' && isMainFlowColumn(to)) {
     return true
   }
 
   const allowed: Record<BacklogColumnId, BacklogColumnId[]> = {
-    en_backlog: ['pendiente_lanzamiento'],
-    pendiente_lanzamiento: ['pendiente_validacion'],
-    pendiente_validacion: ['en_ejecucion'],
-    en_ejecucion: ['finalizado'],
-    bloqueado: ['en_backlog', 'pendiente_lanzamiento'],
+    en_backlog: ['en_preparacion'],
+    en_preparacion: ['en_produccion'],
+    en_produccion: ['finalizado'],
     finalizado: [],
   }
 
@@ -78,7 +71,7 @@ export function isValidTransition(
 
 export function isBackwardMove(from: BacklogColumnId, to: BacklogColumnId): boolean {
   if (!isMainFlowColumn(from) || !isMainFlowColumn(to)) {
-    if (from === 'finalizado' || from === 'bloqueado') return isMainFlowColumn(to)
+    if (from === 'finalizado') return isMainFlowColumn(to)
     return false
   }
   return getColumnIndex(to) < getColumnIndex(from)
@@ -88,37 +81,25 @@ function messages(lang: Lang) {
   return lang === 'es'
     ? {
         noPermission: 'Acción no permitida para tu empresa.',
-        noPermissionLong: 'No puedes actuar sobre pedidos de otra empresa.',
-        needsValidation:
-          'Este pedido debe pasar primero por validación de mesas.',
-        sentToValidation: 'Pedido enviado a validación de mesas.',
-        masterIncident: 'Solo un usuario máster puede marcar incidencias.',
-        masterCancel: 'Solo un usuario máster puede anular pedidos aceptados.',
-        masterFinish: 'Solo un usuario máster puede finalizar pedidos.',
+        needsPreparation: 'El objetivo debe pasar por preparación antes de producir.',
+        prepareRequired: 'Usa el modal de preparación para reservar estaciones.',
+        masterFinish: 'Solo un usuario autorizado puede finalizar objetivos.',
         confirmFinalize:
-          'Este pedido se marcará como finalizado y liberará recursos en la simulación. ¿Deseas continuar?',
+          'Este objetivo se marcará como acabado y liberará recursos en la simulación. ¿Deseas continuar?',
         invalidTransition: 'Transición no permitida en el flujo operativo.',
-        tablesNotValidated:
-          'Las mesas aún no están validadas para pasar a ejecución.',
-        tablesInConflict:
-          'Hay mesas en conflicto. El pedido no puede iniciar producción.',
-        movedBack: 'Pedido retrocedido en el backlog.',
+        recipePending: 'Esperando confirmación de celda/receta.',
+        movedBack: 'Objetivo retrocedido en la cola.',
       }
     : {
         noPermission: 'Action not allowed for your company.',
-        noPermissionLong: 'You cannot act on another company’s orders.',
-        needsValidation: 'This order must go through table validation first.',
-        sentToValidation: 'Order sent to table validation.',
-        masterIncident: 'Only a master user can mark incidents.',
-        masterCancel: 'Only a master user can cancel accepted orders.',
-        masterFinish: 'Only a master user can complete orders.',
+        needsPreparation: 'The objective must go through preparation before production.',
+        prepareRequired: 'Use the preparation modal to reserve stations.',
+        masterFinish: 'Only an authorized user can complete objectives.',
         confirmFinalize:
-          'This order will be marked as completed and release resources in the simulation. Continue?',
+          'This objective will be marked as completed and release resources. Continue?',
         invalidTransition: 'Transition not allowed in the operational flow.',
-        tablesNotValidated: 'Tables are not validated yet for execution.',
-        tablesInConflict:
-          'There are tables in conflict. The order cannot start production.',
-        movedBack: 'Order moved back in the backlog.',
+        recipePending: 'Waiting for cell/recipe confirmation.',
+        movedBack: 'Objective moved back in the queue.',
       }
 }
 
@@ -138,16 +119,12 @@ export function evaluateMove(
     return { ok: true }
   }
 
-  if (targetColumn === 'bloqueado') {
-    if (user.role !== 'master') {
-      return { ok: false, message: msg.masterIncident, toastType: 'error' }
-    }
-    return { ok: false, needsConfirm: true, confirmAction: 'incident' }
-  }
-
   if (targetColumn === 'finalizado') {
-    if (user.role !== 'master') {
+    if (user.role !== 'superadmin') {
       return { ok: false, message: msg.masterFinish, toastType: 'error' }
+    }
+    if (order.column !== 'en_produccion') {
+      return { ok: false, message: msg.invalidTransition, toastType: 'error' }
     }
     return {
       ok: false,
@@ -157,37 +134,30 @@ export function evaluateMove(
     }
   }
 
-  if (targetColumn === 'en_ejecucion') {
-    if (order.column !== 'pendiente_validacion') {
-      return { ok: false, message: msg.needsValidation, toastType: 'error' }
+  if (targetColumn === 'en_preparacion' && order.column === 'en_backlog') {
+    return { ok: false, needsPrepareModal: true }
+  }
+
+  if (targetColumn === 'en_produccion') {
+    if (order.column !== 'en_preparacion') {
+      return { ok: false, message: msg.needsPreparation, toastType: 'error' }
     }
-    if (hasTableConflicts(order)) {
-      return { ok: false, message: msg.tablesInConflict, toastType: 'error' }
-    }
-    if (!canStartProduction(order)) {
-      return { ok: false, message: msg.tablesNotValidated, toastType: 'error' }
+    if (!isSupervisor(user)) {
+      return { ok: false, message: msg.recipePending, toastType: 'error' }
     }
   }
 
-  const isMaster = user.role === 'master'
+  const isMaster = user.role === 'superadmin'
 
   if (!isValidTransition(order.column, targetColumn, isMaster)) {
-    if (
-      !isMaster &&
-      getColumnIndex(targetColumn) > getColumnIndex('pendiente_validacion') &&
-      order.column !== 'pendiente_validacion'
-    ) {
-      return { ok: false, message: msg.needsValidation, toastType: 'error' }
+    if (targetColumn === 'en_preparacion' && order.column === 'en_backlog') {
+      return { ok: false, needsPrepareModal: true }
     }
     return { ok: false, message: msg.invalidTransition, toastType: 'error' }
   }
 
   if (isMaster && isBackwardMove(order.column, targetColumn)) {
     return { ok: true, message: msg.movedBack, toastType: 'info' }
-  }
-
-  if (targetColumn === 'pendiente_validacion') {
-    return { ok: true, message: msg.sentToValidation, toastType: 'success' }
   }
 
   return { ok: true }
@@ -211,24 +181,21 @@ export function applyColumnMove(
     user: userName,
   })
 
-  if (targetColumn === 'pendiente_validacion') {
-    updated.auditTrail.push(entry('Enviado a validación de mesas'))
-  } else if (targetColumn === 'pendiente_lanzamiento') {
-    updated.auditTrail.push(entry('Movido a pendiente de lanzamiento'))
-    if (getColumnIndex(order.column) > getColumnIndex('pendiente_lanzamiento')) {
-      Object.assign(updated, resetValidationTables(updated))
-    }
-  } else if (targetColumn === 'en_ejecucion') {
-    updated.auditTrail.push(entry('En ejecución'))
-  } else if (targetColumn === 'bloqueado') {
-    updated.auditTrail.push(entry('Marcado como incidencia'))
-    updated.alerts = [...updated.alerts, 'Incidencia']
+  if (targetColumn === 'en_preparacion') {
+    updated.auditTrail.push(entry('En preparación'))
+  } else if (targetColumn === 'en_produccion') {
+    updated.productionState = 'producing'
+    updated.preparationStatus = undefined
+    updated.auditTrail.push(entry('En producción'))
   } else if (targetColumn === 'finalizado') {
-    updated.auditTrail.push(entry('Finalizado'))
+    updated.productionState = 'completed'
+    updated.auditTrail.push(entry('Acabado'))
   } else if (targetColumn === 'en_backlog') {
-    updated.auditTrail.push(entry('Movido en backlog'))
+    updated.auditTrail.push(entry('Movido a por ordenar'))
     if (getColumnIndex(order.column) > getColumnIndex('en_backlog')) {
       Object.assign(updated, resetValidationTables(updated))
+      updated.preparationStatus = undefined
+      updated.productionState = undefined
     }
   }
 
@@ -237,22 +204,16 @@ export function applyColumnMove(
     isMainFlowColumn(order.column) &&
     isMainFlowColumn(targetColumn)
   ) {
-    updated.auditTrail.push(entry('Retrocedido en backlog (master)'))
-    if (getColumnIndex(targetColumn) < getColumnIndex('pendiente_validacion')) {
+    updated.auditTrail.push(entry('Retrocedido (master)'))
+    if (getColumnIndex(targetColumn) <= getColumnIndex('en_backlog')) {
       Object.assign(updated, resetValidationTables(updated))
-    } else if (targetColumn === 'pendiente_validacion') {
-      updated.tablesValidated = false
-      updated.validationTables = (updated.validationTables ?? []).map((table) =>
-        table.status === 'conflicto' ? table : { ...table, status: 'pendiente' },
-      )
+      updated.preparationStatus = undefined
     }
   }
 
-  if (
-    (order.column === 'finalizado' || order.column === 'bloqueado') &&
-    isMainFlowColumn(targetColumn)
-  ) {
+  if (order.column === 'finalizado' && isMainFlowColumn(targetColumn)) {
     updated.auditTrail.push(entry('Recuperado al flujo principal (master)'))
+    updated.productionState = targetColumn === 'en_produccion' ? 'producing' : undefined
   }
 
   return updated

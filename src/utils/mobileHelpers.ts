@@ -135,7 +135,7 @@ function computeCompanyAvailablePercent(
     (t) => t.company === company && OCCUPIED.has(t.status),
   ).length
   const activeOrders = state.orders.filter(
-    (o) => o.company === company && o.column === 'en_ejecucion',
+    (o) => o.company === company && o.column === 'en_produccion',
   ).length
 
   const tableLoad = (occupiedByCompany / total) * 55
@@ -173,7 +173,7 @@ export function computeMobileCompanyStats(state: CmsaPersistedState): MobileComp
       (t) => t.company === company && OCCUPIED.has(t.status),
     ).length
     const activeOrders = state.orders.filter(
-      (o) => o.company === company && o.column === 'en_ejecucion',
+      (o) => o.company === company && o.column === 'en_produccion',
     ).length
     const availablePercent = computeCompanyAvailablePercent(company, state)
 
@@ -192,7 +192,7 @@ export function getMobileActiveProduction(
   lang: Lang,
 ): MobileActiveOrder[] {
   return state.orders
-    .filter((o) => o.column === 'en_ejecucion')
+    .filter((o) => o.column === 'en_produccion')
     .map((order) => {
       const remainingMinutes = order.endTime ? parseEndTimeMinutes(order.endTime) : null
       return {
@@ -217,7 +217,7 @@ export function getMobileFinishingSoon(
   const label = lang === 'es' ? 'Próximo a finalizar' : 'Finishing soon'
 
   return orders
-    .filter((o) => o.column === 'en_ejecucion' && o.endTime)
+    .filter((o) => o.column === 'en_produccion' && o.endTime)
     .map((order) => {
       const remainingMinutes = parseEndTimeMinutes(order.endTime)
       return {

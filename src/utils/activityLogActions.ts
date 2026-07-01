@@ -4,21 +4,17 @@ import type { User } from '../types/auth'
 import { logActivity } from './activityLog'
 
 const COLUMN_ACTION_ES: Record<BacklogColumnId, string> = {
-  en_backlog: 'Pedido movido a backlog',
-  pendiente_lanzamiento: 'Pedido aceptado',
-  pendiente_validacion: 'Pedido enviado a validación',
-  en_ejecucion: 'Producción iniciada',
-  bloqueado: 'Pedido bloqueado / incidencia',
-  finalizado: 'Pedido finalizado',
+  en_backlog: 'Objetivo movido a cola',
+  en_preparacion: 'Objetivo en preparación',
+  en_produccion: 'Objetivo en producción',
+  finalizado: 'Objetivo acabado',
 }
 
 const COLUMN_ACTION_EN: Record<BacklogColumnId, string> = {
-  en_backlog: 'Order moved to backlog',
-  pendiente_lanzamiento: 'Order accepted',
-  pendiente_validacion: 'Order sent to validation',
-  en_ejecucion: 'Production started',
-  bloqueado: 'Order blocked / incident',
-  finalizado: 'Order completed',
+  en_backlog: 'Objective moved to queue',
+  en_preparacion: 'Objective in preparation',
+  en_produccion: 'Objective in production',
+  finalizado: 'Objective completed',
 }
 
 export function logOrderColumnMove(
@@ -39,7 +35,7 @@ export function logOrderColumnMove(
 }
 
 export function logOrderCreated(actor: User, reference: string, company: string): void {
-  logActivity(actor, 'Pedido creado', 'pedido', `${reference} · ${company}`)
+  logActivity(actor, 'Objetivo creado', 'pedido', `${reference} · ${company}`)
 }
 
 export function logTableValidated(actor: User, orderReference: string, tableName: string): void {

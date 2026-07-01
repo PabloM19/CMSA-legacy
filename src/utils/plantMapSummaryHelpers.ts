@@ -1,13 +1,16 @@
 import type { BacklogOrder } from '../types/backlog'
-import type { PlantElementView } from '../types/plant'
+import type { PlantElementView, PlantTable } from '../types/plant'
+import { countActiveAlarms } from '../data/mockCellAlarms'
 
 export interface PlantMapSummaryStats {
   freeTables: number
   occupiedTables: number
-  pendingValidation: number
+  occupiedSumo: number
+  occupiedMaf: number
+  preparing: number
   waiting: number
   blockedOrConflict: number
-  ordersInProduction: number
+  activeAlarms: number
 }
 
 function isTable(element: PlantElementView): boolean {
@@ -16,11 +19,13 @@ function isTable(element: PlantElementView): boolean {
 
 export function computePlantMapSummaryStats(
   elements: Map<string, PlantElementView>,
-  orders: BacklogOrder[],
+  _orders: BacklogOrder[],
 ): PlantMapSummaryStats {
   let freeTables = 0
   let occupiedTables = 0
-  let pendingValidation = 0
+  let occupiedSumo = 0
+  let occupiedMaf = 0
+  let preparing = 0
   let waiting = 0
   let blockedOrConflict = 0
 
@@ -33,10 +38,13 @@ export function computePlantMapSummaryStats(
         case 'occupied':
         case 'validated':
           occupiedTables += 1
+          if (element.company === 'SUMO') occupiedSumo += 1
+          if (element.company === 'MAF') occupiedMaf += 1
           break
-        case 'pending_validation':
+        case 'preparing':
         case 'reserved':
-          pendingValidation += 1
+        case 'pending_validation':
+          preparing += 1
           break
         case 'waiting':
           waiting += 1
@@ -55,14 +63,25 @@ export function computePlantMapSummaryStats(
     if (element.status === 'blocked' || element.status === 'conflict') blockedOrConflict += 1
   })
 
-  const ordersInProduction = orders.filter((order) => order.column === 'en_ejecucion').length
+  const activeAlarms = countActiveAlarms()
 
   return {
     freeTables,
     occupiedTables,
-    pendingValidation,
+    occupiedSumo,
+    occupiedMaf,
+    preparing,
     waiting,
     blockedOrConflict,
-    ordersInProduction,
+    activeAlarms,
   }
+}
+
+export function mockOccupancyPercent(table: PlantTable): number | null {
+  if (table.status === 'free') return null
+  const seed = table.id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+  if (table.status === 'preparing' || table.status === 'reserved') return 12 + (seed % 18)
+  if (table.status === 'waiting') return 28 + (seed % 25)
+  if (table.status === 'blocked' || table.status === 'conflict') return 45 + (seed % 30)
+  return 55 + (seed % 40)
 }

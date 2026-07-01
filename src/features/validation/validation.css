@@ -78,18 +78,20 @@
 .validation-filter-chip {
   min-height: 40px;
   padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--button-secondary-border);
   border-radius: var(--radius-full);
-  background: var(--color-white);
+  background: var(--button-secondary-bg);
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--color-gray-700);
+  color: var(--button-secondary-text);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.validation-filter-chip:hover {
-  background: var(--color-gray-50);
+.validation-filter-chip:hover:not(.validation-filter-chip--active) {
+  background: var(--button-secondary-hover-bg);
+  color: var(--button-secondary-hover-text);
+  border-color: var(--button-secondary-hover-border);
 }
 
 .validation-filter-chip--active {
@@ -107,7 +109,7 @@
   border: 1px solid var(--color-border);
   border-left-width: 6px;
   border-radius: var(--radius-lg);
-  background: var(--color-white);
+  background: var(--color-surface);
   box-shadow: var(--shadow-soft);
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
@@ -311,7 +313,7 @@
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-white);
+  background: var(--color-surface);
   box-shadow: var(--shadow-soft);
   border-left-width: 4px;
 }
@@ -319,6 +321,22 @@
 .validation-table-card--pendiente {
   border-left-color: var(--color-gray-400);
   background: var(--color-gray-50);
+}
+
+[data-theme='dark'] .validation-table-card--pendiente {
+  background: rgba(148, 163, 184, 0.1);
+}
+
+[data-theme='dark'] .validation-table-card--validada {
+  background: rgba(34, 197, 94, 0.12);
+}
+
+[data-theme='dark'] .validation-table-card--conflicto {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+[data-theme='dark'] .validation-table-card--parada {
+  background: rgba(234, 179, 8, 0.12);
 }
 
 .validation-table-card--validada {
@@ -350,7 +368,7 @@
   width: 44px;
   height: 44px;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--app-surface-glass-strong);
   color: var(--color-gray-600);
 }
 
@@ -492,32 +510,11 @@
   color: var(--color-muted);
 }
 
-/* Buttons */
+/* Buttons — heredan tokens globales; solo ajustes locales */
 .validation-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
   min-height: 44px;
   padding: var(--space-2) var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-white);
   font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-gray-700);
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
-}
-
-.validation-btn:hover:not(:disabled) {
-  background: var(--color-gray-50);
-}
-
-.validation-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .validation-btn--large {
@@ -525,31 +522,27 @@
   padding: var(--space-3) var(--space-6);
 }
 
-.validation-btn--primary {
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
-  color: var(--color-white);
-  box-shadow: 0 2px 8px var(--color-brand-shadow);
-}
-
-.validation-btn--primary:hover:not(:disabled) {
-  opacity: 0.92;
-  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
-}
-
 .validation-btn--warn {
   border-color: rgba(239, 68, 68, 0.35);
-  color: #b91c1c;
+  color: var(--button-danger-text);
+  background: var(--button-secondary-bg);
 }
 
 .validation-btn--warn:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.06);
+  background: var(--button-danger-hover-bg);
+  color: var(--button-danger-text);
 }
 
 .validation-btn--link {
   color: var(--color-brand-deep);
   border-color: rgba(0, 160, 210, 0.2);
   background: var(--color-brand-pale);
+}
+
+.validation-btn--link:hover:not(:disabled) {
+  background: var(--color-brand-muted);
+  color: var(--color-brand-deep);
+  border-color: rgba(0, 160, 210, 0.3);
 }
 
 .validation-confirm {

@@ -8,9 +8,9 @@ interface BacklogHeroProps {
 }
 
 function HeroIcon({ status }: { status: ReturnType<typeof getBacklogHeroStatus> }) {
-  if (status === 'ok') return <CheckCircle2 size={40} strokeWidth={1.5} />
-  if (status === 'pending_validation') return <ClipboardList size={40} strokeWidth={1.5} />
-  return <AlertTriangle size={40} strokeWidth={1.5} />
+  if (status === 'ok') return <CheckCircle2 size={28} strokeWidth={1.5} />
+  if (status === 'pending_preparation') return <ClipboardList size={28} strokeWidth={1.5} />
+  return <AlertTriangle size={28} strokeWidth={1.5} />
 }
 
 export function BacklogHero({ counts }: BacklogHeroProps) {
@@ -23,9 +23,9 @@ export function BacklogHero({ counts }: BacklogHeroProps) {
   const summaryParts = [
     d.heroSummaryTotal.replace('{total}', String(counts.total)),
     d.heroSummaryQueue.replace('{queue}', String(counts.inQueue)),
-    d.heroSummaryValidation.replace('{validation}', String(counts.pendingValidation)),
-    d.heroSummaryExecution.replace('{execution}', String(counts.inExecution)),
-    d.heroSummaryBlocked.replace('{blocked}', String(counts.blocked)),
+    d.heroSummaryPreparation.replace('{preparation}', String(counts.inPreparation)),
+    d.heroSummaryExecution.replace('{execution}', String(counts.inProduction)),
+    d.heroSummaryCompleted.replace('{completed}', String(counts.completed)),
   ]
 
   return (

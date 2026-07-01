@@ -13,6 +13,7 @@ import type {
   ProductionConfig,
 } from '../types/admin'
 import type { User } from '../types/auth'
+import { canAccessAdmin as canAccessAdminRole } from './permissions'
 import type { OrderCompany } from '../types/newOrder'
 import type { PlantPalletizerElement, PlantTable, PlantTableStatus, PlantTableType } from '../types/plant'
 import { getState, saveState } from './backlogStorage'
@@ -23,7 +24,7 @@ export const ADMIN_STORAGE_KEY = 'cmsa-admin-data'
 const DEFAULT_CONFIG: ProductionConfig = {
   minBoxesPerHour: 100,
   maxBoxesPerHour: 800,
-  boxesPerLayer: 8,
+  boxesPerLayer: 10,
   layersPerPallet: 10,
   overloadThreshold: 5000,
   finishingSoonMinutes: 30,
@@ -93,7 +94,7 @@ function seedAdminData(): AdminPersistedData {
         id: 'audit-seed-1',
         timestamp: nowIso(),
         username: 'sistema',
-        role: 'master',
+        role: 'superadmin',
         action: 'Inicialización admin',
         entity: 'sistema',
         detail: 'Datos mock de administración cargados',
@@ -114,6 +115,10 @@ function readAdminData(): AdminPersistedData | null {
 
 function saveAdminData(data: AdminPersistedData): void {
   localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(data))
+}
+
+export function resetAdminDataToSeed(): void {
+  saveAdminData(seedAdminData())
 }
 
 export function getAdminData(): AdminPersistedData {
@@ -164,8 +169,8 @@ export function getAdminUsers(): AdminUser[] {
   return getAdminData().users
 }
 
-function countActiveMasters(users: AdminUser[]): number {
-  return users.filter((u) => u.role === 'master' && u.status === 'activo').length
+function countActiveSuperAdmins(users: AdminUser[]): number {
+  return users.filter((u) => u.role === 'superadmin' && u.status === 'activo').length
 }
 
 export function createAdminUser(
@@ -226,8 +231,8 @@ export function toggleAdminUserStatus(
   const user = data.users.find((u) => u.id === id)
   if (!user) return { ok: false, error: 'not_found' }
 
-  if (user.status === 'activo' && user.role === 'master') {
-    const others = countActiveMasters(data.users.filter((u) => u.id !== id))
+  if (user.status === 'activo' && user.role === 'superadmin') {
+    const others = countActiveSuperAdmins(data.users.filter((u) => u.id !== id))
     if (others === 0) return { ok: false, error: 'last_master' }
   }
 
@@ -682,5 +687,5 @@ export function resetProductionConfig(actor: User): ProductionConfig {
 }
 
 export function canAccessAdmin(user: User): boolean {
-  return user.role === 'master'
+  return canAccessAdminRole(user)
 }

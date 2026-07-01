@@ -50,8 +50,8 @@ export function filterMobileState(state: CmsaPersistedState, user: User): CmsaPe
 }
 
 export function getMobileRoleBadge(user: User, d: MobileCopy): string {
-  if (user.role === 'master') return d.roleBadgeMaster
-  if (user.role === 'validator') return d.roleBadgeValidator
+  if (user.role === 'superadmin') return d.roleBadgeMaster
+  if (user.role === 'supervisor') return 'Supervisor · ' + d.consultBadge
   if (user.company === 'SUMO' || user.company === 'MAF') {
     return `${user.company} · ${d.consultBadge}`
   }
@@ -59,8 +59,8 @@ export function getMobileRoleBadge(user: User, d: MobileCopy): string {
 }
 
 export function getMobileHeaderLine(user: User, d: MobileCopy): string {
-  if (user.role === 'master') return d.roleBadgeMaster
-  if (user.role === 'validator') return d.roleBadgeValidator
+  if (user.role === 'superadmin') return d.roleBadgeMaster
+  if (user.role === 'supervisor') return `Supervisor · ${d.consultBadge}`
   return `${user.company} · ${d.consultBadge}`
 }
 
@@ -69,8 +69,8 @@ export function computeMobileQuickStats(state: CmsaPersistedState, user: User): 
   const alerts = getMobileAlerts(scoped, 'es').filter((a) => a.id !== 'all-ok')
 
   return {
-    inProduction: scoped.orders.filter((o) => o.column === 'en_ejecucion').length,
-    pending: scoped.orders.filter((o) => o.column === 'pendiente_validacion').length,
+    inProduction: scoped.orders.filter((o) => o.column === 'en_produccion').length,
+    pending: scoped.orders.filter((o) => o.column === 'en_preparacion').length,
     alerts: alerts.length,
     occupiedTables: state.plantTables.filter((t) =>
       ['occupied', 'validated', 'waiting'].includes(t.status),
@@ -83,7 +83,7 @@ export function computeMobileHeroStats(state: CmsaPersistedState, user: User): M
   const alerts = getMobileAlerts(scoped, 'es').filter((a) => a.id !== 'all-ok')
 
   return {
-    inProduction: scoped.orders.filter((o) => o.column === 'en_ejecucion').length,
+    inProduction: scoped.orders.filter((o) => o.column === 'en_produccion').length,
     activeAlerts: alerts.length,
     occupiedTables: state.plantTables.filter((t) =>
       ['occupied', 'validated', 'waiting', 'pending_validation', 'reserved'].includes(t.status),
@@ -178,7 +178,7 @@ export function getMobileFinishingLimited(
 
 export function getMobileCompanyCards(state: CmsaPersistedState, user: User) {
   const all = computeMobileCompanyStats(state)
-  if (user.role === 'master' || user.role === 'validator') return all
+  if (user.role === 'superadmin' || user.role === 'supervisor') return all
   if (user.company === 'SUMO') {
     const primary = all.find((c) => c.company === 'SUMO')!
     const other = all.find((c) => c.company === 'MAF')

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { EmptyState } from '../../components/ui/EmptyState'
+import { PlusCircle } from 'lucide-react'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
@@ -21,13 +21,17 @@ import {
 import { generateOrderId, generateOrderReference, saveCreatedOrder } from '../../utils/orderStorage'
 import { mergeCreatedOrder } from '../../utils/backlogStorage'
 import { logOrderCreated } from '../../utils/activityLogActions'
+import { isSupervisor } from '../../utils/permissions'
 import type { MockProduct } from '../../data/mockProducts'
+import { AddReferenceModal } from './components/AddReferenceModal'
 import { ConfirmOrderModal } from './components/ConfirmOrderModal'
+import { ConfirmOrderFinalModal } from './components/ConfirmOrderFinalModal'
 import { NewOrderImpactReview } from './components/NewOrderImpactReview'
 import { NewOrderLiveSummary } from './components/NewOrderLiveSummary'
 import { NewOrderStep1 } from './components/NewOrderStep1'
 import { NewOrderStep2 } from './components/NewOrderStep2'
 import { NewOrderStepper } from './components/NewOrderStepper'
+import { NewOrderSuccessModal } from './components/NewOrderSuccessModal'
 import '../dashboard/dashboard.css'
 import './newOrder.css'
 
@@ -51,7 +55,7 @@ function emptyForm(company: OrderCompany): NewOrderFormData {
     boxFormat: '',
     boxes: '',
     boxesPerHour: '',
-    notes: '',
+    barcode: '',
   }
 }
 
@@ -71,10 +75,16 @@ export function NewOrderPage() {
   const [errors, setErrors] = useState<NewOrderFormErrors>({})
   const [calculating, setCalculating] = useState(false)
   const [calculation, setCalculation] = useState<OrderCalculation | null>(null)
-  const [showModal, setShowModal] = useState(false)
+  const [showSummaryModal, setShowSummaryModal] = useState(false)
+  const [showFinalModal, setShowFinalModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [acceptedReference, setAcceptedReference] = useState('')
+  const [showAddReference, setShowAddReference] = useState(false)
+  const [catalogVersion, setCatalogVersion] = useState(0)
   const [stepHint, setStepHint] = useState<string | null>(null)
 
   const companyLocked = user?.role === 'user'
+  const canAddReference = user ? isSupervisor(user) : false
 
   function updateField<K extends keyof NewOrderFormData>(key: K, value: NewOrderFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -99,6 +109,7 @@ export function NewOrderPage() {
       variety: product.variedad,
       type: product.uso,
       boxFormat: product.formatoCaja,
+      barcode: product.barcode,
       boxesPerHour:
         product.cajasHoraSugeridas != null
           ? String(product.cajasHoraSugeridas)
@@ -121,12 +132,34 @@ export function NewOrderPage() {
       productId: '',
       productReference: '',
       productName: '',
+      product: '',
+      variety: '',
+      type: '',
+      boxFormat: '',
+      barcode: '',
+      boxesPerHour: '',
     }))
     setErrors((prev) => {
       const next = { ...prev }
       delete next.productId
+      delete next.product
+      delete next.variety
       return next
     })
+    setCalculation(null)
+    setStepHint(null)
+  }
+
+  function resetWizard(keepCompany = true) {
+    setForm(keepCompany ? emptyForm(form.company) : emptyForm(initialCompany))
+    setStep(1)
+    setCalculation(null)
+    setErrors({})
+    setShowSummaryModal(false)
+    setShowFinalModal(false)
+    setShowSuccessModal(false)
+    setAcceptedReference('')
+    setStepHint(null)
   }
 
   function handleContinueStep1() {
@@ -180,28 +213,43 @@ export function NewOrderPage() {
 
   function handleReviewConfirm() {
     if (!calculation) return
-    setShowModal(true)
+    setShowFinalModal(false)
+    setShowSummaryModal(true)
   }
 
   function handleModify() {
-    setShowModal(false)
+    setShowSummaryModal(false)
+    setShowFinalModal(false)
   }
 
-  function handleAccept() {
+  function handleProceedToFinal() {
+    if (!calculation || calculation.blocked) return
+    setShowSummaryModal(false)
+    setShowFinalModal(true)
+  }
+
+  function handleBackToModify() {
+    setShowFinalModal(false)
+    setShowSummaryModal(true)
+  }
+
+  function handleAcceptFinal() {
     if (!calculation || calculation.blocked || !user) return
 
     const boxes = Number(form.boxes)
     const boxesPerHour = Number(form.boxesPerHour)
+    const reference = generateOrderReference()
 
     const created = {
       ...form,
-      reference: generateOrderReference(),
+      reference,
       boxes,
       boxesPerHour,
       id: generateOrderId(),
       createdAt: new Date().toISOString(),
       status: 'pending' as const,
       calculation,
+      ...(form.barcode.trim() ? { barcode: form.barcode.trim() } : {}),
       ...(form.productId
         ? {
             productId: form.productId,
@@ -215,19 +263,13 @@ export function NewOrderPage() {
     mergeCreatedOrder(created)
     logOrderCreated(user, created.reference, created.company)
 
-    navigate('/backlog', { replace: true })
+    setShowFinalModal(false)
+    setShowSummaryModal(false)
+    setAcceptedReference(reference)
+    setShowSuccessModal(true)
   }
 
   if (!user) return null
-
-  if (user.role === 'validator') {
-    return (
-      <div className="new-order">
-        <PageHeader title={d.title} description={d.subtitle} showMockBadge badgeLabel={d.simulatedBadge} />
-        <EmptyState title={d.validatorBlocked} description={d.validatorBlockedHint} />
-      </div>
-    )
-  }
 
   const boxesNum = Number(form.boxes)
   const rateNum = Number(form.boxesPerHour)
@@ -240,6 +282,18 @@ export function NewOrderPage() {
         description={d.subtitle}
         showMockBadge
         badgeLabel={d.simulatedBadge}
+        extra={
+          canAddReference ? (
+            <button
+              type="button"
+              className="ui-btn ui-btn--secondary ui-btn--md new-order__add-ref"
+              onClick={() => setShowAddReference(true)}
+            >
+              <PlusCircle size={18} strokeWidth={1.75} aria-hidden="true" />
+              {d.addReferenceBtn}
+            </button>
+          ) : undefined
+        }
       />
 
       <NewOrderStepper currentStep={step} />
@@ -248,6 +302,7 @@ export function NewOrderPage() {
         <div className="new-order-main">
           {step === 1 && (
             <NewOrderStep1
+              key={catalogVersion}
               form={form}
               errors={errors}
               companyLocked={companyLocked}
@@ -263,49 +318,75 @@ export function NewOrderPage() {
 
           {hint && <p className="new-order-step-hint">{hint}</p>}
 
-          <footer className="new-order-nav">
-            {step > 1 && (
-              <button type="button" className="order-btn order-btn--ghost" onClick={handleBack}>
-                {d.back}
-              </button>
-            )}
+          {!showSuccessModal && (
+            <footer className="new-order-nav">
+              {step > 1 && (
+                <button type="button" className="order-btn order-btn--ghost" onClick={handleBack}>
+                  {d.back}
+                </button>
+              )}
 
-            {step === 1 && (
-              <button type="button" className="order-btn order-btn--primary" onClick={handleContinueStep1}>
-                {d.continue}
-              </button>
-            )}
+              {step === 1 && (
+                <button type="button" className="order-btn order-btn--primary" onClick={handleContinueStep1}>
+                  {d.continue}
+                </button>
+              )}
 
-            {step === 2 && (
-              <button
-                type="button"
-                className="order-btn order-btn--primary"
-                disabled={calculating}
-                onClick={handleCalculate}
-              >
-                {calculating ? d.calculating : d.calculateImpact}
-              </button>
-            )}
+              {step === 2 && (
+                <button
+                  type="button"
+                  className="order-btn order-btn--primary"
+                  disabled={calculating}
+                  onClick={handleCalculate}
+                >
+                  {calculating ? d.calculating : d.calculateImpact}
+                </button>
+              )}
 
-            {step === 3 && (
-              <button type="button" className="order-btn order-btn--primary" onClick={handleReviewConfirm}>
-                {d.reviewConfirm}
-              </button>
-            )}
-          </footer>
+              {step === 3 && (
+                <button type="button" className="order-btn order-btn--primary" onClick={handleReviewConfirm}>
+                  {d.reviewConfirm}
+                </button>
+              )}
+            </footer>
+          )}
         </div>
 
-        <NewOrderLiveSummary form={form} calculation={calculation} />
+        {!showSuccessModal && <NewOrderLiveSummary form={form} calculation={calculation} />}
       </div>
 
-      {showModal && calculation && (
+      {showSummaryModal && calculation && (
         <ConfirmOrderModal
           form={form}
           boxes={boxesNum}
           boxesPerHour={rateNum}
           calculation={calculation}
           onModify={handleModify}
-          onAccept={handleAccept}
+          onAccept={handleProceedToFinal}
+        />
+      )}
+
+      {showFinalModal && calculation && (
+        <ConfirmOrderFinalModal
+          form={form}
+          calculation={calculation}
+          onBackToModify={handleBackToModify}
+          onAcceptFinal={handleAcceptFinal}
+        />
+      )}
+
+      {showSuccessModal && (
+        <NewOrderSuccessModal
+          reference={acceptedReference}
+          onCreateAnother={() => resetWizard(true)}
+          onGoToQueue={() => navigate('/backlog', { replace: true })}
+        />
+      )}
+
+      {showAddReference && (
+        <AddReferenceModal
+          onClose={() => setShowAddReference(false)}
+          onSaved={() => setCatalogVersion((v) => v + 1)}
         />
       )}
     </div>

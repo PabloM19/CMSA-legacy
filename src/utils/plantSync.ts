@@ -70,6 +70,13 @@ export function occupyOrderTables(orderId: string, plantTables: PlantTable[]): P
   )
 }
 
+function isBlockedProduction(order: BacklogOrder): boolean {
+  return (
+    order.column === 'en_produccion' &&
+    (order.productionState === 'temp_blocked' || order.productionState === 'element_blocked')
+  )
+}
+
 export function rebuildPlantTablesFromOrders(
   plantTables: PlantTable[],
   orders: BacklogOrder[],
@@ -79,7 +86,7 @@ export function rebuildPlantTablesFromOrders(
     status: FREE,
     company: null,
     orderId: null,
-    alert: t.id === 'M5' && orders.some((o) => o.id === 'bk-5' && o.column === 'bloqueado')
+    alert: t.id === 'M5' && orders.some((o) => o.id === 'bk-5' && isBlockedProduction(o))
       ? t.alert
       : null,
   }))
@@ -91,7 +98,7 @@ export function rebuildPlantTablesFromOrders(
 
     if (ids.length === 0) return
 
-    if (order.column === 'pendiente_validacion') {
+    if (order.column === 'en_preparacion') {
       next = next.map((table) => {
         if (!ids.includes(table.id)) return table
         const vt = order.validationTables?.find((v) => v.plantTableId === table.id)
@@ -99,27 +106,33 @@ export function rebuildPlantTablesFromOrders(
           ...table,
           company: order.company,
           orderId: order.id,
-          status: vt ? mapValidationStatusToPlant(vt.status) : 'pending_validation',
+          status: vt ? mapValidationStatusToPlant(vt.status) : 'preparing',
         }
       })
-    } else if (order.column === 'en_ejecucion') {
-      next = next.map((table) =>
-        ids.includes(table.id)
-          ? { ...table, status: 'occupied', company: order.company, orderId: order.id }
-          : table,
-      )
-    } else if (order.column === 'bloqueado') {
-      next = next.map((table) =>
-        ids.includes(table.id)
-          ? {
-              ...table,
-              status: 'blocked',
-              company: order.company,
-              orderId: order.id,
-              alert: order.alerts[0] ?? table.alert,
-            }
-          : table,
-      )
+    } else if (order.column === 'en_produccion') {
+      const blocked = isBlockedProduction(order)
+      const critical = order.productionState === 'element_blocked'
+      next = next.map((table) => {
+        if (!ids.includes(table.id)) return table
+        const speedStatus =
+          order.id === 'bk-alm-1' && table.type === 'automatic'
+            ? ('slow' as const)
+            : table.speedStatus
+        return {
+          ...table,
+          status: critical
+            ? 'conflict'
+            : blocked
+              ? 'blocked'
+              : order.productionState === 'temp_waiting'
+                ? 'waiting'
+                : 'occupied',
+          company: order.company,
+          orderId: order.id,
+          alert: order.alerts[0] ?? (blocked || critical ? table.alert : null),
+          speedStatus,
+        }
+      })
     }
   })
 

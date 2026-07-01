@@ -19,7 +19,7 @@ export function logSystemActivity(
   entity: AuditEntity = 'sistema',
 ): AuditEvent {
   return addAuditEvent(
-    { id: 'system', name: 'Sistema', username: 'sistema', role: 'master', company: 'CMSA' },
+    { id: 'system', name: 'Sistema', username: 'sistema', role: 'superadmin', company: 'CMSA' },
     action,
     entity,
     detail,

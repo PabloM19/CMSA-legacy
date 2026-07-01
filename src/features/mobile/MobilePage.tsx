@@ -299,7 +299,7 @@ export function MobilePage() {
                 <div className="mobile-v2-company__head">
                   <Package size={22} aria-hidden="true" />
                   <strong>{item.company}</strong>
-                  {index > 0 && user.role !== 'master' && (
+                  {index > 0 && user.role !== 'superadmin' && (
                     <span className="mobile-v2-company__tag">{d.otherCompany}</span>
                   )}
                 </div>

@@ -1,9 +1,9 @@
 import type { MockProduct } from '../data/mockProducts'
 import {
   FEATURED_PRODUCT_COUNT,
-  getActiveProducts,
   SEARCH_RESULT_LIMIT,
 } from '../data/mockProducts'
+import { getAllCatalogProducts } from './productCatalogStorage'
 
 function normalize(value: string): string {
   return value.trim().toLowerCase()
@@ -12,6 +12,7 @@ function normalize(value: string): string {
 function productHaystack(product: MockProduct): string {
   return [
     product.referenciaProducto,
+    product.barcode,
     product.nombre,
     product.producto,
     product.variedad,
@@ -27,7 +28,7 @@ function productHaystack(product: MockProduct): string {
 }
 
 export function filterProducts(query: string): MockProduct[] {
-  const active = getActiveProducts()
+  const active = getAllCatalogProducts().filter((p) => p.activo && p.producto === 'Naranja')
   const trimmed = query.trim()
 
   if (!trimmed) {
@@ -50,4 +51,8 @@ export function getDisplayProducts(query: string): MockProduct[] {
 
 export function isSearchActive(query: string): boolean {
   return query.trim().length > 0
+}
+
+export function findProductById(id: string): MockProduct | undefined {
+  return getAllCatalogProducts().find((p) => p.id === id)
 }

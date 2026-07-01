@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { LogOut, Settings, UserRound } from 'lucide-react'
 import type { User } from '../../types/auth'
 import { useLanguage } from '../../i18n/LanguageContext'
 import './UserMenu.css'
@@ -41,32 +43,13 @@ function ChevronIcon({ open }: { open: boolean }) {
   )
 }
 
-function LogoutIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-      <path
-        d="M16 17l5-5-5-5M21 12H9"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
 function getChipClass(company: User['company']): string {
   return `user-menu__chip user-menu__chip--${company.toLowerCase()}`
 }
 
 export function UserMenu({ user, onLogout }: UserMenuProps) {
   const { t } = useLanguage()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -90,6 +73,11 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [open])
+
+  function goToProfile(hash?: string) {
+    setOpen(false)
+    navigate(hash ? `/profile${hash}` : '/profile')
+  }
 
   return (
     <div className="user-menu" ref={rootRef}>
@@ -122,16 +110,35 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
               </span>
             </div>
           </div>
+
           <button
             type="button"
-            className="user-menu__logout"
+            className="user-menu__item"
+            role="menuitem"
+            onClick={() => goToProfile()}
+          >
+            <UserRound size={16} aria-hidden="true" />
+            {t.profile.viewProfile}
+          </button>
+          <button
+            type="button"
+            className="user-menu__item"
+            role="menuitem"
+            onClick={() => goToProfile('#preferences')}
+          >
+            <Settings size={16} aria-hidden="true" />
+            {t.profile.preferences}
+          </button>
+          <button
+            type="button"
+            className="user-menu__item user-menu__item--logout"
             role="menuitem"
             onClick={() => {
               setOpen(false)
               onLogout()
             }}
           >
-            <LogoutIcon />
+            <LogOut size={16} aria-hidden="true" />
             {t.common.logout}
           </button>
         </div>

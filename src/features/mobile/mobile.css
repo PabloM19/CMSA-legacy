@@ -139,7 +139,7 @@
   padding: var(--space-md);
   border-radius: var(--radius-md);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--app-surface-glass);
 }
 
 .mobile-company-card--sumo {
@@ -220,7 +220,7 @@
 .mobile-list-item {
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--app-surface-glass-strong);
   border: 1px solid rgba(0, 0, 0, 0.05);
   font-size: 0.8125rem;
 }
@@ -271,6 +271,9 @@
 }
 
 .mobile-list-item__alert {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
   margin-top: 4px;
   font-size: 0.75rem;
   color: #b45309;
@@ -280,7 +283,7 @@
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-gray-300);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--app-surface-glass-strong);
   font-size: 0.8125rem;
 }
 
@@ -332,7 +335,7 @@
 .mobile-summary-chip {
   padding: var(--space-md);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--app-surface-glass);
   border: 1px solid rgba(0, 0, 0, 0.05);
   text-align: center;
 }
@@ -424,7 +427,7 @@
     margin-top: var(--space-md);
     border: 1px solid var(--color-gray-200);
     border-radius: var(--radius-lg);
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--app-surface-glass-subtle);
     box-shadow: var(--glass-shadow);
   }
 }
@@ -513,7 +516,7 @@
   height: 64px;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--app-surface-glass-strong);
 }
 
 .mobile-v2-hero--ok .mobile-v2-hero__icon {
@@ -651,7 +654,7 @@
 .mobile-v2-card {
   padding: var(--space-md);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--app-surface-glass-strong);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -730,7 +733,7 @@
   gap: var(--space-sm);
   padding: var(--space-md);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--app-surface-glass-strong);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -783,7 +786,7 @@
 .mobile-v2-tables-chip {
   padding: var(--space-md);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--app-surface-glass-strong);
   border: 1px solid rgba(0, 0, 0, 0.05);
   text-align: center;
 }
@@ -809,13 +812,24 @@
   gap: 8px;
   min-height: 44px;
   padding: 0 var(--space-md);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
   border: none;
   width: 100%;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.mobile-v2-btn--map:hover {
+  background: var(--color-brand-muted);
+  color: var(--color-brand-deep);
+}
+
+.mobile-v2-btn--secondary:hover {
+  background: var(--button-secondary-hover-bg);
+  color: var(--button-secondary-hover-text);
 }
 
 .mobile-v2-btn--map {
@@ -838,7 +852,7 @@
 .mobile-v2-company {
   padding: var(--space-md);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--app-surface-glass-strong);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -917,7 +931,7 @@
   gap: 4px;
   margin: 0 -16px;
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--app-surface-glass-panel);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--color-gray-200);
 }
@@ -928,7 +942,7 @@
   justify-content: center;
   min-height: 40px;
   padding: 6px 4px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-button);
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--color-gray-700);
@@ -976,7 +990,7 @@
   max-width: 480px;
   max-height: min(82vh, 640px);
   padding: var(--space-lg);
-  background: #fff;
+  background: var(--surface-strong);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   overflow-y: auto;
 }
@@ -1002,10 +1016,16 @@
   width: 36px;
   height: 36px;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   background: var(--color-gray-100);
   font-size: 1.25rem;
   cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mobile-v2-drawer__close:hover {
+  background: var(--button-secondary-hover-bg);
+  color: var(--button-secondary-hover-text);
 }
 
 .mobile-v2-drawer__dl {

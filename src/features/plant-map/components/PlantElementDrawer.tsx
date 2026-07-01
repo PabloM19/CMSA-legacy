@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
+import { getAlarmsForCell } from '../../../data/mockCellAlarms'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { PlantElementView } from '../../../types/plant'
 import { getDrawerSpeedMessage, getDrawerStateNotice } from '../../../utils/plantMapCopyHelpers'
@@ -10,6 +11,7 @@ interface PlantElementDrawerProps {
   onClose: () => void
   variant?: 'side' | 'bottom'
   footer?: ReactNode
+  cellCode?: string | null
 }
 
 export function PlantElementDrawer({
@@ -17,6 +19,7 @@ export function PlantElementDrawer({
   onClose,
   variant = 'side',
   footer,
+  cellCode,
 }: PlantElementDrawerProps) {
   const { t, lang } = useLanguage()
   const d = t.plantMap
@@ -25,10 +28,22 @@ export function PlantElementDrawer({
 
   const isFree = element.status === 'free' || element.status === 'idle'
   const isPalletizer = element.type === 'palletizer'
-  const stateNotice = getDrawerStateNotice(element, d)
+  const isConflict = element.status === 'conflict'
+  const stateNotice = isConflict
+    ? { title: d.drawerBlockedElementTitle, detail: d.drawerBlockedElementDetail, tone: 'warn' as const }
+    : getDrawerStateNotice(element, d)
   const speedMessage = element.speedStatus
     ? getDrawerSpeedMessage(element.speedStatus, d)
     : null
+  const cellAlarms = getAlarmsForCell(cellCode ?? element.name)
+  const activeAlarm = cellAlarms.find((alarm) => alarm.status === 'active') ?? cellAlarms[0]
+
+  const etaDisplay = element.eta ?? d.noEta
+  const occupancyDisplay = isFree
+    ? d.available
+    : element.occupancyPercent != null
+      ? `${element.occupancyPercent}% ${d.occupancyLabel}`
+      : d.zeroOccupancy
 
   return (
     <div className="plant-drawer-overlay" role="presentation" onClick={onClose}>
@@ -66,6 +81,14 @@ export function PlantElementDrawer({
               </dd>
             </div>
           )}
+          <div>
+            <dt>{d.drawerEta}</dt>
+            <dd>{etaDisplay}</dd>
+          </div>
+          <div>
+            <dt>{d.drawerOccupancy}</dt>
+            <dd>{occupancyDisplay}</dd>
+          </div>
         </dl>
 
         {isPalletizer && (
@@ -124,12 +147,6 @@ export function PlantElementDrawer({
                   <dd>{element.remainingTime}</dd>
                 </div>
               )}
-              {element.eta && (
-                <div>
-                  <dt>{d.drawerEta}</dt>
-                  <dd>{element.eta}</dd>
-                </div>
-              )}
               {element.endTime && (
                 <div>
                   <dt>{d.drawerEndTime}</dt>
@@ -140,7 +157,29 @@ export function PlantElementDrawer({
           </section>
         )}
 
-        {element.alert && !stateNotice?.detail && (
+        {activeAlarm && (
+          <section className="plant-drawer__section">
+            <h3 className="plant-drawer__section-title">{d.drawerActiveAlarm}</h3>
+            <dl className="plant-drawer__dl">
+              <div>
+                <dt>{d.alarmTypeLabel}</dt>
+                <dd>{activeAlarm.type}</dd>
+              </div>
+              <div>
+                <dt>{d.alarmSeverityLabel}</dt>
+                <dd>
+                  {activeAlarm.severity === 'critical' ? d.alarmSeverityHigh : d.alarmSeverityMedium}
+                </dd>
+              </div>
+            </dl>
+            <p className="plant-drawer__alert">
+              <AlertTriangle size={16} aria-hidden="true" />
+              {activeAlarm.message}
+            </p>
+          </section>
+        )}
+
+        {element.alert && !activeAlarm && !stateNotice?.detail && (
           <section className="plant-drawer__section">
             <h3 className="plant-drawer__section-title">{d.drawerAlerts}</h3>
             <p className="plant-drawer__alert">

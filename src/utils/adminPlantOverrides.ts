@@ -40,6 +40,10 @@ export function clearAdminPlantOverride(id: string): void {
   localStorage.setItem(ADMIN_PLANT_OVERRIDES_KEY, JSON.stringify(overrides))
 }
 
+export function clearAdminPlantOverrides(): void {
+  localStorage.removeItem(ADMIN_PLANT_OVERRIDES_KEY)
+}
+
 export function applyAdminPlantOverrides(tables: PlantTable[]): PlantTable[] {
   const overrides = readAdminPlantOverrides()
   if (Object.keys(overrides).length === 0) return tables

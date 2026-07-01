@@ -9,13 +9,13 @@ interface BacklogViewControlsProps {
   onDensityChange: (density: BacklogDensity) => void
 }
 
-const MODES: BacklogViewMode[] = ['summary', 'full', 'attention', 'mine']
+const MODES: BacklogViewMode[] = ['summary', 'full', 'in_progress', 'completed']
 
 const MODE_LABEL = {
+  full: 'viewModeFullView',
   summary: 'viewModeSummary',
-  full: 'viewModeFull',
-  attention: 'viewModeAttention',
-  mine: 'viewModeMine',
+  in_progress: 'viewModeInProgress',
+  completed: 'viewModeCompleted',
 } as const
 
 export function BacklogViewControls({

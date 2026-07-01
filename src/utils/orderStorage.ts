@@ -12,6 +12,10 @@ export function getCreatedOrders(): CreatedOrder[] {
   }
 }
 
+export function clearCreatedOrders(): void {
+  localStorage.removeItem(STORAGE_KEY)
+}
+
 export function saveCreatedOrder(order: CreatedOrder): void {
   const existing = getCreatedOrders()
   localStorage.setItem(STORAGE_KEY, JSON.stringify([order, ...existing]))

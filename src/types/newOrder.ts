@@ -14,7 +14,7 @@ export interface NewOrderFormData {
   boxFormat: string
   boxes: string
   boxesPerHour: string
-  notes: string
+  barcode: string
 }
 
 export type NewOrderFormErrors = Partial<Record<keyof NewOrderFormData, string>>
@@ -47,7 +47,8 @@ export interface CreatedOrder {
   boxFormat: string
   boxes: number
   boxesPerHour: number
-  notes: string
+  notes?: string
+  barcode?: string
   createdAt: string
   status: 'pending'
   calculation: OrderCalculation

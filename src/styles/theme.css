@@ -1,0 +1,243 @@
+/* ─── Tema claro (por defecto) ─── */
+
+:root,
+[data-theme='light'] {
+  --app-bg: var(--color-brand-pale);
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-strong: #ffffff;
+  --text-main: #172033;
+  --text-muted: #667085;
+  --border-soft: rgba(15, 23, 42, 0.1);
+  --app-surface-glass: rgba(255, 255, 255, 0.78);
+  --app-surface-glass-strong: rgba(255, 255, 255, 0.88);
+  --app-surface-glass-soft: rgba(255, 255, 255, 0.65);
+  --app-surface-glass-panel: rgba(255, 255, 255, 0.92);
+  --app-surface-glass-subtle: rgba(255, 255, 255, 0.5);
+  --app-border-brand: rgba(0, 160, 210, 0.1);
+  --app-border-brand-strong: rgba(0, 160, 210, 0.18);
+  --color-input-bg: var(--surface-strong);
+  --lang-switcher-bg: rgba(255, 255, 255, 0.6);
+  --lang-switcher-active-bg: var(--color-white);
+  --overlay-backdrop: rgba(26, 35, 40, 0.45);
+  --color-input-bg: var(--surface-strong);
+}
+
+/* ─── Tema oscuro ─── */
+
+[data-theme='dark'] {
+  --app-bg: #0f172a;
+  --surface: rgba(15, 23, 42, 0.72);
+  --surface-strong: #111827;
+  --text-main: #f8fafc;
+  --text-muted: #cbd5e1;
+  --border-soft: rgba(255, 255, 255, 0.12);
+
+  --color-bg: #0f172a;
+  --color-surface-soft: rgba(15, 23, 42, 0.72);
+  --color-text: var(--text-main);
+  --color-muted: var(--text-muted);
+
+  --color-gray-50: #1e293b;
+  --color-gray-100: #334155;
+  --color-gray-200: #475569;
+  --color-gray-300: #64748b;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #cbd5e1;
+  --color-gray-600: #e2e8f0;
+  --color-gray-700: #f1f5f9;
+  --color-gray-800: #f8fafc;
+  --color-gray-900: #ffffff;
+
+  --color-brand-pale: rgba(0, 160, 210, 0.14);
+  --color-brand-muted: rgba(0, 160, 210, 0.22);
+
+  --color-sumo-gradient: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.14) 0%,
+    rgba(124, 58, 237, 0) 100%
+  );
+  --color-maf-gradient: linear-gradient(
+    135deg,
+    rgba(234, 88, 12, 0.14) 0%,
+    rgba(234, 88, 12, 0) 100%
+  );
+
+  --glass-bg: rgba(15, 23, 42, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.28);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.32);
+  --shadow-modal: 0 20px 48px rgba(0, 0, 0, 0.55);
+
+  --color-input-bg: #0f172a;
+  --lang-switcher-bg: rgba(15, 23, 42, 0.65);
+  --lang-switcher-active-bg: #334155;
+  --overlay-backdrop: rgba(2, 6, 23, 0.72);
+
+  /* Acentos legibles sobre fondos oscuros */
+  --color-brand-deep: #7fd4ef;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #38bdf8;
+
+  /* Superficies con más separación del fondo */
+  --color-surface: #1e293b;
+  --surface-strong: #1e293b;
+  --app-surface-glass: rgba(30, 41, 59, 0.88);
+  --app-surface-glass-strong: rgba(30, 41, 59, 0.96);
+  --app-surface-glass-soft: rgba(30, 41, 59, 0.72);
+  --app-surface-glass-panel: rgba(30, 41, 59, 0.98);
+  --app-surface-glass-subtle: rgba(51, 65, 85, 0.55);
+  --color-border: rgba(148, 163, 184, 0.28);
+  --border-soft: rgba(148, 163, 184, 0.22);
+  --app-border-brand: rgba(148, 163, 184, 0.18);
+  --app-border-brand-strong: rgba(148, 163, 184, 0.28);
+
+  /* Botones secundarios más visibles sobre cards oscuras */
+  --button-secondary-bg: rgba(51, 65, 85, 0.9);
+  --button-secondary-text: #f1f5f9;
+  --button-secondary-border: #64748b;
+  --button-secondary-hover-bg: #475569;
+  --button-secondary-hover-text: #ffffff;
+  --button-secondary-hover-border: #94a3b8;
+  --button-ghost-text: #cbd5e1;
+  --button-ghost-hover-bg: #334155;
+  --button-ghost-hover-text: #f8fafc;
+  --button-chip-hover-bg: #334155;
+}
+
+/* Fondo global — modo oscuro */
+[data-theme='dark'] .cmsa-background {
+  background:
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.22), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.14), transparent 35%),
+    linear-gradient(135deg, #020617 0%, #0f172a 48%, #111827 100%);
+}
+
+[data-theme='dark'] .cmsa-background__blob {
+  opacity: 0.35;
+}
+
+[data-theme='dark'] .cmsa-background__blob--1 {
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.35) 0%, transparent 70%);
+}
+
+[data-theme='dark'] .cmsa-background__blob--2 {
+  background: radial-gradient(circle, rgba(0, 160, 210, 0.28) 0%, transparent 70%);
+}
+
+[data-theme='dark'] .cmsa-background__blob--3 {
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.22) 0%, transparent 70%);
+}
+
+[data-theme='dark'] body {
+  background: var(--app-bg);
+  color: var(--text-main);
+}
+
+[data-theme='dark'] .user-menu__chip--master {
+  background: var(--color-master);
+  color: var(--color-white);
+}
+
+[data-theme='dark'] .lang-switcher__btn--active {
+  color: var(--color-brand-light);
+}
+
+[data-theme='dark'] .admin-btn--primary {
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .admin-btn--primary:hover:not(:disabled) {
+  background: #475569;
+  border-color: #64748b;
+  color: #ffffff;
+}
+
+/* ─── Dashboard — modo oscuro ─── */
+
+[data-theme='dark'] .dash-attention__item {
+  background: var(--color-surface);
+}
+
+[data-theme='dark'] .dash-attention__item--critical,
+[data-theme='dark'] .dash-attention__item--blocked {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+[data-theme='dark'] .dash-attention__item--validation {
+  background: rgba(124, 58, 237, 0.16);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+[data-theme='dark'] .dash-attention__item--warning,
+[data-theme='dark'] .dash-attention__item--conflict {
+  background: rgba(234, 179, 8, 0.14);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+[data-theme='dark'] .dash-attention__action {
+  color: #e0f2fe;
+  background: rgba(0, 160, 210, 0.22);
+}
+
+[data-theme='dark'] .dash-attention__action:hover {
+  color: #ffffff;
+  background: rgba(0, 160, 210, 0.32);
+}
+
+[data-theme='dark'] .dash-quick__btn-icon {
+  color: var(--color-brand-light);
+}
+
+[data-theme='dark'] .dash-active-cards__link,
+[data-theme='dark'] .dash-active-cards__more {
+  color: var(--color-brand-light);
+}
+
+[data-theme='dark'] .dash-op-summary__item {
+  border-color: var(--color-border);
+}
+
+[data-theme='dark'] .ui-input::placeholder,
+[data-theme='dark'] .ui-select::placeholder,
+[data-theme='dark'] .ui-textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* ─── Cola diaria — modo oscuro ─── */
+
+[data-theme='dark'] .backlog-card--readonly {
+  background: rgba(15, 23, 42, 0.55);
+}
+
+[data-theme='dark'] .backlog-card__btn--link {
+  color: #bae6fd;
+  background: rgba(0, 160, 210, 0.18);
+  border-color: rgba(125, 211, 252, 0.35);
+}
+
+[data-theme='dark'] .backlog-card__btn--link:hover {
+  color: #ffffff;
+  background: rgba(0, 160, 210, 0.28);
+  border-color: rgba(125, 211, 252, 0.5);
+}
+
+[data-theme='dark'] .backlog-column__view-all {
+  background: var(--button-secondary-bg);
+  color: var(--color-brand-light);
+  border-color: var(--button-secondary-border);
+}
+
+[data-theme='dark'] .backlog-board-scroll__fade--left {
+  background: linear-gradient(to right, var(--color-bg) 0%, transparent 100%);
+}
+
+[data-theme='dark'] .backlog-board-scroll__fade--right {
+  background: linear-gradient(to left, var(--color-bg) 0%, transparent 100%);
+}

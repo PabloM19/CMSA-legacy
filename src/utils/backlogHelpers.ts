@@ -1,15 +1,16 @@
 import type { BacklogKpiCounts } from '../types/backlog'
 
-export type BacklogHeroStatus = 'ok' | 'pending_validation' | 'incidents'
+export type BacklogHeroStatus = 'ok' | 'pending_preparation' | 'incidents'
 
 export function getBacklogHeroStatus(counts: BacklogKpiCounts): BacklogHeroStatus {
-  if (counts.blocked > 0) return 'incidents'
-  if (counts.pendingValidation > 0) return 'pending_validation'
+  if (counts.inPreparation > 0) return 'pending_preparation'
   return 'ok'
 }
 
-export function getBacklogHeroMessageKey(status: BacklogHeroStatus): 'heroOk' | 'heroPendingValidation' | 'heroIncidents' {
+export function getBacklogHeroMessageKey(
+  status: BacklogHeroStatus,
+): 'heroOk' | 'heroPendingPreparation' | 'heroIncidents' {
   if (status === 'incidents') return 'heroIncidents'
-  if (status === 'pending_validation') return 'heroPendingValidation'
+  if (status === 'pending_preparation') return 'heroPendingPreparation'
   return 'heroOk'
 }

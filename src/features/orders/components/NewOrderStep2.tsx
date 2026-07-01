@@ -1,4 +1,4 @@
-import { FormField, Input, Textarea } from '../../../components/ui/FormField'
+import { FormField, Input } from '../../../components/ui/FormField'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { NewOrderFormData, NewOrderFormErrors } from '../../../types/newOrder'
 import { RATE_SHORTCUTS } from '../../../utils/newOrderViewHelpers'
@@ -68,16 +68,6 @@ export function NewOrderStep2({ form, errors, onChange }: NewOrderStep2Props) {
               ))}
             </div>
           </div>
-        </FormField>
-
-        <FormField label={d.notes} htmlFor="notes" className="new-order-step__full">
-          <Textarea
-            id="notes"
-            rows={4}
-            placeholder={d.notesPlaceholder}
-            value={form.notes}
-            onChange={(e) => onChange('notes', e.target.value)}
-          />
         </FormField>
       </div>
     </section>

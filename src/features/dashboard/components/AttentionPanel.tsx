@@ -8,7 +8,9 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { EmptyState } from '../../../components/ui/EmptyState'
+import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
+import { canAccessRoute } from '../../../utils/permissions'
 import type { AttentionItem } from '../../../utils/dashboardHelpers'
 
 interface AttentionPanelProps {
@@ -34,6 +36,7 @@ function AttentionIcon({ kind }: { kind: AttentionItem['kind'] }) {
 }
 
 export function AttentionPanel({ items }: AttentionPanelProps) {
+  const { user } = useAuth()
   const { t } = useLanguage()
   const d = t.dashboard
 
@@ -66,7 +69,7 @@ export function AttentionPanel({ items }: AttentionPanelProps) {
                 <p className="dash-attention__title">{item.title}</p>
                 {item.detail && <p className="dash-attention__detail">{item.detail}</p>}
               </div>
-              {item.actionTo && (
+              {item.actionTo && (!user || canAccessRoute(user, item.actionTo)) && (
                 <Link to={item.actionTo} className="dash-attention__action">
                   {actionLabel(item.actionKey)}
                 </Link>

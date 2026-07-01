@@ -18,7 +18,7 @@ export function Header({ wide = false }: HeaderProps) {
 
   function handleLogout() {
     logout()
-    navigate('/login', { replace: true })
+    navigate('/plant-map', { replace: true })
   }
 
   const innerClass = wide

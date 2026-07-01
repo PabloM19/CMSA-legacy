@@ -3,37 +3,32 @@ import type { BacklogOrder } from '../types/backlog'
 import { canActOnOrder } from './dashboardPermissions'
 
 const ATTENTION_PATTERN =
-  /incidencia|conflicto|crític|critico|retraso|bloqueo|finaliz|próximo|proximo|validaci/i
+  /incidencia|conflicto|crític|critico|retraso|bloqueo|finaliz|próximo|proximo|espera/i
 
 export function orderNeedsAttention(order: BacklogOrder): boolean {
-  if (order.column === 'bloqueado') return true
-
-  if (order.column === 'pendiente_validacion' && !order.tablesValidated) return true
-
+  if (order.column === 'en_produccion' && order.productionState === 'temp_blocked') return true
+  if (order.column === 'en_produccion' && order.productionState === 'element_blocked') return true
+  if (order.column === 'en_preparacion' && order.preparationStatus === 'waiting_cell') return true
   if (order.validationTables.some((t) => t.status === 'conflicto')) return true
-
   if (order.alerts.some((a) => ATTENTION_PATTERN.test(a))) return true
-
-  if (
-    order.column === 'en_ejecucion' &&
-    order.alerts.some((a) => /finaliz|próximo|proximo/i.test(a))
-  ) {
-    return true
-  }
-
   return false
 }
 
-export function filterAttentionOrders(orders: BacklogOrder[]): BacklogOrder[] {
-  return orders.filter(orderNeedsAttention)
+export function filterInProgressOrders(orders: BacklogOrder[]): BacklogOrder[] {
+  return orders.filter(
+    (o) =>
+      o.column === 'en_backlog' ||
+      o.column === 'en_preparacion' ||
+      o.column === 'en_produccion',
+  )
+}
+
+export function filterCompletedOrders(orders: BacklogOrder[]): BacklogOrder[] {
+  return orders.filter((o) => o.column === 'finalizado')
 }
 
 export function filterMineOrders(orders: BacklogOrder[], user: User): BacklogOrder[] {
-  if (user.role === 'master') return orders
-
-  if (user.role === 'validator') {
-    return orders.filter((o) => o.column === 'pendiente_validacion')
-  }
+  if (user.role === 'superadmin' || user.role === 'supervisor') return orders
 
   if (user.role === 'user') {
     if (user.company === 'SUMO' || user.company === 'MAF') {
@@ -46,11 +41,15 @@ export function filterMineOrders(orders: BacklogOrder[], user: User): BacklogOrd
 
 export function filterOrdersForView(
   orders: BacklogOrder[],
-  viewMode: 'summary' | 'full' | 'attention' | 'mine',
+  viewMode: 'summary' | 'full' | 'in_progress' | 'completed',
   user: User | null,
 ): BacklogOrder[] {
   if (!user) return orders
-  if (viewMode === 'attention') return filterAttentionOrders(orders)
-  if (viewMode === 'mine') return filterMineOrders(orders, user)
+  if (viewMode === 'in_progress') {
+    return filterInProgressOrders(filterMineOrders(orders, user))
+  }
+  if (viewMode === 'completed') {
+    return filterCompletedOrders(orders)
+  }
   return orders
 }

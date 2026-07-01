@@ -2,6 +2,7 @@ import { CompanyBadge } from '../../../components/ui/StatusBadge'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { NewOrderFormData, OrderCalculation } from '../../../types/newOrder'
 import { getSummaryStatus, type OrderSummaryStatus } from '../../../utils/newOrderViewHelpers'
+import { BarcodeDisplay } from './BarcodeDisplay'
 
 interface NewOrderLiveSummaryProps {
   form: NewOrderFormData
@@ -40,6 +41,14 @@ export function NewOrderLiveSummary({ form, calculation }: NewOrderLiveSummaryPr
           <dt>{d.productReference}</dt>
           <dd>{form.productReference.trim() || '—'}</dd>
         </div>
+        {form.barcode.trim() && (
+          <div className="new-order-summary__barcode">
+            <dt>{d.barcode}</dt>
+            <dd>
+              <BarcodeDisplay value={form.barcode} />
+            </dd>
+          </div>
+        )}
         <div>
           <dt>{d.product}</dt>
           <dd>{form.productName.trim() || form.product.trim() || '—'}</dd>

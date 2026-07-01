@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user],
   )
 
-  const defaultRoute = user ? getDefaultRoute(user) : '/login'
+  const defaultRoute = user ? getDefaultRoute(user) : '/plant-map'
 
   const value = useMemo(
     () => ({

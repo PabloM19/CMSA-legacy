@@ -123,12 +123,12 @@ export function OrderDetailModal({
               <span className="backlog-card__demo-tag">{d.demo}</span>
             </button>
           )}
-          {user?.role === 'master' && onMarkIncident && (
+          {user?.role === 'superadmin' && onMarkIncident && (
             <button type="button" className="order-btn order-btn--ghost" onClick={onMarkIncident}>
               {d.markIncident}
             </button>
           )}
-          {user?.role === 'master' && onCancel && (
+          {user?.role === 'superadmin' && onCancel && (
             <button type="button" className="order-btn order-btn--danger" onClick={onCancel}>
               {d.cancelOrder}
             </button>

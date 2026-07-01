@@ -8,9 +8,10 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useAuth } from '../features/auth/AuthContext'
 import { getDateLocale, getTranslations, type Lang, type Translations } from './translations'
-
-const LANG_STORAGE_KEY = 'cmsa-lang'
+import { readGuestLanguage, readUserPreferences, saveGuestLanguage, patchUserPreferences } from '../utils/userPreferences'
+import { getSession } from '../utils/auth'
 
 interface LanguageContextValue {
   lang: Lang
@@ -21,18 +22,36 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null)
 
-function readStoredLang(): Lang {
-  const stored = localStorage.getItem(LANG_STORAGE_KEY)
-  return stored === 'en' ? 'en' : 'es'
+function resolveInitialLang(): Lang {
+  const session = getSession()
+  if (session?.user) {
+    return readUserPreferences(session.user.username).language
+  }
+  return readGuestLanguage()
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(readStoredLang)
+  const { user } = useAuth()
+  const username = user?.username
+  const [lang, setLangState] = useState<Lang>(resolveInitialLang)
 
-  const setLang = useCallback((next: Lang) => {
-    setLangState(next)
-    localStorage.setItem(LANG_STORAGE_KEY, next)
-  }, [])
+  useEffect(() => {
+    if (username) {
+      setLangState(readUserPreferences(username).language)
+    }
+  }, [username])
+
+  const setLang = useCallback(
+    (next: Lang) => {
+      setLangState(next)
+      if (username) {
+        patchUserPreferences(username, { language: next })
+      } else {
+        saveGuestLanguage(next)
+      }
+    },
+    [username],
+  )
 
   useEffect(() => {
     document.documentElement.lang = lang
@@ -48,9 +67,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     [lang, setLang],
   )
 
-  return (
-    <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
-  )
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
 }
 
 export function useLanguage(): LanguageContextValue {

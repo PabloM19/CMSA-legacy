@@ -13,9 +13,9 @@ interface DashboardHeroProps {
 }
 
 function HeroIcon({ status }: { status: DashboardSnapshot['generalStatus'] }) {
-  if (status === 'ok') return <CheckCircle2 size={40} strokeWidth={1.5} />
-  if (status === 'warning') return <AlertTriangle size={40} strokeWidth={1.5} />
-  return <Activity size={40} strokeWidth={1.5} />
+  if (status === 'ok') return <CheckCircle2 size={28} strokeWidth={1.5} />
+  if (status === 'warning') return <AlertTriangle size={28} strokeWidth={1.5} />
+  return <Activity size={28} strokeWidth={1.5} />
 }
 
 export function DashboardHero({ data }: DashboardHeroProps) {

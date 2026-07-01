@@ -50,7 +50,7 @@ export function enrichAdminCompanies(
       (user) => user.company === company.name && user.status === 'activo',
     ).length,
     activeOrders: orders.filter(
-      (order) => order.company === company.name && order.column === 'en_ejecucion',
+      (order) => order.company === company.name && order.column === 'en_produccion',
     ).length,
   }))
 }

@@ -4,8 +4,8 @@ import type { PlantTable } from '../types/plant'
 import type { User } from '../types/auth'
 import { logOrderColumnMove } from './activityLogActions'
 import { applyColumnMove } from './backlogRules'
-import { occupyOrderTables, releaseTablesForOrder, syncPlantFromValidationTables } from './plantSync'
-import { assignTablesToOrder } from './tableAssignment'
+import { confirmRecipeForOrder } from './preparationHelpers'
+import { occupyOrderTables, releaseTablesForOrder } from './plantSync'
 
 export function executeColumnMove(
   orders: BacklogOrder[],
@@ -24,11 +24,11 @@ export function executeColumnMove(
   let workingOrder = order
   let workingPlant = plantTables
 
-  const releasesOnLeave = ['pendiente_validacion', 'en_ejecucion', 'bloqueado']
+  const releasesOnLeave = ['en_preparacion', 'en_produccion']
   if (
     order.column !== targetColumn &&
     releasesOnLeave.includes(order.column) &&
-    targetColumn !== 'en_ejecucion'
+    targetColumn !== 'en_produccion'
   ) {
     workingPlant = releaseTablesForOrder(order.id, workingPlant)
     workingOrder = {
@@ -38,40 +38,35 @@ export function executeColumnMove(
       assignmentMode: 'none',
       validationTables: [],
       tablesValidated: false,
+      preparationStatus: undefined,
+      productionState: undefined,
     }
   }
 
-  if (targetColumn === 'pendiente_validacion' && order.column !== 'pendiente_validacion') {
-    const assignment = assignTablesToOrder(workingOrder, workingPlant, lang)
-    if (!assignment.success) {
-      return {
-        success: false,
-        orders,
-        plantTables,
-        message: assignment.message,
-      }
+  if (targetColumn === 'en_produccion' && order.column === 'en_preparacion') {
+    const confirmed = confirmRecipeForOrder(workingOrder, workingPlant, actor.name)
+    workingOrder = confirmed.order
+    workingPlant = confirmed.plantTables
+    workingPlant = occupyOrderTables(workingOrder.id, workingPlant)
+  } else {
+    const moved = applyColumnMove(workingOrder, targetColumn, actor.name)
+    workingOrder = moved
+
+    if (targetColumn === 'finalizado') {
+      workingPlant = releaseTablesForOrder(order.id, workingPlant)
     }
-    workingOrder = assignment.order
-    workingPlant = assignment.plantTables
   }
 
-  const moved = applyColumnMove(workingOrder, targetColumn, actor.name)
-
-  if (targetColumn === 'en_ejecucion') {
-    workingPlant = syncPlantFromValidationTables(workingPlant, moved)
-    workingPlant = occupyOrderTables(moved.id, workingPlant)
-  }
-
-  const nextOrders = orders.map((o) => (o.id === order.id ? moved : o))
+  const nextOrders = orders.map((o) => (o.id === order.id ? workingOrder : o))
 
   if (order.column !== targetColumn) {
-    logOrderColumnMove(actor, moved.reference, order.column, targetColumn, lang)
+    logOrderColumnMove(actor, workingOrder.reference, order.column, targetColumn, lang)
   }
 
   return {
     success: true,
     orders: nextOrders,
     plantTables: workingPlant,
-    movedOrder: moved,
+    movedOrder: workingOrder,
   }
 }

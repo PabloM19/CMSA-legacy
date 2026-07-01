@@ -1,12 +1,31 @@
 import type { OrderCompany } from './newOrder'
+import type { AssignmentMode } from './plant'
 
+/** Columnas principales del tablero (3 + acabados como sección). */
 export type BacklogColumnId =
   | 'en_backlog'
+  | 'en_preparacion'
+  | 'en_produccion'
+  | 'finalizado'
+
+/** @deprecated IDs legacy — migrados al cargar desde localStorage */
+export type LegacyBacklogColumnId =
   | 'pendiente_lanzamiento'
   | 'pendiente_validacion'
   | 'en_ejecucion'
   | 'bloqueado'
-  | 'finalizado'
+
+export type PreparationStatus =
+  | 'pending_preparation'
+  | 'waiting_cell'
+  | 'preparing_recipe'
+
+export type ProductionVisualState =
+  | 'producing'
+  | 'temp_waiting'
+  | 'temp_blocked'
+  | 'element_blocked'
+  | 'completed'
 
 export type ValidationTableStatus = 'pendiente' | 'validada' | 'conflicto' | 'parada'
 export type ValidationTableType = 'automatic' | 'manual'
@@ -30,8 +49,6 @@ export interface AuditEntry {
   user?: string
 }
 
-import type { AssignmentMode } from './plant'
-
 export interface BacklogOrder {
   id: string
   company: OrderCompany
@@ -44,13 +61,12 @@ export interface BacklogOrder {
   boxes: number
   boxesPerHour: number
   column: BacklogColumnId
+  preparationStatus?: PreparationStatus
+  productionState?: ProductionVisualState
   eta: string
   endTime: string
-  /** Mesas necesarias para el pedido. */
   requiredTables: number
-  /** IDs de mesas asignadas: R1, M4… */
   assignedTableIds: string[]
-  /** Alias visible de mesas asignadas (mismos IDs). */
   assignedTables: string[]
   assignmentMode: AssignmentMode
   requiresManualTables?: boolean
@@ -65,9 +81,7 @@ export interface BacklogKpiCounts {
   total: number
   inQueue: number
   inBacklog: number
-  pendingLaunch: number
-  pendingValidation: number
-  inExecution: number
-  blocked: number
+  inPreparation: number
+  inProduction: number
   completed: number
 }

@@ -53,7 +53,7 @@ export function TabletDrawerActions({ element, onAction }: TabletDrawerActionsPr
           {d.actionResume}
         </button>
       )}
-      {((user.role === 'user') || (user.role === 'validator' && !canCritical)) && (
+      {((user.role === 'user') || (false && !canCritical)) && (
         <p className="tablet-drawer-actions__hint">{d.actionRestricted}</p>
       )}
     </div>

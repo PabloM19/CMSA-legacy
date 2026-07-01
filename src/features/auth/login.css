@@ -95,7 +95,7 @@
   width: 100%;
   padding: 0.75rem var(--space-md) 0.75rem 2.75rem;
   border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.85);
   font-size: var(--font-size-base);
   color: var(--color-gray-900);
@@ -126,7 +126,7 @@
   height: 2rem;
   padding: 0;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   background: transparent;
   color: var(--color-gray-400);
   cursor: pointer;
@@ -134,8 +134,8 @@
 }
 
 .login-card__password-toggle:hover:not(:disabled) {
-  color: var(--color-gray-600);
-  background: rgba(0, 0, 0, 0.04);
+  color: var(--button-secondary-hover-text);
+  background: var(--button-ghost-hover-bg);
 }
 
 .login-card__password-toggle:disabled {
@@ -165,18 +165,20 @@
   width: 100%;
   padding: 0.875rem var(--space-lg);
   border: none;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
-  color: var(--color-white);
+  border-radius: var(--radius-button);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
   font-size: var(--font-size-base);
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
   box-shadow: 0 4px 14px var(--color-brand-shadow);
 }
 
 .login-card__submit:hover:not(:disabled) {
-  opacity: 0.92;
+  background: var(--button-primary-hover-bg);
+  color: var(--button-primary-hover-text);
+  box-shadow: 0 6px 18px var(--color-brand-shadow);
 }
 
 .login-card__submit:active:not(:disabled) {

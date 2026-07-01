@@ -5,6 +5,7 @@ export type PlantTableType = 'automatic' | 'manual'
 export type PlantTableStatus =
   | 'free'
   | 'reserved'
+  | 'preparing'
   | 'pending_validation'
   | 'validated'
   | 'occupied'
@@ -62,6 +63,7 @@ export interface PlantElementView {
   endTime: string | null
   remainingTime: string | null
   speedStatus: PlantSpeedStatus
+  occupancyPercent: number | null
   alert: string | null
   isClickable: boolean
 }

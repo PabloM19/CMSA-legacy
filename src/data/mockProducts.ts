@@ -1,6 +1,7 @@
 export interface MockProduct {
   id: string
   referenciaProducto: string
+  barcode: string
   nombre: string
   producto: string
   variedad: string
@@ -15,11 +16,22 @@ export interface MockProduct {
   activo: boolean
 }
 
+let barcodeCounter = 0
+
+function nextBarcode(): string {
+  barcodeCounter += 1
+  return `84370010${String(barcodeCounter).padStart(5, '0')}`
+}
+
 function product(
-  entry: Omit<MockProduct, 'producto' | 'tipo' | 'activo'> & { activo?: boolean },
+  entry: Omit<MockProduct, 'producto' | 'tipo' | 'activo' | 'barcode'> & {
+    activo?: boolean
+    barcode?: string
+  },
 ): MockProduct {
   return {
     ...entry,
+    barcode: entry.barcode ?? nextBarcode(),
     producto: 'Naranja',
     tipo: entry.uso,
     activo: entry.activo ?? true,

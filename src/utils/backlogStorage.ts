@@ -8,16 +8,14 @@ import type { CreatedOrder } from '../types/newOrder'
 import { getCreatedOrders } from './orderStorage'
 import { rebuildPlantTablesFromOrders } from './plantSync'
 import { isPlantTableId, formatTableLabel, resolveAssignedTableIds } from './tableAssignment'
-import { normalizeOrdersValidation } from './validationHelpers'
+import { migrateBacklogOrders } from './backlogMigration'
 
 export const BACKLOG_STORAGE_KEY = 'cmsa-backlog-orders'
 
 const COLUMN_IDS = [
   'en_backlog',
-  'pendiente_lanzamiento',
-  'pendiente_validacion',
-  'en_ejecucion',
-  'bloqueado',
+  'en_preparacion',
+  'en_produccion',
   'finalizado',
 ] as const
 
@@ -92,14 +90,42 @@ function syncLegacyCreatedOrders(orders: BacklogOrder[]): BacklogOrder[] {
 }
 
 function seedInitialState(): CmsaPersistedState {
-  const orders = normalizeOrdersValidation(normalizePriorities([...mockBacklogOrders]))
+  const orders = normalizePriorities([...mockBacklogOrders])
   const plantTables = rebuildPlantTablesFromOrders(createSeedPlantTables(), orders)
   return { orders, plantTables, plantPalletizers: createSeedPalletizers() }
 }
 
+const DEMO_ALARM_IDS = ['bk-alm-1', 'bk-alm-2', 'bk-alm-3'] as const
+
+function ensureDemoAlarmOrders(orders: BacklogOrder[]): BacklogOrder[] {
+  const map = new Map(orders.map((order) => [order.id, order]))
+
+  for (const id of DEMO_ALARM_IDS) {
+    if (!map.has(id)) {
+      const seed = mockBacklogOrders.find((order) => order.id === id)
+      if (seed) map.set(id, seed)
+    }
+  }
+
+  const bk2 = map.get('bk-2')
+  if (bk2?.assignedTableIds?.includes('R4')) {
+    const seed = mockBacklogOrders.find((order) => order.id === 'bk-2')
+    if (seed) map.set('bk-2', seed)
+  }
+
+  const bk7 = map.get('bk-7')
+  if (bk7?.assignedTableIds?.includes('M2')) {
+    const seed = mockBacklogOrders.find((order) => order.id === 'bk-7')
+    if (seed) map.set('bk-7', seed)
+  }
+
+  return Array.from(map.values())
+}
+
 function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
-  let orders = syncLegacyCreatedOrders(state.orders.map(normalizeOrderFields))
-  orders = normalizeOrdersValidation(orders)
+  let orders = syncLegacyCreatedOrders(
+    ensureDemoAlarmOrders(migrateBacklogOrders(state.orders.map(normalizeOrderFields))),
+  )
   orders = normalizePriorities(orders)
   const plantTables = applyAdminPlantOverrides(
     rebuildPlantTablesFromOrders(

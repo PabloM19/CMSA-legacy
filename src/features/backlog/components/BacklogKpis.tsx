@@ -12,9 +12,8 @@ export function BacklogKpis({ counts }: BacklogKpisProps) {
   const items = [
     { key: 'total', label: d.kpiTotal, value: counts.total },
     { key: 'queue', label: d.kpiQueue, value: counts.inQueue, isQueue: true },
-    { key: 'validation', label: d.kpiValidation, value: counts.pendingValidation },
-    { key: 'execution', label: d.kpiExecution, value: counts.inExecution },
-    { key: 'blocked', label: d.kpiBlocked, value: counts.blocked },
+    { key: 'preparation', label: d.kpiPreparation, value: counts.inPreparation },
+    { key: 'production', label: d.kpiProduction, value: counts.inProduction },
     { key: 'completed', label: d.kpiCompleted, value: counts.completed },
   ]
 
@@ -26,7 +25,7 @@ export function BacklogKpis({ counts }: BacklogKpisProps) {
           <span className="backlog-kpi__value">{item.value}</span>
           {item.isQueue && (
             <span className="backlog-kpi__detail">
-              {d.kpiQueueBacklog}: {counts.inBacklog} · {d.kpiQueueLaunch}: {counts.pendingLaunch}
+              {d.kpiQueueBacklog}: {counts.inBacklog} · {d.kpiPreparationShort}: {counts.inPreparation}
             </span>
           )}
         </article>

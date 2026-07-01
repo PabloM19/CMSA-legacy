@@ -1,13 +1,25 @@
-export type BacklogViewMode = 'summary' | 'full' | 'attention' | 'mine'
+export type BacklogViewMode = 'summary' | 'full' | 'in_progress' | 'completed'
 export type BacklogDensity = 2 | 4 | 'all'
 
 const VIEW_MODE_KEY = 'cmsa-backlog-view-mode'
 const DENSITY_KEY = 'cmsa-backlog-density'
 
+export function clearBacklogViewPrefs(): void {
+  try {
+    localStorage.removeItem(VIEW_MODE_KEY)
+    localStorage.removeItem(DENSITY_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
 export function loadViewMode(): BacklogViewMode {
   try {
     const raw = localStorage.getItem(VIEW_MODE_KEY)
-    if (raw === 'summary' || raw === 'full' || raw === 'attention' || raw === 'mine') return raw
+    if (raw === 'summary' || raw === 'full' || raw === 'in_progress' || raw === 'completed') {
+      return raw
+    }
+    if (raw === 'attention' || raw === 'mine') return 'in_progress'
   } catch {
     /* ignore */
   }
@@ -46,7 +58,6 @@ export function isCompactViewMode(viewMode: BacklogViewMode): boolean {
   return viewMode !== 'full'
 }
 
-/** Ajusta densidad guardada al modo activo (Resumen nunca usa "Todos"). */
 export function normalizeDensityForMode(
   viewMode: BacklogViewMode,
   density: BacklogDensity,

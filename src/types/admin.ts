@@ -113,8 +113,10 @@ export interface AdminPersistedData {
 export type AdminTabId =
   | 'users'
   | 'companies'
+  | 'references'
   | 'tables'
   | 'palletizers'
+  | 'alarms'
   | 'activity'
   | 'config'
   | 'audit'

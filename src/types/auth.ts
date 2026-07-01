@@ -1,6 +1,7 @@
-export type Company = 'SUMO' | 'MAF' | 'MASTER' | 'CMSA'
+export type Company = 'SUMO' | 'MAF' | 'GLOBAL' | 'MASTER' | 'CMSA'
 
-export type UserRole = 'user' | 'master' | 'validator'
+/** `user` = operario SUMO/MAF */
+export type UserRole = 'user' | 'supervisor' | 'superadmin'
 
 export interface User {
   id: string

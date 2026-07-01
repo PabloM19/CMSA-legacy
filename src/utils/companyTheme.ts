@@ -6,6 +6,7 @@ export function getCompanyThemeClass(company: Company): string {
     MAF: 'theme-maf',
     MASTER: 'theme-master',
     CMSA: 'theme-brand',
+    GLOBAL: 'theme-brand',
   }
   return map[company]
 }

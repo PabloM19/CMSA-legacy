@@ -8,6 +8,7 @@ import type {
   PlantTable,
   PlantTableStatus,
 } from '../types/plant'
+import { mockOccupancyPercent } from './plantMapSummaryHelpers'
 
 function mockRemainingTime(endTime: string | null, lang: Lang): string | null {
   if (!endTime) return null
@@ -31,6 +32,7 @@ function tableToView(table: PlantTable, order: BacklogOrder | null, lang: Lang):
     endTime: order?.endTime ?? null,
     remainingTime: mockRemainingTime(order?.endTime ?? null, lang),
     speedStatus: table.speedStatus,
+    occupancyPercent: mockOccupancyPercent(table),
     alert: table.alert,
     isClickable: true,
   }
@@ -53,6 +55,7 @@ function palletizerToView(p: PlantPalletizerElement): PlantElementView {
     endTime: null,
     remainingTime: null,
     speedStatus: null,
+    occupancyPercent: p.status === 'active' ? 68 : p.status === 'waiting' ? 22 : null,
     alert: p.alert,
     isClickable: true,
   }
@@ -86,25 +89,27 @@ export function getStatusLabel(
   const es: Record<string, string> = {
     free: 'Libre',
     reserved: 'Reservada',
-    pending_validation: 'Pend. validación',
+    preparing: 'Pendiente de preparación',
+    pending_validation: 'Esperando confirmación de celda',
     validated: 'Validada',
-    occupied: 'Ocupada / en ejecución',
-    waiting: 'En espera',
-    blocked: 'Bloqueada',
-    conflict: 'Conflicto',
-    active: 'Activo',
+    occupied: 'En producción',
+    waiting: 'En espera temporal',
+    blocked: 'Bloqueo temporal',
+    conflict: 'Elemento bloqueado',
+    active: 'En producción',
     idle: 'Inactivo',
   }
   const en: Record<string, string> = {
     free: 'Free',
     reserved: 'Reserved',
-    pending_validation: 'Pending validation',
+    preparing: 'Pending preparation',
+    pending_validation: 'Awaiting cell confirmation',
     validated: 'Validated',
-    occupied: 'Occupied / in execution',
-    waiting: 'Waiting',
-    blocked: 'Blocked',
-    conflict: 'Conflict',
-    active: 'Active',
+    occupied: 'In production',
+    waiting: 'Temporary wait',
+    blocked: 'Temporary block',
+    conflict: 'Element blocked',
+    active: 'In production',
     idle: 'Idle',
   }
   const dict = lang === 'es' ? es : en
@@ -119,13 +124,6 @@ export function getSpeedLabel(speed: PlantSpeedStatus, lang: Lang): string | nul
   return speed === 'slow' ? 'Slow' : speed === 'fast' ? 'Fast' : 'Normal'
 }
 
-export function getSpeedEmoji(speed: PlantSpeedStatus): string | null {
-  if (speed === 'slow') return '🐢'
-  if (speed === 'fast') return '🐇'
-  if (speed === 'normal') return '✓'
-  return null
-}
-
 export function getTypeLabel(type: PlantElementView['type'], lang: Lang): string {
   if (lang === 'es') {
     if (type === 'automatic') return 'Automática'
@@ -138,8 +136,14 @@ export function getTypeLabel(type: PlantElementView['type'], lang: Lang): string
 }
 
 export function statusCssClass(status: PlantTableStatus | PlantPalletizerStatus): string {
-  if (status === 'pending_validation' || status === 'reserved') return 'pending_validation'
+  if (status === 'preparing') return 'preparing'
+  if (status === 'pending_validation' || status === 'reserved') return 'preparing'
   if (status === 'active') return 'occupied'
   if (status === 'idle') return 'free'
+  if (status === 'conflict') return 'blocked-critical'
   return status
+}
+
+export function hasCriticalBlink(status: PlantTableStatus | PlantPalletizerStatus): boolean {
+  return status === 'conflict'
 }

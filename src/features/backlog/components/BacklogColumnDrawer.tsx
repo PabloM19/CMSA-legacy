@@ -8,8 +8,8 @@ interface BacklogColumnDrawerProps {
   orders: BacklogOrder[]
   onClose: () => void
   onViewDetail: (order: BacklogOrder) => void
-  onSendValidation: (order: BacklogOrder) => void
   onPrepare: (order: BacklogOrder) => void
+  onConfirmRecipe: (order: BacklogOrder) => void
 }
 
 export function BacklogColumnDrawer({
@@ -17,8 +17,8 @@ export function BacklogColumnDrawer({
   orders,
   onClose,
   onViewDetail,
-  onSendValidation,
   onPrepare,
+  onConfirmRecipe,
 }: BacklogColumnDrawerProps) {
   const { t } = useLanguage()
   const d = t.backlog
@@ -55,9 +55,10 @@ export function BacklogColumnDrawer({
                 key={order.id}
                 order={order}
                 sortable={false}
+                completed={columnId === 'finalizado'}
                 onViewDetail={onViewDetail}
-                onSendValidation={onSendValidation}
                 onPrepare={onPrepare}
+                onConfirmRecipe={onConfirmRecipe}
               />
             ))
           )}

@@ -1,10 +1,9 @@
 import {
+  AlertTriangle,
   CheckSquare,
   Clock,
-  Factory,
   LayoutGrid,
   Lock,
-  Package,
 } from 'lucide-react'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { PlantMapSummaryStats } from '../../../utils/plantMapSummaryHelpers'
@@ -21,6 +20,7 @@ export function PlantMapSummary({ stats }: PlantMapSummaryProps) {
 
   const items = [
     {
+      key: 'free',
       label: d.summaryFree,
       hint: d.summaryFreeHint,
       value: stats.freeTables,
@@ -28,20 +28,24 @@ export function PlantMapSummary({ stats }: PlantMapSummaryProps) {
       tone: 'neutral' as const,
     },
     {
+      key: 'occupied',
       label: d.summaryOccupied,
       hint: d.summaryOccupiedHint,
       value: stats.occupiedTables,
-      icon: Factory,
+      icon: LayoutGrid,
       tone: 'brand' as const,
+      breakdown: true,
     },
     {
-      label: d.summaryPending,
-      hint: d.summaryPendingHint,
-      value: stats.pendingValidation,
+      key: 'preparing',
+      label: d.summaryPreparing,
+      hint: d.summaryPreparingHint,
+      value: stats.preparing,
       icon: CheckSquare,
       tone: 'pending' as const,
     },
     {
+      key: 'waiting',
       label: d.summaryWaiting,
       hint: d.summaryWaitingHint,
       value: stats.waiting,
@@ -49,6 +53,7 @@ export function PlantMapSummary({ stats }: PlantMapSummaryProps) {
       tone: 'wait' as const,
     },
     {
+      key: 'conflict',
       label: d.summaryConflict,
       hint: d.summaryConflictHint,
       value: stats.blockedOrConflict,
@@ -56,11 +61,12 @@ export function PlantMapSummary({ stats }: PlantMapSummaryProps) {
       tone: 'warn' as const,
     },
     {
-      label: d.summaryProduction,
-      hint: d.summaryProductionHint,
-      value: stats.ordersInProduction,
-      icon: Package,
-      tone: 'production' as const,
+      key: 'alarms',
+      label: d.summaryActiveAlarms,
+      hint: d.summaryActiveAlarmsHint,
+      value: stats.activeAlarms,
+      icon: AlertTriangle,
+      tone: 'warn' as const,
     },
   ]
 
@@ -71,7 +77,7 @@ export function PlantMapSummary({ stats }: PlantMapSummaryProps) {
           const Icon = item.icon
           return (
             <article
-              key={item.label}
+              key={item.key}
               className={`dash-card plant-map-summary__card plant-map-summary__card--${item.tone}`}
             >
               <span className="plant-map-summary__icon" aria-hidden="true">
@@ -80,6 +86,18 @@ export function PlantMapSummary({ stats }: PlantMapSummaryProps) {
               <span className="plant-map-summary__value">{item.value}</span>
               <span className="plant-map-summary__label">{item.label}</span>
               <span className="plant-map-summary__hint">{item.hint}</span>
+              {item.breakdown && (
+                <div className="plant-map-summary__breakdown">
+                  <div className="plant-map-summary__chips">
+                    <span className="plant-map-summary__chip plant-map-summary__chip--sumo">
+                      {d.summaryOccupiedSumo.replace('{sumo}', String(stats.occupiedSumo))}
+                    </span>
+                    <span className="plant-map-summary__chip plant-map-summary__chip--maf">
+                      {d.summaryOccupiedMaf.replace('{maf}', String(stats.occupiedMaf))}
+                    </span>
+                  </div>
+                </div>
+              )}
             </article>
           )
         })}

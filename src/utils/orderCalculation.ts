@@ -18,13 +18,15 @@ function getAlertMessages(lang: Lang): AlertMessages {
         overload: 'Sobrecarga: el volumen supera el límite operativo (5.000 cajas).',
         slowFlow: 'Aviso: flujo lento (< 100 cajas/h).',
         fastFlow: 'Aviso: flujo rápido (> 800 cajas/h).',
-        incompleteLayer: 'Aviso: capa incompleta — las cajas no son múltiplo de 8.',
+        incompleteLayer:
+          'Las cajas no completan una capa de 10. Puede quedar en espera temporal.',
       }
     : {
         overload: 'Overload: volume exceeds operational limit (5,000 boxes).',
         slowFlow: 'Warning: slow flow (< 100 boxes/h).',
         fastFlow: 'Warning: fast flow (> 800 boxes/h).',
-        incompleteLayer: 'Warning: incomplete layer — boxes are not a multiple of 8.',
+        incompleteLayer:
+          'Boxes do not complete a layer of 10. May remain on temporary hold.',
       }
 }
 
@@ -109,11 +111,11 @@ export function calculateOrder(
     alerts.push({ type: 'warning', message: messages.fastFlow })
   }
 
-  if (boxes % 8 !== 0) {
+  if (boxes % 10 !== 0) {
     alerts.push({ type: 'warning', message: messages.incompleteLayer })
   }
 
-  const requiredTables = Math.max(1, Math.ceil(boxes / 1200))
+  const requiredTables = Math.max(2, Math.ceil(boxes / 1200))
   const durationHours = boxes / boxesPerHour
   const durationMinutes = Math.round(durationHours * 60)
   const now = new Date()

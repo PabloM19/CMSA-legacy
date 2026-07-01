@@ -1,5 +1,5 @@
 import type { Lang } from '../i18n/translations'
-import type { BacklogColumnId } from '../types/backlog'
+import type { BacklogColumnId, BacklogOrder, PreparationStatus, ProductionVisualState } from '../types/backlog'
 import type { PlantPalletizerStatus, PlantTableStatus } from '../types/plant'
 
 export type StatusBadgeVariant =
@@ -7,6 +7,7 @@ export type StatusBadgeVariant =
   | 'queue'
   | 'pending'
   | 'pending_validation'
+  | 'preparing'
   | 'validated'
   | 'executing'
   | 'waiting'
@@ -32,21 +33,60 @@ export interface StatusBadgeInfo {
 }
 
 const COLUMN_LABELS_ES: Record<BacklogColumnId, { label: string; variant: StatusBadgeVariant }> = {
-  en_backlog: { label: 'En cola', variant: 'queue' },
-  pendiente_lanzamiento: { label: 'Pendiente', variant: 'pending' },
-  pendiente_validacion: { label: 'Pendiente de validación', variant: 'pending_validation' },
-  en_ejecucion: { label: 'En ejecución', variant: 'executing' },
-  bloqueado: { label: 'Bloqueado', variant: 'blocked' },
-  finalizado: { label: 'Finalizado', variant: 'finished' },
+  en_backlog: { label: 'Por ordenar', variant: 'queue' },
+  en_preparacion: { label: 'En preparación', variant: 'preparing' },
+  en_produccion: { label: 'En producción', variant: 'executing' },
+  finalizado: { label: 'Acabado', variant: 'finished' },
 }
 
 const COLUMN_LABELS_EN: Record<BacklogColumnId, { label: string; variant: StatusBadgeVariant }> = {
-  en_backlog: { label: 'In queue', variant: 'queue' },
-  pendiente_lanzamiento: { label: 'Pending', variant: 'pending' },
-  pendiente_validacion: { label: 'Pending validation', variant: 'pending_validation' },
-  en_ejecucion: { label: 'In execution', variant: 'executing' },
-  bloqueado: { label: 'Blocked', variant: 'blocked' },
-  finalizado: { label: 'Finished', variant: 'finished' },
+  en_backlog: { label: 'To sort', variant: 'queue' },
+  en_preparacion: { label: 'In preparation', variant: 'preparing' },
+  en_produccion: { label: 'In production', variant: 'executing' },
+  finalizado: { label: 'Completed', variant: 'finished' },
+}
+
+const PREP_ES: Record<PreparationStatus, StatusBadgeInfo> = {
+  pending_preparation: { label: 'Pendiente de preparación', variant: 'preparing' },
+  waiting_cell: { label: 'Esperando confirmación de celda', variant: 'info' },
+  preparing_recipe: { label: 'Preparando receta', variant: 'preparing' },
+}
+
+const PREP_EN: Record<PreparationStatus, StatusBadgeInfo> = {
+  pending_preparation: { label: 'Pending preparation', variant: 'preparing' },
+  waiting_cell: { label: 'Waiting for cell confirmation', variant: 'info' },
+  preparing_recipe: { label: 'Preparing recipe', variant: 'preparing' },
+}
+
+const PROD_ES: Record<ProductionVisualState, StatusBadgeInfo> = {
+  producing: { label: 'En producción', variant: 'executing' },
+  temp_waiting: { label: 'En espera temporal', variant: 'warning' },
+  temp_blocked: { label: 'Bloqueo temporal', variant: 'blocked' },
+  element_blocked: { label: 'Elemento bloqueado', variant: 'critical' },
+  completed: { label: 'Acabado', variant: 'finished' },
+}
+
+const PROD_EN: Record<ProductionVisualState, StatusBadgeInfo> = {
+  producing: { label: 'In production', variant: 'executing' },
+  temp_waiting: { label: 'Temporary hold', variant: 'warning' },
+  temp_blocked: { label: 'Temporary block', variant: 'blocked' },
+  element_blocked: { label: 'Element blocked', variant: 'critical' },
+  completed: { label: 'Completed', variant: 'finished' },
+}
+
+export function getOrderStatusBadge(order: BacklogOrder, lang: Lang): StatusBadgeInfo {
+  if (order.column === 'finalizado' || order.productionState === 'completed') {
+    return lang === 'es' ? PROD_ES.completed : PROD_EN.completed
+  }
+  if (order.column === 'en_produccion' && order.productionState) {
+    const dict = lang === 'es' ? PROD_ES : PROD_EN
+    return dict[order.productionState]
+  }
+  if (order.column === 'en_preparacion' && order.preparationStatus) {
+    const dict = lang === 'es' ? PREP_ES : PREP_EN
+    return dict[order.preparationStatus]
+  }
+  return getColumnStatusBadge(order.column, lang)
 }
 
 export function getColumnStatusBadge(column: BacklogColumnId, lang: Lang): StatusBadgeInfo {
@@ -57,12 +97,13 @@ export function getColumnStatusBadge(column: BacklogColumnId, lang: Lang): Statu
 const PLANT_STATUS_ES: Record<string, { label: string; variant: StatusBadgeVariant }> = {
   free: { label: 'Libre', variant: 'free' },
   reserved: { label: 'Reservada', variant: 'pending' },
-  pending_validation: { label: 'Pendiente de validación', variant: 'pending_validation' },
+  preparing: { label: 'Pendiente de preparación', variant: 'preparing' },
+  pending_validation: { label: 'Pendiente de celda', variant: 'info' },
   validated: { label: 'Validado', variant: 'validated' },
-  occupied: { label: 'En ejecución', variant: 'executing' },
-  waiting: { label: 'En espera', variant: 'waiting' },
-  blocked: { label: 'Bloqueado', variant: 'blocked' },
-  conflict: { label: 'Conflicto', variant: 'conflict' },
+  occupied: { label: 'En producción', variant: 'executing' },
+  waiting: { label: 'En espera temporal', variant: 'waiting' },
+  blocked: { label: 'Bloqueo temporal', variant: 'blocked' },
+  conflict: { label: 'Elemento bloqueado', variant: 'conflict' },
   active: { label: 'Activo', variant: 'active' },
   idle: { label: 'Inactivo', variant: 'inactive' },
 }
@@ -70,12 +111,13 @@ const PLANT_STATUS_ES: Record<string, { label: string; variant: StatusBadgeVaria
 const PLANT_STATUS_EN: Record<string, { label: string; variant: StatusBadgeVariant }> = {
   free: { label: 'Free', variant: 'free' },
   reserved: { label: 'Reserved', variant: 'pending' },
-  pending_validation: { label: 'Pending validation', variant: 'pending_validation' },
+  preparing: { label: 'Pending preparation', variant: 'preparing' },
+  pending_validation: { label: 'Pending cell', variant: 'info' },
   validated: { label: 'Validated', variant: 'validated' },
-  occupied: { label: 'In execution', variant: 'executing' },
-  waiting: { label: 'Waiting', variant: 'waiting' },
-  blocked: { label: 'Blocked', variant: 'blocked' },
-  conflict: { label: 'Conflict', variant: 'conflict' },
+  occupied: { label: 'In production', variant: 'executing' },
+  waiting: { label: 'Temporary hold', variant: 'waiting' },
+  blocked: { label: 'Temporary block', variant: 'blocked' },
+  conflict: { label: 'Element blocked', variant: 'conflict' },
   active: { label: 'Active', variant: 'active' },
   idle: { label: 'Inactive', variant: 'inactive' },
 }
@@ -90,17 +132,17 @@ export function getPlantStatusBadge(
 
 const DASH_ORDER_ES: Record<string, { label: string; variant: StatusBadgeVariant }> = {
   pending: { label: 'Pendiente', variant: 'pending' },
-  active: { label: 'En ejecución', variant: 'executing' },
+  active: { label: 'En producción', variant: 'executing' },
   finishing: { label: 'Próximo a finalizar', variant: 'finishing' },
-  validation: { label: 'Pendiente de validación', variant: 'pending_validation' },
+  validation: { label: 'En preparación', variant: 'preparing' },
   delayed: { label: 'Retrasado', variant: 'danger' },
 }
 
 const DASH_ORDER_EN: Record<string, { label: string; variant: StatusBadgeVariant }> = {
   pending: { label: 'Pending', variant: 'pending' },
-  active: { label: 'In execution', variant: 'executing' },
+  active: { label: 'In production', variant: 'executing' },
   finishing: { label: 'About to finish', variant: 'finishing' },
-  validation: { label: 'Pending validation', variant: 'pending_validation' },
+  validation: { label: 'In preparation', variant: 'preparing' },
   delayed: { label: 'Delayed', variant: 'danger' },
 }
 

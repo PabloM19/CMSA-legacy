@@ -12,7 +12,7 @@
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.65);
+  background: var(--app-surface-glass-soft);
   border: 1px dashed var(--color-gray-300);
   color: var(--color-muted);
   font-size: var(--font-size-sm);
@@ -34,11 +34,70 @@
 /* Board */
 .backlog-board {
   display: grid;
-  grid-template-columns: repeat(6, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
   gap: var(--space-5);
   padding-bottom: var(--space-2);
   scroll-snap-type: x proximity;
   min-width: min-content;
+}
+
+.backlog-board--completed-only {
+  grid-template-columns: minmax(280px, 520px);
+  max-width: 520px;
+}
+
+.backlog-column--empty {
+  flex: 0 0 160px;
+  min-width: 160px;
+  max-width: 200px;
+  opacity: 0.85;
+}
+
+.backlog-column--empty .backlog-column__empty {
+  font-size: var(--font-size-xs);
+  padding: var(--space-2);
+}
+
+.backlog-card--completed {
+  opacity: 0.55;
+  filter: grayscale(0.35);
+}
+
+.backlog-card--completed .backlog-card__ref,
+.backlog-card--completed .backlog-card__product {
+  text-decoration: line-through;
+}
+
+.backlog-card--critical {
+  animation: backlog-critical-pulse 1.4s ease-in-out infinite;
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+@keyframes backlog-critical-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+  }
+}
+
+.backlog-completed-section,
+.backlog-column__completed {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--color-gray-300);
+}
+
+.backlog-completed-section__title,
+.backlog-column__completed-title {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+  margin: 0 0 var(--space-3);
 }
 
 /* Horizontal scroll area */
@@ -111,7 +170,7 @@
   height: 44px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--app-surface-glass-panel);
   backdrop-filter: blur(6px);
   color: var(--color-gray-600);
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
@@ -120,9 +179,10 @@
 }
 
 .backlog-board-scroll__arrow:hover {
-  background: var(--color-white);
-  color: var(--color-brand-deep);
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+  background: var(--button-secondary-hover-bg);
+  color: var(--color-brand-light);
+  border-color: var(--button-secondary-hover-border);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.16);
 }
 
 .backlog-board-scroll__arrow--left {
@@ -156,7 +216,7 @@
   gap: var(--space-3);
   padding: var(--space-5);
   border-bottom: 1px solid var(--color-gray-100);
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--app-surface-glass);
 }
 
 .backlog-column__head-main {
@@ -221,7 +281,7 @@
   padding: var(--space-6) var(--space-3);
   border: 1px dashed var(--color-gray-200);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--app-surface-glass-subtle);
 }
 
 /* Cards de pedido */
@@ -229,7 +289,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  background: var(--color-white);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
@@ -269,7 +329,7 @@
   height: 32px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   background: var(--color-gray-100);
   color: var(--color-gray-500);
   cursor: grab;
@@ -341,7 +401,9 @@
 
 .backlog-card__actions {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
   margin-top: auto;
   padding-top: var(--space-3);
@@ -352,38 +414,48 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-white);
-  font-size: var(--font-size-xs);
+  min-height: 32px;
+  padding: 4px var(--space-3);
+  border: 1px solid var(--button-secondary-border);
+  border-radius: var(--radius-button);
+  background: var(--button-secondary-bg);
+  font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--color-gray-700);
+  color: var(--button-secondary-text);
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.backlog-card__btn:hover {
-  background: var(--color-gray-50);
+.backlog-card__btn:hover:not(.backlog-card__btn--primary) {
+  background: var(--button-secondary-hover-bg);
+  color: var(--button-secondary-hover-text);
+  border-color: var(--button-secondary-hover-border);
 }
 
 .backlog-card__btn--primary {
   border-color: transparent;
-  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
-  color: var(--color-white);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
   box-shadow: 0 2px 8px var(--color-brand-shadow);
 }
 
 .backlog-card__btn--primary:hover {
-  opacity: 0.92;
+  background: var(--button-primary-hover-bg);
+  color: var(--button-primary-hover-text);
 }
 
 .backlog-card__btn--link {
   color: var(--color-brand-deep);
   border-color: rgba(0, 160, 210, 0.2);
   background: var(--color-brand-pale);
+}
+
+.backlog-card__btn--link:hover {
+  background: var(--color-brand-muted);
+  color: var(--color-brand-deep);
+  border-color: rgba(0, 160, 210, 0.3);
 }
 
 .backlog-card__demo-tag {
@@ -427,9 +499,9 @@
 }
 
 .backlog-toast--info {
-  background: var(--color-white);
-  color: var(--color-gray-800);
-  border: 1px solid var(--color-gray-200);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 /* Detalle modal */
@@ -493,23 +565,24 @@
 
 .order-btn--danger {
   border: 1px solid rgba(239, 68, 68, 0.35);
-  background: var(--color-white);
-  color: var(--color-danger);
+  background: var(--button-secondary-bg);
+  color: var(--button-danger-text);
 }
 
 .order-btn--danger:hover:not(:disabled) {
-  background: var(--color-danger-bg);
+  background: var(--button-danger-hover-bg);
+  color: var(--button-danger-text);
 }
 
 @media (max-width: 1400px) {
   .backlog-board {
-    grid-template-columns: repeat(6, minmax(240px, 1fr));
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
   }
 }
 
 @media (max-width: 720px) {
   .backlog-board {
-    grid-template-columns: repeat(6, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, minmax(200px, 1fr));
   }
 }
 
@@ -543,25 +616,32 @@
 .backlog-view-chip {
   min-height: 44px;
   padding: var(--space-2) var(--space-5);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--button-secondary-border);
   border-radius: var(--radius-full);
-  background: var(--color-white);
+  background: var(--button-secondary-bg);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--color-gray-700);
+  color: var(--button-secondary-text);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.backlog-view-chip:hover {
-  background: var(--color-gray-50);
+.backlog-view-chip:hover:not(.backlog-view-chip--active) {
+  background: var(--button-chip-hover-bg);
+  color: var(--button-secondary-hover-text);
+  border-color: var(--button-secondary-hover-border);
 }
 
 .backlog-view-chip--active {
   border-color: transparent;
-  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
-  color: var(--color-white);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
   box-shadow: 0 2px 8px var(--color-brand-shadow);
+}
+
+.backlog-view-chip--active:hover {
+  background: var(--button-chip-active-hover-bg);
+  color: var(--button-primary-hover-text);
 }
 
 .backlog-density {
@@ -609,7 +689,7 @@
   background: linear-gradient(
     180deg,
     rgba(0, 160, 210, 0.06) 0%,
-    rgba(255, 255, 255, 0.9) 100%
+    var(--app-surface-glass-strong) 100%
   );
 }
 
@@ -630,7 +710,7 @@
   padding: var(--space-2) var(--space-4);
   border: 1px solid rgba(0, 160, 210, 0.35);
   border-radius: var(--radius-md);
-  background: var(--color-white);
+  background: var(--color-surface);
   font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--color-brand-deep);
@@ -756,7 +836,7 @@
 .backlog-drawer {
   width: min(480px, 100vw);
   height: 100%;
-  background: var(--color-white);
+  background: var(--color-surface);
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;

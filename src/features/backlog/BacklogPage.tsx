@@ -6,12 +6,10 @@ import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { BacklogColumnId, BacklogOrder } from '../../types/backlog'
 import type { PlantTable } from '../../types/plant'
-import { canActOnOrder } from '../../utils/dashboardPermissions'
-import { evaluateMove } from '../../utils/backlogRules'
 import { executeColumnMove } from '../../utils/backlogMove'
 import { getState, saveOrdersAndPlant } from '../../utils/backlogStorage'
-import { demoValidateAllTables } from '../../utils/validationHelpers'
-import { logAllTablesValidated } from '../../utils/activityLogActions'
+import { confirmRecipeForOrder } from '../../utils/preparationHelpers'
+import { isSupervisor } from '../../utils/permissions'
 import { BacklogBoard } from './components/BacklogBoard'
 import { BacklogBoardSkeleton } from './components/BacklogBoardSkeleton'
 import { BacklogHelpNote } from './components/BacklogHelpNote'
@@ -70,44 +68,22 @@ export function BacklogPage() {
     return true
   }
 
-  function moveOrderToColumn(order: BacklogOrder, targetColumn: BacklogColumnId) {
-    if (!user) return
-    const evalResult = evaluateMove(user, order, targetColumn, lang)
-    if (evalResult.needsConfirm && evalResult.confirmAction === 'finalize') {
-      setConfirm({ type: 'finalize', order })
+  function handleConfirmRecipe(order: BacklogOrder) {
+    if (!user || !isSupervisor(user)) {
+      showToast(d.noPermission, 'error')
       return
     }
-    if (!evalResult.ok) {
-      showToast(evalResult.message ?? '', evalResult.toastType ?? 'error')
-      return
-    }
-    if (applyMove(order, targetColumn) && evalResult.message) {
-      showToast(evalResult.message, evalResult.toastType ?? 'success')
-    }
-  }
-
-  function handleSendValidation(order: BacklogOrder) {
-    moveOrderToColumn(order, 'pendiente_validacion')
-  }
-
-  function handleValidateTables(order: BacklogOrder) {
-    if (!user || !canActOnOrder(user, order.company)) {
-      showToast(
-        lang === 'es'
-          ? 'No puedes actuar sobre pedidos de otra empresa.'
-          : 'You cannot act on another company’s orders.',
-        'error',
-      )
-      return
-    }
-    const updated = demoValidateAllTables(order, user.name, lang)
-    logAllTablesValidated(user, order.reference)
-    persist(
-      orders.map((o) => (o.id === order.id ? updated : o)),
+    const { order: nextOrder, plantTables: nextPlant } = confirmRecipeForOrder(
+      order,
       plantTables,
+      user.name,
     )
-    showToast(d.tablesValidated, 'success')
-    setDetailOrder((current) => (current?.id === order.id ? updated : current))
+    persist(
+      orders.map((o) => (o.id === order.id ? nextOrder : o)),
+      nextPlant,
+    )
+    showToast(d.confirmRecipeSuccess, 'success')
+    setDetailOrder((current) => (current?.id === order.id ? nextOrder : current))
   }
 
   function handleMarkIncident(order: BacklogOrder) {
@@ -119,11 +95,11 @@ export function BacklogPage() {
   }
 
   function handleCancel(order: BacklogOrder) {
-    if (user?.role !== 'master') {
+    if (user?.role !== 'superadmin') {
       showToast(
         lang === 'es'
-          ? 'Solo un usuario máster puede anular pedidos aceptados.'
-          : 'Only a master user can cancel accepted orders.',
+          ? 'Solo un usuario máster puede anular objetivos aceptados.'
+          : 'Only a master user can cancel accepted objectives.',
         'error',
       )
       return
@@ -135,15 +111,29 @@ export function BacklogPage() {
     if (!confirm || !user) return
     const { order, type } = confirm
     if (type === 'incident') {
-      applyMove(order, 'bloqueado')
+      const updated: BacklogOrder = {
+        ...order,
+        column: 'en_produccion',
+        productionState: 'temp_blocked',
+        alerts: [...order.alerts, lang === 'es' ? 'Bloqueo temporal' : 'Temporary block'],
+      }
+      persist(
+        orders.map((o) => (o.id === order.id ? updated : o)),
+        plantTables,
+      )
     } else if (type === 'finalize') {
       applyMove(order, 'finalizado')
     } else {
       const withAlert = {
         ...order,
+        column: 'en_produccion' as const,
+        productionState: 'temp_blocked' as const,
         alerts: [...order.alerts, lang === 'es' ? 'Anulado' : 'Cancelled'],
       }
-      applyMove(withAlert, 'bloqueado')
+      persist(
+        orders.map((o) => (o.id === order.id ? withAlert : o)),
+        plantTables,
+      )
     }
     setConfirm(null)
     setDetailOrder(null)
@@ -207,13 +197,9 @@ export function BacklogPage() {
           onDragStart={setActiveDragId}
           onOrdersChange={persist}
           onToast={showToast}
-          onConfirmIncident={handleMarkIncident}
           onConfirmFinalize={handleConfirmFinalize}
           onViewDetail={setDetailOrder}
-          onSendValidation={handleSendValidation}
-          onMarkIncident={handleMarkIncident}
-          onCancel={handleCancel}
-          onValidateTables={handleValidateTables}
+          onConfirmRecipe={handleConfirmRecipe}
         />
       )}
 
@@ -228,20 +214,13 @@ export function BacklogPage() {
           order={detailOrder}
           onClose={() => setDetailOrder(null)}
           onMarkIncident={
-            user.role === 'master' && detailOrder.column !== 'bloqueado'
+            user.role === 'superadmin' && detailOrder.column !== 'finalizado'
               ? () => handleMarkIncident(detailOrder)
               : undefined
           }
           onCancel={
-            user.role === 'master' && detailOrder.column !== 'finalizado'
+            user.role === 'superadmin' && detailOrder.column !== 'finalizado'
               ? () => handleCancel(detailOrder)
-              : undefined
-          }
-          onValidateTables={
-            canActOnOrder(user, detailOrder.company) &&
-            detailOrder.column === 'pendiente_validacion' &&
-            !detailOrder.tablesValidated
-              ? () => handleValidateTables(detailOrder)
               : undefined
           }
         />

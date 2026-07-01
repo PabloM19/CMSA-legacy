@@ -131,10 +131,10 @@ h3.ui-heading {
 /* Cards */
 .ui-card,
 .dash-card {
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--app-surface-glass);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid rgba(0, 160, 210, 0.1);
+  border: 1px solid var(--app-border-brand);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: var(--space-6);
@@ -189,25 +189,37 @@ h3.ui-heading {
 /* Buttons — base compartida */
 .ui-btn,
 .order-btn,
-.admin-btn {
+.admin-btn,
+.validation-btn,
+.backlog-card__btn,
+.dash-btn,
+.mobile-v2-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   font-family: inherit;
   font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s, box-shadow 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
   white-space: nowrap;
   text-decoration: none;
 }
 
 .ui-btn:disabled,
 .order-btn:disabled,
-.admin-btn:disabled {
-  opacity: 0.5;
+.admin-btn:disabled,
+.validation-btn:disabled,
+.backlog-card__btn:disabled,
+.dash-btn:disabled {
+  opacity: var(--button-disabled-opacity);
   cursor: not-allowed;
 }
 
@@ -235,59 +247,74 @@ h3.ui-heading {
 /* Variants */
 .ui-btn--primary,
 .order-btn--primary,
-.admin-btn--primary {
+.admin-btn--primary,
+.validation-btn--primary,
+.backlog-card__btn--primary {
   border: none;
-  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
-  color: var(--color-white);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
   box-shadow: 0 2px 8px var(--color-brand-shadow);
 }
 
 .ui-btn--primary:hover:not(:disabled),
 .order-btn--primary:hover:not(:disabled),
-.admin-btn--primary:hover:not(:disabled) {
-  opacity: 0.92;
+.admin-btn--primary:hover:not(:disabled),
+.validation-btn--primary:hover:not(:disabled),
+.backlog-card__btn--primary:hover:not(:disabled) {
+  background: var(--button-primary-hover-bg);
+  color: var(--button-primary-hover-text);
+  box-shadow: 0 4px 12px var(--color-brand-shadow);
 }
 
 .ui-btn--secondary,
 .order-btn--ghost,
-.admin-btn--ghost {
-  border: 1px solid var(--color-gray-300);
-  background: var(--color-white);
-  color: var(--color-gray-700);
+.admin-btn--ghost,
+.validation-btn:not(.validation-btn--primary):not(.validation-btn--warn):not(.validation-btn--link) {
+  border: 1px solid var(--button-secondary-border);
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
 }
 
 .ui-btn--secondary:hover:not(:disabled),
 .order-btn--ghost:hover:not(:disabled),
-.admin-btn--ghost:hover:not(:disabled) {
-  background: var(--color-gray-50);
+.admin-btn--ghost:hover:not(:disabled),
+.validation-btn:not(.validation-btn--primary):not(.validation-btn--warn):not(.validation-btn--link):hover:not(:disabled) {
+  background: var(--button-secondary-hover-bg);
+  color: var(--button-secondary-hover-text);
+  border-color: var(--button-secondary-hover-border);
 }
 
 .ui-btn--ghost {
   border: 1px solid transparent;
   background: transparent;
-  color: var(--color-gray-600);
+  color: var(--button-ghost-text);
 }
 
 .ui-btn--ghost:hover:not(:disabled) {
-  background: var(--color-gray-100);
+  background: var(--button-ghost-hover-bg);
+  color: var(--button-ghost-hover-text);
   border-color: transparent;
 }
 
 .ui-btn--danger,
-.admin-btn--danger {
+.admin-btn--danger,
+.order-btn--danger {
   border: 1px solid rgba(239, 68, 68, 0.35);
-  background: var(--color-white);
-  color: var(--color-danger);
+  background: var(--button-secondary-bg);
+  color: var(--button-danger-text);
 }
 
 .ui-btn--danger:hover:not(:disabled),
-.admin-btn--danger:hover:not(:disabled) {
-  background: var(--color-danger-bg);
+.admin-btn--danger:hover:not(:disabled),
+.order-btn--danger:hover:not(:disabled) {
+  background: var(--button-danger-hover-bg);
+  color: var(--button-danger-text);
 }
 
 .ui-btn--icon {
   min-width: 44px;
   padding: var(--space-2);
+  border-radius: var(--radius-full);
 }
 
 /* Badges — empresa */
@@ -466,8 +493,8 @@ h3.ui-heading {
   min-height: 44px;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-white);
+  border-radius: var(--radius-control);
+  background: var(--color-input-bg);
   font-family: inherit;
   font-size: var(--font-size-base);
   color: var(--color-text);
@@ -516,7 +543,7 @@ h3.ui-heading {
   align-items: center;
   justify-content: center;
   padding: var(--space-6);
-  background: rgba(26, 35, 40, 0.45);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -527,7 +554,7 @@ h3.ui-heading {
   max-width: 520px;
   max-height: calc(100vh - var(--space-8) * 2);
   overflow-y: auto;
-  background: var(--color-white);
+  background: var(--surface-strong);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-modal);
   padding: var(--space-7);
@@ -567,11 +594,15 @@ h3.ui-heading {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(26, 35, 40, 0.4);
+  background: var(--overlay-backdrop);
+}
+
+[data-theme='dark'] .ui-drawer-overlay {
+  background: rgba(2, 6, 23, 0.65);
 }
 
 .ui-drawer {
-  background: var(--color-white);
+  background: var(--surface-strong);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow: var(--shadow-modal);
   padding: var(--space-6);
@@ -600,7 +631,7 @@ h3.ui-heading {
   gap: var(--space-3);
   padding: var(--space-8) var(--space-6);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--app-surface-glass-subtle);
   border: 1px dashed var(--color-gray-300);
 }
 
@@ -727,23 +758,21 @@ h3.ui-heading {
 .dash-btn {
   min-height: 36px;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  background: var(--color-white);
+  border: 1px solid var(--button-secondary-border);
+  background: var(--button-secondary-bg);
   font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--color-gray-800);
+  color: var(--button-secondary-text);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
 }
 
 .dash-btn:hover:not(:disabled) {
-  background: var(--color-gray-50);
-  border-color: var(--color-gray-400);
+  background: var(--button-secondary-hover-bg);
+  color: var(--button-secondary-hover-text);
+  border-color: var(--button-secondary-hover-border);
 }
 
 .dash-btn:disabled {
-  opacity: 0.45;
+  opacity: var(--button-disabled-opacity);
   cursor: not-allowed;
 }

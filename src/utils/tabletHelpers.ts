@@ -67,11 +67,11 @@ function formatRemaining(endTime: string, lang: Lang): string {
 }
 
 export function computeTabletKpis(state: CmsaPersistedState): TabletKpis {
-  const activeProduction = state.orders.filter((o) => o.column === 'en_ejecucion').length
+  const activeProduction = state.orders.filter((o) => o.column === 'en_produccion').length
   const occupiedTables = state.plantTables.filter(isTableOccupied).length
   const freeTables = state.plantTables.filter((t) => t.status === 'free').length
   const finishingSoon = state.orders.filter(
-    (o) => o.column === 'en_ejecucion' && o.endTime,
+    (o) => o.column === 'en_produccion' && o.endTime,
   ).length
 
   const alerts = buildTabletAlerts(state, 'es')
@@ -89,12 +89,16 @@ export function computeGeneralStatus(state: CmsaPersistedState): TabletGeneralSt
   const hasCritical =
     state.plantTables.some((t) => t.status === 'conflict' || t.status === 'blocked') ||
     state.plantPalletizers.some((p) => p.status === 'conflict' || p.status === 'blocked') ||
-    state.orders.some((o) => o.column === 'bloqueado')
+    state.orders.some(
+      (o) =>
+        o.column === 'en_produccion' &&
+        (o.productionState === 'temp_blocked' || o.productionState === 'element_blocked'),
+    )
 
   if (hasCritical) return 'critical'
 
   const hasWarning =
-    state.orders.some((o) => o.column === 'pendiente_validacion') ||
+    state.orders.some((o) => o.column === 'en_preparacion') ||
     state.plantTables.some((t) => t.status === 'waiting' || t.status === 'pending_validation') ||
     state.orders.some((o) => o.alerts.length > 0)
 
@@ -169,7 +173,7 @@ export function buildTabletAlerts(state: CmsaPersistedState, lang: Lang): Tablet
   })
 
   state.orders.forEach((order) => {
-    if (order.column === 'pendiente_validacion') {
+    if (order.column === 'en_preparacion') {
       alerts.push({
         id: `order-pending-${order.id}`,
         severity: 'warning',
@@ -179,7 +183,7 @@ export function buildTabletAlerts(state: CmsaPersistedState, lang: Lang): Tablet
         source: order.reference,
       })
     }
-    if (order.column === 'en_ejecucion' && order.endTime) {
+    if (order.column === 'en_produccion' && order.endTime) {
       alerts.push({
         id: `order-finishing-${order.id}`,
         severity: 'info',
@@ -217,7 +221,7 @@ export function getActiveProductionOrders(
   lang: Lang,
 ): TabletActiveOrder[] {
   return orders
-    .filter((o) => o.column === 'en_ejecucion')
+    .filter((o) => o.column === 'en_produccion')
     .map((order) => ({
       id: order.id,
       reference: order.reference,

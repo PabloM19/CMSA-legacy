@@ -68,3 +68,8 @@ export function clearTabletSnapshot(id: string): void {
   delete snapshots[id]
   saveTabletSnapshots(snapshots)
 }
+
+export function clearTabletStorage(): void {
+  localStorage.removeItem(TABLET_OVERRIDES_KEY)
+  localStorage.removeItem(TABLET_SNAPSHOTS_KEY)
+}

@@ -35,7 +35,7 @@ export function MobileShell() {
   function handleLogout() {
     setDrawerOpen(false)
     logout()
-    navigate('/login', { replace: true })
+    navigate('/plant-map', { replace: true })
   }
 
   return (

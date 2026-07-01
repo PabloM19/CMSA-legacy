@@ -2,58 +2,58 @@ import type { ReactNode } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { AlertTriangle, GripVertical } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { CompanyBadge, StatusBadge } from '../../../components/ui/StatusBadge'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../../types/backlog'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
+import { isSupervisor } from '../../../utils/permissions'
 import { formatTableList, resolveAssignedTableIds } from '../../../utils/backlogStorage'
-import { getColumnStatusBadge } from '../../../utils/statusBadge'
+import { getOrderStatusBadge } from '../../../utils/statusBadge'
 
 interface BacklogOrderCardProps {
   order: BacklogOrder
   sortable?: boolean
   compact?: boolean
+  completed?: boolean
   onViewDetail: (order: BacklogOrder) => void
-  onSendValidation?: (order: BacklogOrder) => void
   onPrepare?: (order: BacklogOrder) => void
+  onConfirmRecipe?: (order: BacklogOrder) => void
   onMarkIncident?: (order: BacklogOrder) => void
   onCancel?: (order: BacklogOrder) => void
-  onValidateTables?: (order: BacklogOrder) => void
 }
 
 export function BacklogOrderCard(props: BacklogOrderCardProps) {
-  const { sortable = true, ...rest } = props
-  if (sortable) {
-    return <SortableBacklogOrderCard {...rest} />
+  const { sortable = true, completed = false, ...rest } = props
+  if (completed || !sortable) {
+    return <StaticBacklogOrderCard {...rest} completed={completed} />
   }
-  return <StaticBacklogOrderCard {...rest} />
+  return <SortableBacklogOrderCard {...rest} />
 }
 
 function BacklogOrderCardContent({
   order,
   compact = false,
+  completed = false,
   dragHandle,
   onViewDetail,
-  onSendValidation,
   onPrepare,
+  onConfirmRecipe,
 }: {
   order: BacklogOrder
   compact?: boolean
+  completed?: boolean
   dragHandle: ReactNode
   onViewDetail: (order: BacklogOrder) => void
-  onSendValidation?: (order: BacklogOrder) => void
   onPrepare?: (order: BacklogOrder) => void
+  onConfirmRecipe?: (order: BacklogOrder) => void
 }) {
   const { user } = useAuth()
   const { t, lang } = useLanguage()
   const d = t.backlog
 
   const canAct = user ? canActOnOrder(user, order.company) : false
-  const isMaster = user?.role === 'master'
-  const statusBadge = getColumnStatusBadge(order.column, lang)
-  const columnLabel = d.columns[order.column]
+  const statusBadge = getOrderStatusBadge(order, lang)
 
   const tableIds = resolveAssignedTableIds(order)
   const tablesLabel =
@@ -62,7 +62,7 @@ function BacklogOrderCardContent({
       : `${order.requiredTables} ${d.tablesNeeded}`
 
   function renderPrimaryAction() {
-    if (!canAct) return null
+    if (completed || !canAct) return null
 
     if (order.column === 'en_backlog' && onPrepare) {
       return (
@@ -76,26 +76,14 @@ function BacklogOrderCardContent({
       )
     }
 
-    if (order.column === 'pendiente_lanzamiento' && onSendValidation) {
+    if (order.column === 'en_preparacion' && onConfirmRecipe && user && isSupervisor(user)) {
       return (
         <button
           type="button"
           className="backlog-card__btn backlog-card__btn--primary"
-          onClick={() => onSendValidation(order)}
+          onClick={() => onConfirmRecipe(order)}
         >
-          {d.sendValidation}
-        </button>
-      )
-    }
-
-    if (order.column === 'bloqueado' && isMaster) {
-      return (
-        <button
-          type="button"
-          className="backlog-card__btn backlog-card__btn--primary"
-          onClick={() => onViewDetail(order)}
-        >
-          {d.actionReview}
+          {d.confirmRecipe}
         </button>
       )
     }
@@ -103,33 +91,17 @@ function BacklogOrderCardContent({
     return null
   }
 
-  function renderSecondaryAction() {
-    if (order.column === 'pendiente_validacion') {
-      return (
-        <Link to="/validation" className="backlog-card__btn backlog-card__btn--link">
-          {d.goValidation}
-        </Link>
-      )
-    }
-
-    return (
-      <button type="button" className="backlog-card__btn" onClick={() => onViewDetail(order)}>
-        {d.viewDetail}
-      </button>
-    )
-  }
-
   return (
     <article
-      className={`backlog-card order-card--${order.company.toLowerCase()}${!canAct ? ' backlog-card--readonly' : ''}`}
+      className={`backlog-card order-card--${order.company.toLowerCase()}${!canAct ? ' backlog-card--readonly' : ''}${completed ? ' backlog-card--completed' : ''}${order.productionState === 'element_blocked' ? ' backlog-card--critical' : ''}`}
     >
       <div className="backlog-card__head">
-        {dragHandle}
+        {!completed && dragHandle}
         <div className="backlog-card__head-main">
           <span className="backlog-card__ref">{order.reference}</span>
           <div className="backlog-card__badges">
             <CompanyBadge company={order.company} />
-            <StatusBadge label={columnLabel} variant={statusBadge.variant} />
+            <StatusBadge label={statusBadge.label} variant={statusBadge.variant} />
           </div>
         </div>
       </div>
@@ -138,32 +110,26 @@ function BacklogOrderCardContent({
         <p className="backlog-card__product">
           {order.product} · {order.variety}
         </p>
-        <div className="backlog-card__stats">
-          <span>
-            {d.boxes}: <strong>{order.boxes}</strong>
-          </span>
-          {!compact && (
-            <span>
-              {d.boxesPerHour}: <strong>{order.boxesPerHour}</strong>
-            </span>
-          )}
-        </div>
-        <div className="backlog-card__stats">
-          <span>
-            {d.tables}: <strong>{tablesLabel}</strong>
-          </span>
-        </div>
-        {!compact && (
-          <div className="backlog-card__stats">
-            <span>
-              {d.eta}: <strong>{order.eta}</strong>
-            </span>
-            <span>
-              {d.endTime}: <strong>{order.endTime}</strong>
-            </span>
-          </div>
+        {!completed && (
+          <>
+            <div className="backlog-card__stats">
+              <span>
+                {d.boxes}: <strong>{order.boxes}</strong>
+              </span>
+              {!compact && (
+                <span>
+                  {d.boxesPerHour}: <strong>{order.boxesPerHour}</strong>
+                </span>
+              )}
+            </div>
+            <div className="backlog-card__stats">
+              <span>
+                {d.tables}: <strong>{tablesLabel}</strong>
+              </span>
+            </div>
+          </>
         )}
-        {order.alerts.length > 0 && (
+        {order.alerts.length > 0 && !completed && (
           <p className="backlog-card__alert">
             <AlertTriangle size={14} aria-hidden="true" />
             {order.alerts[0]}
@@ -171,32 +137,21 @@ function BacklogOrderCardContent({
         )}
       </div>
 
-      {!canAct && (
-        <p className="backlog-card__readonly">
-          <span>{d.readOnlyShort}</span>
-          <span className="backlog-card__readonly-sep">·</span>
-          <span>{d.readOnlyOtherCompany}</span>
-        </p>
-      )}
-
       <div className="backlog-card__actions">
         {renderPrimaryAction()}
-        {renderSecondaryAction()}
+        <button type="button" className="backlog-card__btn" onClick={() => onViewDetail(order)}>
+          {d.viewDetail}
+        </button>
       </div>
     </article>
   )
 }
 
-function SortableBacklogOrderCard({
-  order,
-  compact,
-  onViewDetail,
-  onSendValidation,
-  onPrepare,
-}: Omit<BacklogOrderCardProps, 'sortable'>) {
+function SortableBacklogOrderCard(props: Omit<BacklogOrderCardProps, 'sortable' | 'completed'>) {
   const { user } = useAuth()
   const { t } = useLanguage()
   const d = t.backlog
+  const { order } = props
 
   const canAct = user ? canActOnOrder(user, order.company) : false
 
@@ -230,14 +185,7 @@ function SortableBacklogOrderCard({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <BacklogOrderCardContent
-        order={order}
-        compact={compact}
-        dragHandle={dragHandle}
-        onViewDetail={onViewDetail}
-        onSendValidation={onSendValidation}
-        onPrepare={onPrepare}
-      />
+      <BacklogOrderCardContent {...props} dragHandle={dragHandle} />
     </div>
   )
 }
@@ -245,18 +193,20 @@ function SortableBacklogOrderCard({
 function StaticBacklogOrderCard({
   order,
   compact,
+  completed,
   onViewDetail,
-  onSendValidation,
   onPrepare,
+  onConfirmRecipe,
 }: Omit<BacklogOrderCardProps, 'sortable'>) {
   return (
     <BacklogOrderCardContent
       order={order}
       compact={compact}
+      completed={completed}
       dragHandle={<span className="backlog-card__drag-spacer" aria-hidden="true" />}
       onViewDetail={onViewDetail}
-      onSendValidation={onSendValidation}
       onPrepare={onPrepare}
+      onConfirmRecipe={onConfirmRecipe}
     />
   )
 }

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  loadNormalizedViewPrefs,
   normalizeDensityForMode,
   saveDensity,
   saveViewMode,
@@ -10,21 +9,28 @@ import {
 
 const SKELETON_MS = 400
 
+const DEFAULT_VIEW_MODE: BacklogViewMode = 'summary'
+const DEFAULT_DENSITY: BacklogDensity = 2
+
+/** Al entrar en cola diaria siempre arranca en resumen (2 por columna). */
+function initialViewPrefs(): { viewMode: BacklogViewMode; density: BacklogDensity } {
+  return {
+    viewMode: DEFAULT_VIEW_MODE,
+    density: DEFAULT_DENSITY,
+  }
+}
+
 export function useBacklogView() {
-  const [viewMode, setViewMode] = useState<BacklogViewMode>(
-    () => loadNormalizedViewPrefs().viewMode,
-  )
-  const [density, setDensity] = useState<BacklogDensity>(
-    () => loadNormalizedViewPrefs().density,
-  )
+  const [viewMode, setViewMode] = useState<BacklogViewMode>(DEFAULT_VIEW_MODE)
+  const [density, setDensity] = useState<BacklogDensity>(DEFAULT_DENSITY)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    const { viewMode: mode, density: normalized } = loadNormalizedViewPrefs()
-    saveViewMode(mode)
-    saveDensity(normalized)
+    const { viewMode: mode, density: normalized } = initialViewPrefs()
     setViewMode(mode)
     setDensity(normalized)
+    saveViewMode(mode)
+    saveDensity(normalized)
   }, [])
 
   const withSkeleton = useCallback((apply: () => void) => {

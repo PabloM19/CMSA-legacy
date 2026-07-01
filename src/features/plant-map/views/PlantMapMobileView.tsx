@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, Factory } from 'lucide-react'
+import { Bell, Factory, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { EmptyState } from '../../../components/ui/EmptyState'
 import { PageHeader } from '../../../components/ui/PageHeader'
@@ -184,7 +184,10 @@ export function PlantMapMobileView() {
                 )}
                 <p className="mobile-list-item__status">{order.status}</p>
                 {order.alert && (
-                  <p className="mobile-list-item__alert">⚠ {order.alert}</p>
+                  <p className="mobile-list-item__alert">
+                    <AlertTriangle size={14} aria-hidden="true" />
+                    {order.alert}
+                  </p>
                 )}
               </li>
             ))}
