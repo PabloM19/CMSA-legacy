@@ -1,6 +1,6 @@
 import type { AdminTabId } from '../types/admin'
 import type { NavKey } from '../i18n/translations'
-import type { User } from '../types/auth'
+import type { User, UserRole } from '../types/auth'
 
 const OPERATOR_ROUTES = [
   '/orders/new',
@@ -39,7 +39,7 @@ export function getAdminTabsForUser(user: User): AdminTabId[] {
     return ['users', 'companies', 'references', 'tables', 'palletizers', 'alarms', 'activity']
   }
   if (user.role === 'supervisor') {
-    return ['references', 'alarms', 'production']
+    return ['users', 'references', 'alarms', 'production']
   }
   return []
 }
@@ -94,6 +94,35 @@ export const NAV_ITEMS: { to: string; key: NavKey }[] = [
   { to: '/profile', key: 'profile' },
 ]
 
+export function canManageUsers(user: User): boolean {
+  return isSupervisor(user)
+}
+
+export function canManageCompanies(user: User): boolean {
+  return isSuperAdmin(user)
+}
+
+export function canManagePlantElements(user: User): boolean {
+  return isSuperAdmin(user)
+}
+
+/** Roles que el actor puede asignar al crear/editar usuarios mock. */
+export function getAssignableRoles(actor: User): UserRole[] {
+  if (isSuperAdmin(actor)) return ['user', 'supervisor', 'superadmin']
+  if (actor.role === 'supervisor') return ['user', 'supervisor']
+  return []
+}
+
+export function canEditAdminUser(actor: User, targetRole: UserRole): boolean {
+  if (isSuperAdmin(actor)) return true
+  if (actor.role === 'supervisor') return targetRole !== 'superadmin'
+  return false
+}
+
+export function canAssignAdminRole(actor: User, role: UserRole): boolean {
+  return getAssignableRoles(actor).includes(role)
+}
+
 export function canWithdrawProduction(user: User): boolean {
   return isSupervisor(user)
 }
@@ -113,10 +142,11 @@ export function getMobileNavItems(user: User) {
 
 export function getVisibleNavItems(user: User) {
   return NAV_ITEMS.filter((item) => {
+    if (item.key === 'profile') return false
     if (item.key === 'admin' || item.key === 'references') {
       return isSupervisor(user)
     }
-    if (item.key === 'newOrder' || item.key === 'backlog' || item.key === 'alarms' || item.key === 'profile') {
+    if (item.key === 'newOrder' || item.key === 'backlog' || item.key === 'alarms') {
       return canAccessRoute(user, item.to)
     }
     return canAccessRoute(user, item.to)

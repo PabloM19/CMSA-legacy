@@ -6,7 +6,7 @@ import type { AdminTabId } from '../../types/admin'
 import type { BacklogOrder } from '../../types/backlog'
 import { canAccessAdmin } from '../../utils/adminStorage'
 import { getState, saveOrdersAndPlant } from '../../utils/backlogStorage'
-import { getAdminTabsForUser, isSuperAdmin } from '../../utils/permissions'
+import { getAdminTabsForUser, isSuperAdmin, isSupervisor } from '../../utils/permissions'
 import { logOrderWithdrawn } from '../../utils/activityLogActions'
 import { withdrawOrderFromProduction, type WithdrawReason } from '../../utils/withdrawProduction'
 import { AdminAccessDenied } from './components/AdminAccessDenied'
@@ -91,7 +91,7 @@ export function AdminPage() {
         ))}
       </nav>
 
-      {activeTab === 'users' && isSuperAdmin(user) && (
+      {activeTab === 'users' && isSupervisor(user) && (
         <UsersTab refreshKey={refreshKey} onChanged={bumpRefresh} />
       )}
       {activeTab === 'companies' && isSuperAdmin(user) && (

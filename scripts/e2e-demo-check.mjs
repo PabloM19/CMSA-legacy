@@ -99,11 +99,13 @@ async function main() {
     if (
       (sumoHas('Mapa') || sumoHrefs.includes('/plant-map')) &&
       (sumoHas('Cola') || sumoHrefs.includes('/backlog')) &&
-      (sumoHas('Alarmas') || sumoHrefs.includes('/alarms')) &&
-      (sumoHas('Perfil') || sumoHrefs.includes('/profile'))
+      (sumoHas('Alarmas') || sumoHrefs.includes('/alarms'))
     ) {
       pass('A4', `Sidebar operario: ${sumoNav.filter(Boolean).join(', ') || sumoHrefs.join(', ')}`)
     } else fail('A4', `Sidebar operario incompleta: labels=[${sumoNav.join('|')}] hrefs=[${sumoHrefs.join(', ')}]`)
+    if (!sumoHas('Perfil') && !sumoHrefs.includes('/profile')) {
+      pass('A4-profile', 'Perfil no aparece en sidebar (solo menú superior)')
+    } else fail('A4-profile', 'Perfil sigue visible en sidebar')
     if (!sumoHas('Admin') && !sumoHas('Referencias')) {
       pass('operario-no-admin', 'Operario sin Admin/Referencias')
     } else fail('operario-no-admin', 'Operario ve Admin o Referencias')
@@ -222,7 +224,7 @@ async function main() {
     // Alarmas ampliadas + marcar revisada
     await page.goto(`${BASE}/alarms`)
     await page.waitForSelector('.alarms-page', { timeout: 5000 })
-    const alarmItems = await page.locator('.alarms-page__item').count()
+    const alarmItems = await page.locator('.alarms-page .operational-alarms-table tbody tr').count()
     if (alarmItems >= 3) pass('D19', `${alarmItems} alarmas en vista ampliada`)
     else fail('D19', `Solo ${alarmItems} alarmas`)
 
@@ -262,8 +264,8 @@ async function main() {
 
     // Mapa alarmas tabla
     await page.goto(`${BASE}/plant-map`)
-    await page.waitForSelector('.plant-map-alerts, .plant-alerts', { timeout: 8000 }).catch(() => null)
-    const mapAlarms = await page.locator('.plant-map-alerts table tbody tr, .plant-alerts table tbody tr').count()
+    await page.waitForSelector('.plant-map-alarms-table', { timeout: 8000 }).catch(() => null)
+    const mapAlarms = await page.locator('.plant-map-alarms-table .operational-alarms-table tbody tr').count()
     if (mapAlarms >= 1) pass('D19-map', `Tabla alarmas bajo mapa: ${mapAlarms} filas`)
     else {
       const alt = await page.locator('text=ALM-SUMO').count()

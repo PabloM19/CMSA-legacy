@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
+import { useLogout } from '../../features/auth/useLogout'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { LangSwitcher } from '../ui/LangSwitcher'
 import { formatHeaderDate } from '../../utils/companyTheme'
@@ -10,16 +10,11 @@ interface HeaderProps {
 }
 
 export function Header({ wide = false }: HeaderProps) {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const { dateLocale } = useLanguage()
-  const navigate = useNavigate()
+  const handleLogout = useLogout()
 
   if (!user) return null
-
-  function handleLogout() {
-    logout()
-    navigate('/plant-map', { replace: true })
-  }
 
   const innerClass = wide
     ? 'app-layout__header-inner app-layout__header-inner--wide'

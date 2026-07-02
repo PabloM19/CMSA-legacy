@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { LayoutGrid } from 'lucide-react'
+import { LayoutGrid, PlusCircle } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { AdminTableRow } from '../../../types/admin'
+import type { OrderCompany } from '../../../types/newOrder'
+import type { PlantTableStatus, PlantTableType } from '../../../types/plant'
 import {
+  createAdminTable,
   getAdminTables,
   toggleAdminTableActive,
   updateAdminTable,
@@ -19,6 +22,27 @@ interface TablesTabProps {
   onChanged: () => void
 }
 
+const TABLE_STATUSES: PlantTableStatus[] = [
+  'free',
+  'reserved',
+  'preparing',
+  'pending_validation',
+  'validated',
+  'occupied',
+  'waiting',
+  'blocked',
+  'conflict',
+]
+
+type TableForm = {
+  name: string
+  type: PlantTableType
+  status: PlantTableStatus
+  company: OrderCompany | ''
+  capacity: number
+  active: boolean
+}
+
 export function TablesTab({ refreshKey, onChanged }: TablesTabProps) {
   const { user: actor } = useAuth()
   const { t, lang } = useLanguage()
@@ -28,17 +52,45 @@ export function TablesTab({ refreshKey, onChanged }: TablesTabProps) {
   void refreshKey
 
   const [search, setSearch] = useState('')
-  const [modal, setModal] = useState<'edit' | 'detail' | null>(null)
+  const [modal, setModal] = useState<'create' | 'edit' | 'detail' | null>(null)
   const [selected, setSelected] = useState<AdminTableRow | null>(null)
-  const [form, setForm] = useState({ capacity: 1000, active: true })
+  const [form, setForm] = useState<TableForm>({
+    name: '',
+    type: 'automatic',
+    status: 'free',
+    company: '',
+    capacity: 1000,
+    active: true,
+  })
   const [error, setError] = useState<string | null>(null)
   const [confirmToggle, setConfirmToggle] = useState<AdminTableRow | null>(null)
 
   const filtered = filterAdminTables(tables, search, lang)
 
+  function openCreate() {
+    setForm({
+      name: '',
+      type: 'automatic',
+      status: 'free',
+      company: '',
+      capacity: 1000,
+      active: true,
+    })
+    setSelected(null)
+    setError(null)
+    setModal('create')
+  }
+
   function openEdit(row: AdminTableRow) {
     setSelected(row)
-    setForm({ capacity: row.capacity, active: row.active })
+    setForm({
+      name: row.name,
+      type: row.type,
+      status: row.status,
+      company: row.company ?? '',
+      capacity: row.capacity,
+      active: row.active,
+    })
     setError(null)
     setModal('edit')
   }
@@ -49,17 +101,36 @@ export function TablesTab({ refreshKey, onChanged }: TablesTabProps) {
   }
 
   function handleSave() {
-    if (!actor || !selected) return
-    const result = updateAdminTable(actor, selected.id, {
-      name: selected.name,
-      type: selected.type,
-      status: selected.status,
-      company: selected.company,
-      capacity: form.capacity,
-      active: form.active,
-    })
-    if (!result.ok) {
-      setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+    if (!actor) return
+    const company = form.company === '' ? null : form.company
+
+    if (modal === 'create') {
+      const result = createAdminTable(actor, {
+        name: form.name,
+        type: form.type,
+        status: form.status,
+        company,
+        capacity: form.capacity,
+        active: form.active,
+      })
+      if (!result.ok) {
+        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+        return
+      }
+    } else if (modal === 'edit' && selected) {
+      const result = updateAdminTable(actor, selected.id, {
+        name: form.name,
+        type: form.type,
+        status: form.status,
+        company,
+        capacity: form.capacity,
+        active: form.active,
+      })
+      if (!result.ok) {
+        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+        return
+      }
+    } else {
       return
     }
     setModal(null)
@@ -89,12 +160,18 @@ export function TablesTab({ refreshKey, onChanged }: TablesTabProps) {
         </div>
       </div>
 
-      <AdminSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder={d.searchTables}
-        resultCount={filtered.length}
-      />
+      <div className="admin-tab__toolbar">
+        <AdminSearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder={d.searchTables}
+          resultCount={filtered.length}
+        />
+        <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
+          <PlusCircle size={18} aria-hidden="true" />
+          {d.createTable}
+        </button>
+      </div>
 
       {filtered.length === 0 ? (
         <AdminEmptyState />
@@ -142,11 +219,60 @@ export function TablesTab({ refreshKey, onChanged }: TablesTabProps) {
         </ul>
       )}
 
-      {modal === 'edit' && selected && (
+      {(modal === 'create' || modal === 'edit') && (
         <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
           <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{d.editTable}</h2>
+            <h2 className="order-modal__title">
+              {modal === 'create' ? d.createTable : d.editTable}
+            </h2>
             <div className="admin-form">
+              <div className="admin-form__row">
+                <label>{d.colCode}</label>
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="R10"
+                  readOnly={modal === 'edit'}
+                />
+              </div>
+              <div className="admin-form__grid">
+                <div className="admin-form__row">
+                  <label>{d.colType}</label>
+                  <select
+                    value={form.type}
+                    onChange={(e) => setForm({ ...form, type: e.target.value as PlantTableType })}
+                  >
+                    <option value="automatic">{d.typeAutomatic}</option>
+                    <option value="manual">{d.typeManual}</option>
+                  </select>
+                </div>
+                <div className="admin-form__row">
+                  <label>{d.colTableStatus}</label>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value as PlantTableStatus })}
+                  >
+                    {TABLE_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {getStatusLabel(s, lang)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="admin-form__row">
+                <label>{d.colCompany}</label>
+                <select
+                  value={form.company}
+                  onChange={(e) =>
+                    setForm({ ...form, company: e.target.value as OrderCompany | '' })
+                  }
+                >
+                  <option value="">—</option>
+                  <option value="SUMO">SUMO</option>
+                  <option value="MAF">MAF</option>
+                </select>
+              </div>
               <div className="admin-form__row">
                 <label>{d.colCapacity}</label>
                 <input

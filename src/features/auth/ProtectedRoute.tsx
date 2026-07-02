@@ -6,7 +6,7 @@ export function ProtectedRoute() {
   const location = useLocation()
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />
+    return <Navigate to="/plant-map" replace />
   }
 
   if (!canAccess(location.pathname)) {

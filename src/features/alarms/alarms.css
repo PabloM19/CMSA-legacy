@@ -5,130 +5,40 @@
   width: 100%;
 }
 
-.alarms-page__list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.alarms-page__item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.alarms-page__item--critical {
-  border-color: rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.08);
-}
-
-.alarms-page__item--warning {
-  border-color: rgba(234, 179, 8, 0.35);
-  background: rgba(234, 179, 8, 0.08);
-}
-
-.alarms-page__item--info {
-  border-color: rgba(59, 130, 246, 0.25);
-  background: rgba(59, 130, 246, 0.06);
-}
-
-.alarms-page__item--reviewed {
-  opacity: 0.85;
-}
-
-.alarms-page__item--resolved {
-  opacity: 0.65;
-}
-
-.alarms-page__icon {
-  flex-shrink: 0;
-  color: var(--color-warning);
-  margin-top: 2px;
-}
-
-.alarms-page__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.alarms-page__message {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.alarms-page__meta {
-  font-size: var(--font-size-xs);
-  color: var(--color-muted);
-  margin-top: var(--space-1);
-}
-
-.alarms-page__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-}
-
-.alarms-page__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: 36px;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--button-secondary-border);
-  background: var(--button-secondary-bg);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.alarms-page__btn--primary {
-  border-color: transparent;
-  background: var(--button-primary-bg);
-  color: var(--button-primary-text);
-}
-
-.alarms-page__detail {
+.alarms-page__table {
   padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
-.alarms-page__detail-title {
-  margin: 0;
+.operational-alarms__section-title {
+  margin: 0 0 var(--space-2);
   font-size: var(--font-size-lg);
+  font-weight: 700;
 }
 
-.alarms-page__detail-list {
-  display: grid;
-  gap: var(--space-3);
-  margin: 0;
+.operational-alarms__filters {
+  margin-top: calc(-1 * var(--space-2));
 }
 
-.alarms-page__detail-list dt {
-  font-size: var(--font-size-xs);
-  color: var(--color-muted);
-  font-weight: 600;
+.operational-alarms-table__row--reviewed {
+  opacity: 0.85;
 }
 
-.alarms-page__detail-list dd {
-  margin: 0;
-  font-weight: 600;
+.operational-alarms-table__row--critical td:first-child {
+  box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.65);
 }
 
-.alarms-page__reassign-disabled {
+.operational-alarms-table__row--warning td:first-child {
+  box-shadow: inset 3px 0 0 rgba(234, 179, 8, 0.65);
+}
+
+.operational-alarms__reassign-note {
   font-size: var(--font-size-sm);
   color: var(--color-muted);
   font-style: italic;
-  margin: 0;
+  margin: var(--space-3) 0 0;
 }
 
 .alarms-page__v2 {
@@ -138,12 +48,13 @@
   border-radius: var(--radius-lg);
   border: 1px dashed var(--border-soft);
   background: var(--app-surface-glass-subtle);
+  margin: 0;
 }
 
-.admin-tab--embedded .alarms-page > header {
-  display: none;
+.plant-map-alarms-table .operational-alarms__section-title {
+  font-size: var(--font-size-base);
 }
 
-.admin-tab--embedded .alarms-page {
-  gap: var(--space-4);
+.plant-map-alarms-table .admin-search {
+  max-width: 100%;
 }

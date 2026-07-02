@@ -164,7 +164,7 @@ export function ProfilePage() {
             <div className="profile-page__avatar-actions">
               <button
                 type="button"
-                className="ui-btn ui-btn--secondary profile-page__change-photo"
+                className="ui-btn ui-btn--md ui-btn--secondary profile-page__change-photo"
                 onClick={() => setAvatarPickerOpen((open) => !open)}
               >
                 {p.changePhoto}
@@ -275,9 +275,11 @@ export function ProfilePage() {
               onChange={(e) => setJobTitle(e.target.value)}
             />
 
-            <button type="button" className="ui-btn ui-btn--primary profile-page__save" onClick={handleSaveContact}>
-              {p.saveContactData}
-            </button>
+            <div className="profile-page__card-actions">
+              <button type="button" className="ui-btn ui-btn--md ui-btn--primary" onClick={handleSaveContact}>
+                {p.saveContactData}
+              </button>
+            </div>
           </article>
 
           <article className="profile-page__card">
@@ -320,9 +322,11 @@ export function ProfilePage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
 
-              <button type="submit" className="ui-btn ui-btn--secondary profile-page__save">
-                {p.savePassword}
-              </button>
+              <div className="profile-page__card-actions">
+                <button type="submit" className="ui-btn ui-btn--md ui-btn--secondary">
+                  {p.savePassword}
+                </button>
+              </div>
             </form>
           </article>
         </div>

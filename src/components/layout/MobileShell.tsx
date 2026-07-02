@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
+import { useLogout } from '../../features/auth/useLogout'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { LangSwitcher } from '../ui/LangSwitcher'
 import { getMobileNavItems } from '../../utils/permissions'
@@ -9,9 +10,9 @@ import { CmsaBackgroundDecor } from './CmsaBackgroundDecor'
 import './mobile-shell.css'
 
 export function MobileShell() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
+  const handleLogout = useLogout()
   const { t } = useLanguage()
-  const navigate = useNavigate()
   const location = useLocation()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -32,10 +33,9 @@ export function MobileShell() {
 
   const navItems = getMobileNavItems(user)
 
-  function handleLogout() {
+  function onLogout() {
     setDrawerOpen(false)
-    logout()
-    navigate('/plant-map', { replace: true })
+    handleLogout()
   }
 
   return (
@@ -92,7 +92,7 @@ export function MobileShell() {
           ))}
         </nav>
         <p className="mobile-shell__drawer-note">{t.mobile.navReadOnlyNote}</p>
-        <button type="button" className="mobile-shell__logout" onClick={handleLogout}>
+        <button type="button" className="mobile-shell__logout" onClick={onLogout}>
           {t.common.logout}
         </button>
       </aside>

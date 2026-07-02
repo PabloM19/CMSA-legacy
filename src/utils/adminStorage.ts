@@ -13,7 +13,7 @@ import type {
   ProductionConfig,
 } from '../types/admin'
 import type { User } from '../types/auth'
-import { canAccessAdmin as canAccessAdminRole } from './permissions'
+import { canAccessAdmin as canAccessAdminRole, canAssignAdminRole, canEditAdminUser } from './permissions'
 import type { OrderCompany } from '../types/newOrder'
 import type { PlantPalletizerElement, PlantTable, PlantTableStatus, PlantTableType } from '../types/plant'
 import { getState, saveState } from './backlogStorage'
@@ -180,6 +180,9 @@ export function createAdminUser(
   if (!input.name.trim() || !input.username.trim() || !input.role || !input.company) {
     return { ok: false, error: 'missing_fields' }
   }
+  if (!canAssignAdminRole(actor, input.role)) {
+    return { ok: false, error: 'forbidden_role' }
+  }
 
   const data = getAdminData()
   if (data.users.some((u) => u.username === input.username.trim())) {
@@ -208,9 +211,17 @@ export function updateAdminUser(
   const index = data.users.findIndex((u) => u.id === id)
   if (index < 0) return { ok: false, error: 'not_found' }
 
-  const next = { ...data.users[index], ...patch }
+  const current = data.users[index]
+  if (!canEditAdminUser(actor, current.role)) {
+    return { ok: false, error: 'forbidden_role' }
+  }
+
+  const next = { ...current, ...patch }
   if (!next.name.trim() || !next.username.trim()) {
     return { ok: false, error: 'missing_fields' }
+  }
+  if (!canAssignAdminRole(actor, next.role)) {
+    return { ok: false, error: 'forbidden_role' }
   }
 
   if (data.users.some((u) => u.id !== id && u.username === next.username.trim())) {
@@ -230,6 +241,10 @@ export function toggleAdminUserStatus(
   const data = getAdminData()
   const user = data.users.find((u) => u.id === id)
   if (!user) return { ok: false, error: 'not_found' }
+
+  if (!canEditAdminUser(actor, user.role)) {
+    return { ok: false, error: 'forbidden_role' }
+  }
 
   if (user.status === 'activo' && user.role === 'superadmin') {
     const others = countActiveSuperAdmins(data.users.filter((u) => u.id !== id))

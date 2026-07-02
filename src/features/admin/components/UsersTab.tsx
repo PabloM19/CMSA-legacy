@@ -1,15 +1,17 @@
 import { useState } from 'react'
-import { User } from 'lucide-react'
+import { PlusCircle, User } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { AdminUser } from '../../../types/admin'
 import type { Company, UserRole } from '../../../types/auth'
 import {
+  createAdminUser,
   getAdminUsers,
   toggleAdminUserStatus,
   updateAdminUser,
 } from '../../../utils/adminStorage'
 import { filterAdminUsers, getAdminUserEmail } from '../../../utils/adminViewHelpers'
+import { canEditAdminUser, getAssignableRoles } from '../../../utils/permissions'
 import { AdminConfirmModal } from './AdminConfirmModal'
 import { AdminEmptyState } from './AdminEmptyState'
 import { AdminSearchBar } from './AdminSearchBar'
@@ -27,6 +29,14 @@ type UserForm = {
   status: AdminUser['status']
 }
 
+const EMPTY_FORM: UserForm = {
+  name: '',
+  username: '',
+  role: 'user',
+  company: 'SUMO',
+  status: 'activo',
+}
+
 export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
   const { user: actor } = useAuth()
   const { t, lang } = useLanguage()
@@ -35,23 +45,27 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
   const users = getAdminUsers()
   void refreshKey
 
+  const assignableRoles = actor ? getAssignableRoles(actor) : []
+
   const [search, setSearch] = useState('')
-  const [modal, setModal] = useState<'edit' | 'detail' | null>(null)
+  const [modal, setModal] = useState<'create' | 'edit' | 'detail' | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState<UserForm>({
-    name: '',
-    username: '',
-    role: 'user',
-    company: 'SUMO',
-    status: 'activo',
-  })
+  const [form, setForm] = useState<UserForm>(EMPTY_FORM)
   const [error, setError] = useState<string | null>(null)
   const [confirmDeactivate, setConfirmDeactivate] = useState<AdminUser | null>(null)
 
   const filtered = filterAdminUsers(users, search, lang)
   const editingUser = editingId ? users.find((u) => u.id === editingId) : null
 
+  function openCreate() {
+    setForm({ ...EMPTY_FORM, role: assignableRoles[0] ?? 'user' })
+    setEditingId(null)
+    setError(null)
+    setModal('create')
+  }
+
   function openEdit(u: AdminUser) {
+    if (!actor || !canEditAdminUser(actor, u.role)) return
     setForm({
       name: u.name,
       username: u.username,
@@ -70,22 +84,34 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
   }
 
   function handleSave() {
-    if (!actor || !editingId) return
-    const result = updateAdminUser(actor, editingId, { ...form })
-    if (!result.ok) {
-      setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+    if (!actor) return
+
+    if (modal === 'create') {
+      const result = createAdminUser(actor, { ...form })
+      if (!result.ok) {
+        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+        return
+      }
+    } else if (modal === 'edit' && editingId) {
+      const result = updateAdminUser(actor, editingId, { ...form })
+      if (!result.ok) {
+        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+        return
+      }
+    } else {
       return
     }
+
     setModal(null)
     onChanged()
   }
 
   function handleToggle(u: AdminUser) {
+    if (!actor || !canEditAdminUser(actor, u.role)) return
     if (u.status === 'activo') {
       setConfirmDeactivate(u)
       return
     }
-    if (!actor) return
     toggleAdminUserStatus(actor, u.id)
     onChanged()
   }
@@ -114,58 +140,73 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
         </div>
       </div>
 
-      <AdminSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder={d.searchUsers}
-        resultCount={filtered.length}
-      />
+      <div className="admin-tab__toolbar">
+        <AdminSearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder={d.searchUsers}
+          resultCount={filtered.length}
+        />
+        <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
+          <PlusCircle size={18} aria-hidden="true" />
+          {d.createUser}
+        </button>
+      </div>
 
       {filtered.length === 0 ? (
         <AdminEmptyState />
       ) : (
         <ul className="admin-card-list">
-          {filtered.map((u) => (
-            <li key={u.id} className="admin-card">
-              <div className="admin-card__main">
-                <div className="admin-card__head">
-                  <strong className="admin-card__title">{u.name}</strong>
-                  <span className={`admin-badge admin-badge--${u.status === 'activo' ? 'ok' : 'off'}`}>
-                    {u.status === 'activo' ? d.statusActive : d.statusInactive}
-                  </span>
+          {filtered.map((u) => {
+            const canEdit = actor ? canEditAdminUser(actor, u.role) : false
+            return (
+              <li key={u.id} className="admin-card">
+                <div className="admin-card__main">
+                  <div className="admin-card__head">
+                    <strong className="admin-card__title">{u.name}</strong>
+                    <span className={`admin-badge admin-badge--${u.status === 'activo' ? 'ok' : 'off'}`}>
+                      {u.status === 'activo' ? d.statusActive : d.statusInactive}
+                    </span>
+                  </div>
+                  <p className="admin-card__meta">{u.username}</p>
+                  <p className="admin-card__meta">{getAdminUserEmail(u)}</p>
+                  <div className="admin-card__tags">
+                    <span className={`admin-badge admin-badge--${u.company.toLowerCase()}`}>{u.company}</span>
+                    <span className="admin-badge admin-badge--master">{t.roles[u.role]}</span>
+                  </div>
+                  {u.lastAccessMock && (
+                    <p className="admin-card__foot">
+                      {d.lastAccess}: {u.lastAccessMock}
+                    </p>
+                  )}
                 </div>
-                <p className="admin-card__meta">{u.username}</p>
-                <p className="admin-card__meta">{getAdminUserEmail(u)}</p>
-                <div className="admin-card__tags">
-                  <span className={`admin-badge admin-badge--${u.company.toLowerCase()}`}>{u.company}</span>
-                  <span className="admin-badge admin-badge--master">{t.roles[u.role]}</span>
+                <div className="admin-card__actions">
+                  <button type="button" className="admin-btn" onClick={() => openDetail(u)}>
+                    {d.viewDetail}
+                  </button>
+                  {canEdit && (
+                    <>
+                      <button type="button" className="admin-btn" onClick={() => openEdit(u)}>
+                        {d.editMock}
+                      </button>
+                      <button type="button" className="admin-btn" onClick={() => handleToggle(u)}>
+                        {u.status === 'activo' ? d.deactivate : d.activate}
+                      </button>
+                    </>
+                  )}
                 </div>
-                {u.lastAccessMock && (
-                  <p className="admin-card__foot">
-                    {d.lastAccess}: {u.lastAccessMock}
-                  </p>
-                )}
-              </div>
-              <div className="admin-card__actions">
-                <button type="button" className="admin-btn" onClick={() => openDetail(u)}>
-                  {d.viewDetail}
-                </button>
-                <button type="button" className="admin-btn" onClick={() => openEdit(u)}>
-                  {d.editMock}
-                </button>
-                <button type="button" className="admin-btn" onClick={() => handleToggle(u)}>
-                  {u.status === 'activo' ? d.deactivate : d.activate}
-                </button>
-              </div>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
       )}
 
-      {modal === 'edit' && (
+      {(modal === 'create' || modal === 'edit') && (
         <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
           <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{d.editUser}</h2>
+            <h2 className="order-modal__title">
+              {modal === 'create' ? d.createUser : d.editUser}
+            </h2>
             <div className="admin-form">
               <div className="admin-form__row">
                 <label>{d.colName}</label>
@@ -173,7 +214,10 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
               </div>
               <div className="admin-form__row">
                 <label>{d.colUsername}</label>
-                <input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+                <input
+                  value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                />
               </div>
               <div className="admin-form__grid">
                 <div className="admin-form__row">
@@ -182,9 +226,11 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
                     value={form.role}
                     onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
                   >
-                    <option value="user">{t.roles.user}</option>
-                    <option value="supervisor">{t.roles.supervisor}</option>
-                    <option value="superadmin">{t.roles.superadmin}</option>
+                    {assignableRoles.map((role) => (
+                      <option key={role} value={role}>
+                        {t.roles[role]}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="admin-form__row">
@@ -195,8 +241,8 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
                   >
                     <option value="SUMO">SUMO</option>
                     <option value="MAF">MAF</option>
+                    <option value="GLOBAL">GLOBAL</option>
                     <option value="CMSA">CMSA</option>
-                    <option value="MASTER">MASTER</option>
                   </select>
                 </div>
               </div>

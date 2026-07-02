@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Package } from 'lucide-react'
+import { Package, PlusCircle } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { AdminPalletizerRow } from '../../../types/admin'
 import type { PlantPalletizerStatus } from '../../../types/plant'
 import {
+  createAdminPalletizer,
   getAdminPalletizers,
   toggleAdminPalletizerActive,
   updateAdminPalletizer,
@@ -31,9 +32,10 @@ export function PalletizersTab({ refreshKey, onChanged }: PalletizersTabProps) {
   void refreshKey
 
   const [search, setSearch] = useState('')
-  const [modal, setModal] = useState<'edit' | 'detail' | null>(null)
+  const [modal, setModal] = useState<'create' | 'edit' | 'detail' | null>(null)
   const [selected, setSelected] = useState<AdminPalletizerRow | null>(null)
   const [form, setForm] = useState({
+    name: '',
     status: 'idle' as PlantPalletizerStatus,
     capacity: 500,
     alert: '',
@@ -44,9 +46,17 @@ export function PalletizersTab({ refreshKey, onChanged }: PalletizersTabProps) {
 
   const filtered = filterAdminPalletizers(rows, search, lang)
 
+  function openCreate() {
+    setForm({ name: '', status: 'idle', capacity: 500, alert: '', active: true })
+    setSelected(null)
+    setError(null)
+    setModal('create')
+  }
+
   function openEdit(row: AdminPalletizerRow) {
     setSelected(row)
     setForm({
+      name: row.name,
       status: row.status,
       capacity: row.capacity,
       alert: row.alert ?? '',
@@ -62,16 +72,31 @@ export function PalletizersTab({ refreshKey, onChanged }: PalletizersTabProps) {
   }
 
   function handleSave() {
-    if (!actor || !selected) return
-    const result = updateAdminPalletizer(actor, selected.id, {
-      name: selected.name,
-      status: form.status,
-      capacity: form.capacity,
-      alert: form.alert.trim() || null,
-      active: form.active,
-    })
-    if (!result.ok) {
-      setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+    if (!actor) return
+
+    if (modal === 'create') {
+      const result = createAdminPalletizer(actor, {
+        name: form.name,
+        capacity: form.capacity,
+        active: form.active,
+      })
+      if (!result.ok) {
+        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+        return
+      }
+    } else if (modal === 'edit' && selected) {
+      const result = updateAdminPalletizer(actor, selected.id, {
+        name: selected.name,
+        status: form.status,
+        capacity: form.capacity,
+        alert: form.alert.trim() || null,
+        active: form.active,
+      })
+      if (!result.ok) {
+        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+        return
+      }
+    } else {
       return
     }
     setModal(null)
@@ -97,12 +122,18 @@ export function PalletizersTab({ refreshKey, onChanged }: PalletizersTabProps) {
         </div>
       </div>
 
-      <AdminSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder={d.searchPalletizers}
-        resultCount={filtered.length}
-      />
+      <div className="admin-tab__toolbar">
+        <AdminSearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder={d.searchPalletizers}
+          resultCount={filtered.length}
+        />
+        <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
+          <PlusCircle size={18} aria-hidden="true" />
+          {d.createPalletizer}
+        </button>
+      </div>
 
       {filtered.length === 0 ? (
         <AdminEmptyState />
@@ -139,11 +170,23 @@ export function PalletizersTab({ refreshKey, onChanged }: PalletizersTabProps) {
         </ul>
       )}
 
-      {modal === 'edit' && selected && (
+      {(modal === 'create' || modal === 'edit') && (
         <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
           <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{d.editPalletizer}</h2>
+            <h2 className="order-modal__title">
+              {modal === 'create' ? d.createPalletizer : d.editPalletizer}
+            </h2>
             <div className="admin-form">
+              {modal === 'create' && (
+                <div className="admin-form__row">
+                  <label>{d.colCode}</label>
+                  <input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="P1"
+                  />
+                </div>
+              )}
               <div className="admin-form__grid">
                 <div className="admin-form__row">
                   <label>{d.colTableStatus}</label>

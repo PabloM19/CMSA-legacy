@@ -1,9 +1,15 @@
 import { useMemo, useState } from 'react'
-import { Building2 } from 'lucide-react'
+import { Building2, PlusCircle } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { AdminCompany } from '../../../types/admin'
-import { getAdminCompanies, getAdminUsers, updateAdminCompany } from '../../../utils/adminStorage'
+import {
+  createAdminCompany,
+  getAdminCompanies,
+  getAdminUsers,
+  toggleAdminCompanyStatus,
+  updateAdminCompany,
+} from '../../../utils/adminStorage'
 import { loadBacklogOrders } from '../../../utils/backlogStorage'
 import { enrichAdminCompanies, filterAdminCompanies } from '../../../utils/adminViewHelpers'
 import { AdminEmptyState } from './AdminEmptyState'
@@ -27,9 +33,9 @@ export function CompaniesTab({ refreshKey, onChanged }: CompaniesTabProps) {
   )
 
   const [search, setSearch] = useState('')
-  const [modal, setModal] = useState<'edit' | 'detail' | null>(null)
+  const [modal, setModal] = useState<'create' | 'edit' | 'detail' | null>(null)
   const [selected, setSelected] = useState<AdminCompany | null>(null)
-  const [form, setForm] = useState({ color: '#6D28D9', assignedCapacity: 50 })
+  const [form, setForm] = useState({ name: '', color: '#6D28D9', assignedCapacity: 50 })
   const [error, setError] = useState<string | null>(null)
 
   const filtered = filterAdminCompanies(companies, search)
@@ -37,9 +43,16 @@ export function CompaniesTab({ refreshKey, onChanged }: CompaniesTabProps) {
     ? companies.find((c) => c.id === selected.id) ?? null
     : null
 
+  function openCreate() {
+    setForm({ name: '', color: '#6D28D9', assignedCapacity: 50 })
+    setSelected(null)
+    setError(null)
+    setModal('create')
+  }
+
   function openEdit(c: AdminCompany) {
     setSelected(c)
-    setForm({ color: c.color, assignedCapacity: c.assignedCapacity })
+    setForm({ name: c.name, color: c.color, assignedCapacity: c.assignedCapacity })
     setError(null)
     setModal('edit')
   }
@@ -50,16 +63,36 @@ export function CompaniesTab({ refreshKey, onChanged }: CompaniesTabProps) {
   }
 
   function handleSave() {
-    if (!actor || !selected) return
-    const result = updateAdminCompany(actor, selected.id, {
-      color: form.color,
-      assignedCapacity: form.assignedCapacity,
-    })
-    if (!result.ok) {
-      setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+    if (!actor) return
+    if (modal === 'create') {
+      const result = createAdminCompany(actor, {
+        name: form.name,
+        color: form.color,
+        assignedCapacity: form.assignedCapacity,
+      })
+      if (!result.ok) {
+        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+        return
+      }
+    } else if (modal === 'edit' && selected) {
+      const result = updateAdminCompany(actor, selected.id, {
+        color: form.color,
+        assignedCapacity: form.assignedCapacity,
+      })
+      if (!result.ok) {
+        setError(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+        return
+      }
+    } else {
       return
     }
     setModal(null)
+    onChanged()
+  }
+
+  function handleToggle(c: AdminCompany) {
+    if (!actor) return
+    toggleAdminCompanyStatus(actor, c.id)
     onChanged()
   }
 
@@ -75,12 +108,18 @@ export function CompaniesTab({ refreshKey, onChanged }: CompaniesTabProps) {
         </div>
       </div>
 
-      <AdminSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder={d.searchCompanies}
-        resultCount={filtered.length}
-      />
+      <div className="admin-tab__toolbar">
+        <AdminSearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder={d.searchCompanies}
+          resultCount={filtered.length}
+        />
+        <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
+          <PlusCircle size={18} aria-hidden="true" />
+          {d.createCompany}
+        </button>
+      </div>
 
       {filtered.length === 0 ? (
         <AdminEmptyState />
@@ -117,17 +156,32 @@ export function CompaniesTab({ refreshKey, onChanged }: CompaniesTabProps) {
                 <button type="button" className="admin-btn" onClick={() => openEdit(c)}>
                   {d.editMock}
                 </button>
+                <button type="button" className="admin-btn" onClick={() => handleToggle(c)}>
+                  {c.status === 'activa' ? d.deactivate : d.activate}
+                </button>
               </div>
             </li>
           ))}
         </ul>
       )}
 
-      {modal === 'edit' && selected && (
+      {(modal === 'create' || modal === 'edit') && (
         <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
           <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{d.editCompany}</h2>
+            <h2 className="order-modal__title">
+              {modal === 'create' ? d.createCompany : d.editCompany}
+            </h2>
             <div className="admin-form">
+              {modal === 'create' && (
+                <div className="admin-form__row">
+                  <label>{d.colName}</label>
+                  <input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="SUMO"
+                  />
+                </div>
+              )}
               <div className="admin-form__row">
                 <label>{d.colColor}</label>
                 <input

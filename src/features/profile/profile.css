@@ -189,8 +189,20 @@
 }
 
 .profile-page__change-photo {
+  min-width: 180px;
+}
+
+.profile-page__card-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: var(--space-2);
+}
+
+.profile-page__password-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   width: 100%;
-  max-width: 220px;
 }
 
 .profile-page__avatar-picker {
@@ -227,15 +239,7 @@
 
 .profile-page__input {
   margin-bottom: var(--space-4);
-}
-
-.profile-page__save {
-  margin-top: var(--space-1);
-}
-
-.profile-page__password-form {
-  display: flex;
-  flex-direction: column;
+  width: 100%;
 }
 
 .profile-page__pref-block + .profile-page__pref-block {
@@ -273,27 +277,6 @@
 }
 
 .profile-page__toggle-btn:hover:not(.profile-page__toggle-btn--active) {
-  background: var(--button-secondary-hover-bg);
-  color: var(--button-secondary-hover-text);
-  border-color: var(--button-secondary-hover-border);
-}
-
-.profile-page__change-photo,
-.profile-page__save {
-  min-width: 160px;
-}
-
-.profile-page__save.ui-btn--primary {
-  box-shadow: 0 2px 10px rgba(0, 160, 210, 0.35);
-}
-
-.profile-page__save.ui-btn--secondary {
-  border-color: var(--button-secondary-border);
-  background: var(--button-secondary-bg);
-  color: var(--button-secondary-text);
-}
-
-.profile-page__save.ui-btn--secondary:hover:not(:disabled) {
   background: var(--button-secondary-hover-bg);
   color: var(--button-secondary-hover-text);
   border-color: var(--button-secondary-hover-border);
@@ -346,9 +329,5 @@
 
   .profile-page__avatar-actions {
     align-items: flex-start;
-  }
-
-  .profile-page__change-photo {
-    max-width: none;
   }
 }

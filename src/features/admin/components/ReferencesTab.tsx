@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { PlusCircle } from 'lucide-react'
+import { BookOpen, PlusCircle } from 'lucide-react'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { MockProduct } from '../../../data/mockProducts'
 import {
@@ -70,13 +70,16 @@ export function ReferencesTab({
   }
 
   return (
-    <section className="admin-tab">
-      {showHeader && (
-        <>
-          <h2 className="admin-tab__title">{r.title}</h2>
-          <p className="admin-tab__desc">{r.subtitle}</p>
-        </>
-      )}
+    <section className="admin-section dash-card admin-tab">
+      <div className="admin-section__intro">
+        <div className="admin-section__icon" aria-hidden="true">
+          <BookOpen size={32} strokeWidth={1.75} />
+        </div>
+        <div>
+          <h2 className="admin-section__title">{showHeader ? r.title : d.tabs.references}</h2>
+          <p className="admin-section__desc">{showHeader ? r.subtitle : d.sectionReferencesDesc}</p>
+        </div>
+      </div>
 
       <div className="admin-tab__toolbar">
         <AdminSearchBar
@@ -100,7 +103,7 @@ export function ReferencesTab({
       {filtered.length === 0 ? (
         <AdminEmptyState />
       ) : (
-        <div className="admin-table-wrap">
+        <div className="admin-table-wrap" role="region" aria-label={r.title}>
           <table className="admin-table">
             <thead>
               <tr>
@@ -110,6 +113,7 @@ export function ReferencesTab({
                 <th>{t.backlog.variety}</th>
                 <th>{r.colCalibre}</th>
                 <th>{r.colFormat}</th>
+                <th>{r.colUsage}</th>
                 <th>{t.backlog.boxesPerHour}</th>
                 <th>{d.colStatus}</th>
                 <th>{d.colAction}</th>
@@ -118,14 +122,21 @@ export function ReferencesTab({
             <tbody>
               {filtered.map((product) => (
                 <tr key={product.id} className={!product.activo ? 'admin-table__row--muted' : ''}>
-                  <td>{product.referenciaProducto}</td>
-                  <td>{product.barcode}</td>
+                  <td className="admin-table__cell-ref">{product.referenciaProducto}</td>
+                  <td className="admin-table__cell-mono">{product.barcode}</td>
                   <td>{product.producto}</td>
                   <td>{product.variedad}</td>
                   <td>{product.calibre}</td>
                   <td>{product.formatoCaja}</td>
+                  <td>{product.uso}</td>
                   <td>{product.cajasHoraSugeridas}</td>
-                  <td>{product.activo ? d.statusActiveF : d.statusInactiveF}</td>
+                  <td>
+                    <span
+                      className={`admin-badge admin-badge--${product.activo ? 'ok' : 'off'}`}
+                    >
+                      {product.activo ? d.statusActiveF : d.statusInactiveF}
+                    </span>
+                  </td>
                   <td className="admin-table__actions">
                     <button
                       type="button"

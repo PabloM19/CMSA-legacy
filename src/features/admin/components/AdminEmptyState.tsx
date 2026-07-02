@@ -1,6 +1,10 @@
 import { useLanguage } from '../../../i18n/LanguageContext'
 
-export function AdminEmptyState() {
+interface AdminEmptyStateProps {
+  message?: string
+}
+
+export function AdminEmptyState({ message }: AdminEmptyStateProps = {}) {
   const { t } = useLanguage()
-  return <p className="admin-empty">{t.admin.noResults}</p>
+  return <p className="admin-empty">{message ?? t.admin.noResults}</p>
 }
