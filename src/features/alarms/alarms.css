@@ -53,8 +53,80 @@
 
 .plant-map-alarms-table .operational-alarms__section-title {
   font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-gray-900);
 }
 
 .plant-map-alarms-table .admin-search {
   max-width: 100%;
+}
+
+.plant-map-alarms-table .admin-search__input {
+  background: #ffffff;
+}
+
+.plant-map-alarms-table .admin-search__count {
+  color: var(--color-gray-600);
+}
+
+.plant-map-alarms-table .admin-filter-bar {
+  margin-bottom: 0;
+}
+
+.plant-map-alarms-table .admin-filter-bar__btn {
+  background: #ffffff;
+}
+
+.plant-map-alarms-table .admin-filter-bar__btn--active {
+  background: #e0f2fe;
+  border-color: rgba(0, 160, 210, 0.45);
+  color: #0369a1;
+}
+
+.plant-map-alarms-table .admin-table-wrap {
+  background: #ffffff;
+  border-color: var(--color-gray-200);
+  box-shadow: none;
+}
+
+.plant-map-alarms-table .admin-table thead {
+  background: var(--color-gray-50);
+}
+
+.plant-map-alarms-table .admin-table tbody tr {
+  background: #ffffff;
+}
+
+.plant-map-alarms-table .admin-table tbody tr:hover {
+  background: var(--color-gray-50);
+}
+
+.plant-map-alarms-table .admin-table tbody tr:hover td {
+  background: var(--color-gray-50);
+}
+
+.plant-map-alarms-table .admin-table th,
+.plant-map-alarms-table .admin-table td {
+  background: inherit;
+}
+
+.plant-map-alarms-table .operational-alarms-table__row--critical {
+  border-left: 3px solid rgba(239, 68, 68, 0.75);
+}
+
+.plant-map-alarms-table .operational-alarms-table__row--warning {
+  border-left: 3px solid rgba(234, 179, 8, 0.75);
+}
+
+.plant-map-alarms-table .operational-alarms-table__row--critical td:first-child,
+.plant-map-alarms-table .operational-alarms-table__row--warning td:first-child {
+  box-shadow: none;
+}
+
+.plant-map-alarms-table .admin-empty {
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-gray-50);
+  color: var(--color-gray-600);
 }
