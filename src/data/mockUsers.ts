@@ -36,7 +36,7 @@ const supervisor: User = {
 const superadmin: User = {
   id: 'u4',
   username: 'usuario_superadmin',
-  name: 'Super Admin CMSA',
+  name: 'SuperMaster CMSA',
   company: 'GLOBAL',
   role: 'superadmin',
 }
@@ -64,7 +64,7 @@ export const mockCredentials: MockCredential[] = [
     username: 'usuario_superadmin',
     password: 'admin123',
     user: superadmin,
-    roleLabel: 'Super Admin',
+    roleLabel: 'SuperMaster',
   },
   // Alias de compatibilidad (no listados en ayuda principal)
   { username: 'usuario_sumo', password: '1234', user: operarioSumo, hidden: true },
@@ -72,7 +72,7 @@ export const mockCredentials: MockCredential[] = [
   {
     username: 'usuario_master',
     password: 'master123',
-    user: { ...superadmin, username: 'usuario_master', name: 'Super Admin CMSA' },
+    user: { ...superadmin, username: 'usuario_master', name: 'SuperMaster CMSA' },
     hidden: true,
   },
 ]

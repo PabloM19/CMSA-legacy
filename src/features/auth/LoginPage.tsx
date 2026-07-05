@@ -7,6 +7,7 @@ import { LangSwitcher } from '../../components/ui/LangSwitcher'
 import { getVisibleMockCredentials } from '../../data/mockUsers'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { authenticate, getPostLoginPath } from '../../utils/auth'
+import { readUserPreferences } from '../../utils/userPreferences'
 import { useAuth } from './AuthContext'
 import './login.css'
 
@@ -55,7 +56,7 @@ function LockIcon() {
 export function LoginPage() {
   const navigate = useNavigate()
   const { isAuthenticated, login, defaultRoute } = useAuth()
-  const { t } = useLanguage()
+  const { t, setLang } = useLanguage()
   const copy = t.login
 
   const [username, setUsername] = useState('')
@@ -83,6 +84,7 @@ export function LoginPage() {
     const user = authenticate(username.trim(), password)
     if (user) {
       login(user)
+      setLang(readUserPreferences(user.username).language)
       navigate(getPostLoginPath(user), { replace: true })
     } else {
       setError(true)

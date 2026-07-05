@@ -83,6 +83,15 @@ export function getOrderStatusBadge(order: BacklogOrder, lang: Lang): StatusBadg
   if (order.column === 'finalizado' || order.productionState === 'completed') {
     return lang === 'es' ? PROD_ES.completed : PROD_EN.completed
   }
+  if (
+    order.column === 'en_preparacion' &&
+    order.preparationStatus === 'pending_preparation' &&
+    !(order.assignedTableIds?.length ?? 0)
+  ) {
+    return lang === 'es'
+      ? { label: 'Pendiente de aceptación', variant: 'pending' }
+      : { label: 'Pending acceptance', variant: 'pending' }
+  }
   if (order.column === 'en_produccion' && order.productionState) {
     const dict = lang === 'es' ? PROD_ES : PROD_EN
     return dict[order.productionState]

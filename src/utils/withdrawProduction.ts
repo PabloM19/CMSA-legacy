@@ -23,6 +23,7 @@ export function withdrawOrderFromProduction(
   orderId: string,
   reasonLabel: string,
   actorName: string,
+  boxesProduced = 0,
 ): { orders: BacklogOrder[]; plantTables: PlantTable[] } {
   const nextOrders = orders.map((order) => {
     if (order.id !== orderId) return order
@@ -30,8 +31,9 @@ export function withdrawOrderFromProduction(
       ...order,
       column: 'finalizado' as const,
       productionState: 'withdrawn' as const,
+      boxesProduced: boxesProduced > 0 ? boxesProduced : order.boxesProduced,
       alerts: [...order.alerts.filter((a) => !a.startsWith('Retirado')), `Retirado: ${reasonLabel}`],
-      auditTrail: [...order.auditTrail, auditEntry('Retirado de producción', actorName)],
+      auditTrail: [...order.auditTrail, auditEntry('Orden retirada de producción', actorName)],
     }
   })
   const nextPlant = releaseTablesForOrder(orderId, plantTables)

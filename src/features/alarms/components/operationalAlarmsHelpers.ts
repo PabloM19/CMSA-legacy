@@ -23,7 +23,6 @@ export function matchesAlarmQuery(
   alarm: CellAlarm,
   query: string,
   lang: Lang,
-  severityLabels: { high: string; medium: string },
 ): boolean {
   const q = query.trim().toLowerCase()
   if (!q) return true
@@ -35,9 +34,7 @@ export function matchesAlarmQuery(
     alarm.type,
     alarm.summary,
     alarm.message,
-    alarm.severity,
     alarmStatusLabel(alarm.status, lang),
-    alarmSeverityLabel(alarm.severity, lang, severityLabels),
   ]
     .join(' ')
     .toLowerCase()

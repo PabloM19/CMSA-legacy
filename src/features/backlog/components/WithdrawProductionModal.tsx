@@ -8,12 +8,14 @@ interface WithdrawProductionModalProps {
   order: BacklogOrder
   onClose: () => void
   onConfirm: (reason: WithdrawReason, comment: string) => void
+  commentRequired?: boolean
 }
 
 export function WithdrawProductionModal({
   order,
   onClose,
   onConfirm,
+  commentRequired = false,
 }: WithdrawProductionModalProps) {
   const { t } = useLanguage()
   const d = t.backlog
@@ -26,6 +28,10 @@ export function WithdrawProductionModal({
     e.preventDefault()
     if (!reason) {
       setError(d.withdrawReasonRequired)
+      return
+    }
+    if (commentRequired && !comment.trim()) {
+      setError(d.withdrawCommentRequired)
       return
     }
     onConfirm(reason, comment.trim())
@@ -64,7 +70,10 @@ export function WithdrawProductionModal({
             </Select>
           </FormField>
 
-          <FormField label={d.withdrawCommentLabel} htmlFor="withdraw-comment">
+          <FormField
+            label={commentRequired ? `${d.withdrawCommentLabel} *` : d.withdrawCommentLabel}
+            htmlFor="withdraw-comment"
+          >
             <textarea
               id="withdraw-comment"
               className="ui-input backlog-withdraw__comment"

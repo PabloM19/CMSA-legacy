@@ -66,9 +66,14 @@ export interface PlantElementView {
   occupancyPercent: number | null
   alert: string | null
   isClickable: boolean
+  /** Mesa/celda desactivada desde administración. */
+  isDisabled?: boolean
+  /** Situación crítica mock (high runner / alto volumen). */
+  isCritical?: boolean
 }
 
 export interface CmsaPersistedState {
+  dailyOrders: import('./dailyOrder').DailyOrder[]
   orders: BacklogOrder[]
   plantTables: PlantTable[]
   plantPalletizers: PlantPalletizerElement[]

@@ -26,7 +26,10 @@ export interface OrderAlert {
 
 export interface OrderCalculation {
   requiredTables: number
-  eta: string
+  /** Estimated Time of Completion */
+  etc: string
+  /** @deprecated Usar etc */
+  eta?: string
   estimatedEnd: string
   capacityConsumed: number
   alerts: OrderAlert[]

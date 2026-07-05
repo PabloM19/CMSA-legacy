@@ -125,7 +125,7 @@ export function ActiveProductionCards({
                 </p>
               )}
 
-              <Link to="/backlog" className="dash-active-cards__link">
+              <Link to="/production-orders" className="dash-active-cards__link">
                 {d.viewDetail}
               </Link>
             </article>
@@ -134,7 +134,7 @@ export function ActiveProductionCards({
       </div>
 
       {hasMore && (
-        <Link to="/backlog" className="dash-active-cards__more">
+        <Link to="/production-orders" className="dash-active-cards__more">
           {d.viewAllQueue}
         </Link>
       )}

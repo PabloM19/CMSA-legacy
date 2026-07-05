@@ -1,4 +1,6 @@
-import { mockBacklogOrders, convertCreatedOrder } from '../data/mockBacklogOrders'
+import { mockBacklogOrders, convertCreatedOrder, getSeedDailyOrders } from '../data/mockBacklogOrders'
+import { syncAllDailyOrders } from './dailyOrderHelpers'
+import type { DailyOrder } from '../types/dailyOrder'
 import { createSeedPalletizers, createSeedPlantTables } from '../data/mockPlantTables'
 import type { BacklogOrder } from '../types/backlog'
 import type { CmsaPersistedState, PlantPalletizerElement, PlantPalletizerStatus, PlantTable } from '../types/plant'
@@ -42,6 +44,7 @@ function readRawState(): CmsaPersistedState | null {
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) {
       return {
+        dailyOrders: getSeedDailyOrders(),
         orders: parsed as BacklogOrder[],
         plantTables: createSeedPlantTables(),
         plantPalletizers: createSeedPalletizers(),
@@ -50,6 +53,7 @@ function readRawState(): CmsaPersistedState | null {
     const legacy = parsed as CmsaPersistedState
     return {
       ...legacy,
+      dailyOrders: legacy.dailyOrders?.length ? legacy.dailyOrders : getSeedDailyOrders(),
       plantPalletizers: legacy.plantPalletizers?.length
         ? legacy.plantPalletizers
         : createSeedPalletizers(),
@@ -84,15 +88,16 @@ function mergeById(existing: BacklogOrder[], incoming: BacklogOrder[]): BacklogO
 }
 
 function syncLegacyCreatedOrders(orders: BacklogOrder[]): BacklogOrder[] {
-  const pending = getCreatedOrders().map(convertCreatedOrder)
+  const pending = getCreatedOrders().map((o) => convertCreatedOrder(o))
   if (pending.length === 0) return orders
   return mergeById(orders, pending)
 }
 
 function seedInitialState(): CmsaPersistedState {
   const orders = normalizePriorities([...mockBacklogOrders])
+  const dailyOrders = syncAllDailyOrders(getSeedDailyOrders(), orders)
   const plantTables = rebuildPlantTablesFromOrders(createSeedPlantTables(), orders)
-  return { orders, plantTables, plantPalletizers: createSeedPalletizers() }
+  return { dailyOrders, orders, plantTables, plantPalletizers: createSeedPalletizers() }
 }
 
 const DEMO_ALARM_IDS = ['bk-alm-1', 'bk-alm-2', 'bk-alm-3'] as const
@@ -107,16 +112,16 @@ function ensureDemoAlarmOrders(orders: BacklogOrder[]): BacklogOrder[] {
     }
   }
 
-  const bk2 = map.get('bk-2')
+  const bk2 = map.get('bk-alm-1')
   if (bk2?.assignedTableIds?.includes('R4')) {
-    const seed = mockBacklogOrders.find((order) => order.id === 'bk-2')
-    if (seed) map.set('bk-2', seed)
+    const seed = mockBacklogOrders.find((order) => order.id === 'bk-alm-1')
+    if (seed) map.set('bk-alm-1', seed)
   }
 
-  const bk7 = map.get('bk-7')
+  const bk7 = map.get('bk-alm-3')
   if (bk7?.assignedTableIds?.includes('M2')) {
-    const seed = mockBacklogOrders.find((order) => order.id === 'bk-7')
-    if (seed) map.set('bk-7', seed)
+    const seed = mockBacklogOrders.find((order) => order.id === 'bk-alm-3')
+    if (seed) map.set('bk-alm-3', seed)
   }
 
   return Array.from(map.values())
@@ -127,6 +132,10 @@ function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
     ensureDemoAlarmOrders(migrateBacklogOrders(state.orders.map(normalizeOrderFields))),
   )
   orders = normalizePriorities(orders)
+  const dailyOrders = syncAllDailyOrders(
+    state.dailyOrders?.length ? state.dailyOrders : getSeedDailyOrders(),
+    orders,
+  )
   const plantTables = applyAdminPlantOverrides(
     rebuildPlantTablesFromOrders(
       state.plantTables?.length > 0 ? state.plantTables : createSeedPlantTables(),
@@ -135,7 +144,7 @@ function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
   )
   const plantPalletizers =
     state.plantPalletizers?.length > 0 ? state.plantPalletizers : createSeedPalletizers()
-  return { orders, plantTables, plantPalletizers }
+  return { dailyOrders, orders, plantTables, plantPalletizers }
 }
 
 function applyTabletOverrides(state: CmsaPersistedState): CmsaPersistedState {
@@ -198,9 +207,18 @@ export function saveOrders(orders: BacklogOrder[]): void {
   saveState({ ...current, orders })
 }
 
-export function saveOrdersAndPlant(orders: BacklogOrder[], plantTables: PlantTable[]): void {
+export function getDailyOrders(): DailyOrder[] {
+  return getState().dailyOrders
+}
+
+export function saveOrdersAndPlant(
+  orders: BacklogOrder[],
+  plantTables: PlantTable[],
+  dailyOrders?: DailyOrder[],
+): void {
   const current = getState()
-  saveState({ ...current, orders, plantTables })
+  const nextDaily = dailyOrders ?? syncAllDailyOrders(current.dailyOrders, orders)
+  saveState({ ...current, orders, plantTables, dailyOrders: nextDaily })
 }
 
 export function mergeOrder(order: BacklogOrder): BacklogOrder[] {

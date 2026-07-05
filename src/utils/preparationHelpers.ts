@@ -83,17 +83,18 @@ export function reserveStationsForOrder(
   const nextOrder: BacklogOrder = {
     ...order,
     column: 'en_preparacion',
-    preparationStatus: 'pending_preparation',
+    preparationStatus: 'waiting_cell',
     assignedTableIds: selectedIds,
     assignedTables: selectedIds,
     assignmentMode,
     validationTables,
     tablesValidated: false,
+    alerts: order.alerts.filter((a) => !a.includes('Pendiente de aceptación')),
     auditTrail: [
       ...order.auditTrail,
       {
         id: `audit-${Date.now()}`,
-        action: 'En preparación — estaciones reservadas',
+        action: 'Orden aceptada — en preparación',
         timestamp: new Date().toISOString(),
       },
     ],

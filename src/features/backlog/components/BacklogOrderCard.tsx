@@ -9,6 +9,7 @@ import type { BacklogOrder } from '../../../types/backlog'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
 import { canWithdrawProduction, isSupervisor } from '../../../utils/permissions'
 import { formatTableList, resolveAssignedTableIds } from '../../../utils/backlogStorage'
+import { canConfirmCellReady, isPendingAcceptanceColumn, orderEtc } from '../../../utils/dailyOrderHelpers'
 import { getOrderStatusBadge } from '../../../utils/statusBadge'
 
 interface BacklogOrderCardProps {
@@ -65,26 +66,26 @@ function BacklogOrderCardContent({
   function renderPrimaryAction() {
     if (completed || !canAct) return null
 
-    if (order.column === 'en_backlog' && onPrepare) {
+    if (isPendingAcceptanceColumn(order) && onPrepare) {
       return (
         <button
           type="button"
           className="backlog-card__btn backlog-card__btn--primary"
           onClick={() => onPrepare(order)}
         >
-          {d.actionPrepare}
+          {d.actionAcceptOrder}
         </button>
       )
     }
 
-    if (order.column === 'en_preparacion' && onConfirmRecipe && user && isSupervisor(user)) {
+    if (canConfirmCellReady(order) && onConfirmRecipe && user && isSupervisor(user)) {
       return (
         <button
           type="button"
           className="backlog-card__btn backlog-card__btn--primary"
           onClick={() => onConfirmRecipe(order)}
         >
-          {d.confirmRecipe}
+          {d.confirmCellReady}
         </button>
       )
     }
@@ -127,6 +128,11 @@ function BacklogOrderCardContent({
               <span>
                 {d.tables}: <strong>{tablesLabel}</strong>
               </span>
+              {!compact && (
+                <span>
+                  {d.etc}: <strong>{orderEtc(order)}</strong>
+                </span>
+              )}
             </div>
           </>
         )}
@@ -211,6 +217,7 @@ function StaticBacklogOrderCard({
   onViewDetail,
   onPrepare,
   onConfirmRecipe,
+  onWithdraw,
 }: Omit<BacklogOrderCardProps, 'sortable'>) {
   return (
     <BacklogOrderCardContent
@@ -221,6 +228,7 @@ function StaticBacklogOrderCard({
       onViewDetail={onViewDetail}
       onPrepare={onPrepare}
       onConfirmRecipe={onConfirmRecipe}
+      onWithdraw={onWithdraw}
     />
   )
 }

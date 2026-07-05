@@ -2,53 +2,72 @@ import type { CellAlarm, CellAlarmStatus } from '../types/cellAlarm'
 
 const STORAGE_KEY = 'cmsa-cell-alarms'
 const STORAGE_VERSION_KEY = 'cmsa-cell-alarms-version'
-const ALARMS_VERSION = '3'
+const ALARMS_VERSION = '4'
 
 export const MOCK_CELL_ALARMS: CellAlarm[] = [
   {
-    id: 'alarm-exceso-001',
+    id: 'evt-exceso-001',
     cellCode: 'R4',
     type: 'Exceso de cajas',
     summary: 'Más cajas de las establecidas',
     severity: 'warning',
     time: '11:18',
-    orderReference: 'ALM-SUMO-EXCESO-001',
+    orderReference: 'REF-DISPLAY-PACK',
     company: 'SUMO',
     product: 'Naranja',
-    variety: 'Navelina',
+    variety: 'Display Pack',
     message:
-      'El objetivo está enviando más cajas de las establecidas para la referencia.',
+      'La orden de producción está enviando más cajas de las establecidas para la referencia.',
     status: 'active',
+    category: 'operational',
+    isCritical: true,
   },
   {
-    id: 'alarm-falta-001',
+    id: 'evt-falta-001',
     cellCode: 'R6',
     type: 'Falta de cajas',
     summary: 'Menos cajas de las establecidas',
     severity: 'warning',
     time: '10:52',
-    orderReference: 'ALM-MAF-FALTA-001',
+    orderReference: 'REF-SMCSMR-7CT',
     company: 'MAF',
     product: 'Naranja',
-    variety: 'Valencia Late',
+    variety: 'smCsmr 7ct',
     message:
-      'El objetivo está enviando menos cajas de las establecidas para la referencia.',
+      'La orden de producción está enviando menos cajas de las establecidas para la referencia.',
     status: 'active',
+    category: 'operational',
   },
   {
-    id: 'alarm-bloq-001',
-    cellCode: 'M2',
-    type: 'Bloqueo por incidencia',
-    summary: 'Celda bloqueada temporalmente',
-    severity: 'critical',
-    time: '10:35',
-    orderReference: 'ALM-SUMO-BLOQ-001',
+    id: 'evt-receta-001',
+    cellCode: 'R3',
+    type: 'Cambio de receta pendiente',
+    summary: 'Receta pendiente de confirmación',
+    severity: 'info',
+    time: '10:41',
+    orderReference: 'PO-CT-001',
     company: 'SUMO',
     product: 'Naranja',
-    variety: 'Lane Late',
-    message:
-      'La celda asociada al objetivo está bloqueada temporalmente por una incidencia.',
+    variety: 'Cartons',
+    message: 'Cambio de receta pendiente de confirmación por operario.',
     status: 'active',
+    category: 'operational',
+  },
+  {
+    id: 'evt-bloq-001',
+    cellCode: 'M2',
+    type: 'Bloqueo por ocupación',
+    summary: 'Celda bloqueada por ocupación',
+    severity: 'critical',
+    time: '10:35',
+    orderReference: 'PO-DP-2',
+    company: 'SUMO',
+    product: 'Naranja',
+    variety: 'Display Pack',
+    message: 'Bloqueo por ocupación: la celda no puede aceptar más carga en este momento.',
+    status: 'active',
+    category: 'operational',
+    isCritical: true,
   },
 ]
 
@@ -70,19 +89,33 @@ function ensureAlarmVersion(): void {
   }
 }
 
-export function getCellAlarms(): CellAlarm[] {
+/** Eventos operativos (excluye alarmas reales de seguridad). */
+export function getOperationalEvents(): CellAlarm[] {
   ensureAlarmVersion()
-  return readStored() ?? MOCK_CELL_ALARMS
+  return (readStored() ?? MOCK_CELL_ALARMS).filter((e) => e.category !== 'safety')
+}
+
+/** @deprecated Usar getOperationalEvents */
+export function getCellAlarms(): CellAlarm[] {
+  return getOperationalEvents()
 }
 
 export function getAlarmsForCell(cellCode: string): CellAlarm[] {
-  return getCellAlarms().filter(
+  return getOperationalEvents().filter(
     (alarm) => alarm.cellCode === cellCode && alarm.status !== 'resolved',
   )
 }
 
 export function countActiveAlarms(): number {
-  return getCellAlarms().filter((alarm) => alarm.status === 'active').length
+  return getOperationalEvents().filter((alarm) => alarm.status === 'active').length
+}
+
+export function getEventCellCodes(): Set<string> {
+  return new Set(
+    getOperationalEvents()
+      .filter((e) => e.status !== 'resolved')
+      .map((e) => e.cellCode),
+  )
 }
 
 export function saveCellAlarms(alarms: CellAlarm[]): void {
@@ -90,13 +123,14 @@ export function saveCellAlarms(alarms: CellAlarm[]): void {
 }
 
 export function markAlarmReviewed(alarmId: string): CellAlarm[] {
-  const next = getCellAlarms().map((alarm) =>
+  const current = readStored() ?? MOCK_CELL_ALARMS
+  const next = current.map((alarm) =>
     alarm.id === alarmId && alarm.status === 'active'
       ? { ...alarm, status: 'reviewed' as CellAlarmStatus }
       : alarm,
   )
   saveCellAlarms(next)
-  return next
+  return next.filter((e) => e.category !== 'safety')
 }
 
 export function resetCellAlarmsMock(): void {

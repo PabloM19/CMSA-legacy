@@ -1,5 +1,7 @@
 import type { Lang } from '../i18n/translations'
 import type { BacklogOrder } from '../types/backlog'
+import { getAlarmsForCell } from '../data/mockCellAlarms'
+import { getAdminData } from './adminStorage'
 import type {
   PlantElementView,
   PlantPalletizerElement,
@@ -15,37 +17,62 @@ function mockRemainingTime(endTime: string | null, lang: Lang): string | null {
   return lang === 'es' ? `~${endTime} restante (sim.)` : `~${endTime} remaining (sim.)`
 }
 
+function isElementDisabled(id: string, type: PlantElementView['type']): boolean {
+  const data = getAdminData()
+  if (type === 'palletizer') {
+    const meta = data.palletizerMeta[id]
+    return meta?.active === false
+  }
+  const meta = data.tableMeta[id]
+  return meta?.active === false
+}
+
+function isCriticalElement(tableName: string, order: BacklogOrder | null): boolean {
+  const events = getAlarmsForCell(tableName)
+  if (events.some((e) => e.isCritical)) return true
+  if (order?.boxes != null && order.boxes >= 10_000) return true
+  if (order?.reference && /REF-DISPLAY-PACK|REF-CARTONS|REF-SMCSMR/i.test(order.reference)) {
+    return true
+  }
+  return false
+}
+
 function tableToView(table: PlantTable, order: BacklogOrder | null, lang: Lang): PlantElementView {
+  const disabled = isElementDisabled(table.id, table.type)
+  const critical = !disabled && isCriticalElement(table.name, order)
   return {
     id: table.id,
     name: table.name,
     type: table.type,
-    status: table.status,
-    company: table.company,
-    orderId: table.orderId,
-    orderReference: order?.reference ?? null,
-    product: order?.product ?? null,
-    variety: order?.variety ?? null,
-    boxes: order?.boxes ?? null,
-    boxesPerHour: order?.boxesPerHour ?? null,
-    eta: order?.eta ?? null,
-    endTime: order?.endTime ?? null,
-    remainingTime: mockRemainingTime(order?.endTime ?? null, lang),
-    speedStatus: table.speedStatus,
-    occupancyPercent: mockOccupancyPercent(table),
-    alert: table.alert,
-    isClickable: true,
+    status: disabled ? 'free' : table.status,
+    company: disabled ? null : table.company,
+    orderId: disabled ? null : table.orderId,
+    orderReference: disabled ? null : (order?.reference ?? null),
+    product: disabled ? null : (order?.product ?? null),
+    variety: disabled ? null : (order?.variety ?? null),
+    boxes: disabled ? null : (order?.boxes ?? null),
+    boxesPerHour: disabled ? null : (order?.boxesPerHour ?? null),
+    eta: disabled ? null : (order?.etc ?? order?.eta ?? null),
+    endTime: disabled ? null : (order?.endTime ?? null),
+    remainingTime: disabled ? null : mockRemainingTime(order?.endTime ?? null, lang),
+    speedStatus: disabled ? null : table.speedStatus,
+    occupancyPercent: disabled ? null : mockOccupancyPercent(table),
+    alert: disabled ? null : table.alert,
+    isClickable: !disabled,
+    isDisabled: disabled,
+    isCritical: critical,
   }
 }
 
 function palletizerToView(p: PlantPalletizerElement): PlantElementView {
+  const disabled = isElementDisabled(p.id, 'palletizer')
   return {
     id: p.id,
     name: p.name,
     type: 'palletizer',
-    status: p.status,
-    company: p.company,
-    orderId: p.orderId,
+    status: disabled ? 'idle' : p.status,
+    company: disabled ? null : p.company,
+    orderId: disabled ? null : p.orderId,
     orderReference: null,
     product: null,
     variety: null,
@@ -55,9 +82,17 @@ function palletizerToView(p: PlantPalletizerElement): PlantElementView {
     endTime: null,
     remainingTime: null,
     speedStatus: null,
-    occupancyPercent: p.status === 'active' ? 68 : p.status === 'waiting' ? 22 : null,
-    alert: p.alert,
-    isClickable: true,
+    occupancyPercent: disabled
+      ? null
+      : p.status === 'active'
+        ? 68
+        : p.status === 'waiting'
+          ? 22
+          : null,
+    alert: disabled ? null : p.alert,
+    isClickable: !disabled,
+    isDisabled: disabled,
+    isCritical: false,
   }
 }
 
@@ -126,16 +161,20 @@ export function getSpeedLabel(speed: PlantSpeedStatus, lang: Lang): string | nul
 
 export function getTypeLabel(type: PlantElementView['type'], lang: Lang): string {
   if (lang === 'es') {
-    if (type === 'automatic') return 'Automática'
-    if (type === 'manual') return 'Manual'
+    if (type === 'automatic') return 'Robot (robotino)'
+    if (type === 'manual') return 'Mesa manual'
     return 'Paletizador'
   }
-  if (type === 'automatic') return 'Automatic'
-  if (type === 'manual') return 'Manual'
+  if (type === 'automatic') return 'Robot cell'
+  if (type === 'manual') return 'Manual table'
   return 'Palletizer'
 }
 
-export function statusCssClass(status: PlantTableStatus | PlantPalletizerStatus): string {
+export function statusCssClass(
+  status: PlantTableStatus | PlantPalletizerStatus,
+  isDisabled?: boolean,
+): string {
+  if (isDisabled) return 'disabled'
   if (status === 'preparing') return 'preparing'
   if (status === 'pending_validation' || status === 'reserved') return 'preparing'
   if (status === 'active') return 'occupied'

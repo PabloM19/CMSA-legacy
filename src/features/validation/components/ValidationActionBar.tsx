@@ -63,7 +63,7 @@ export function ValidationActionBar({
               {d.validateAll}
             </button>
           )}
-          <Link to="/backlog" className="validation-btn validation-btn--link validation-btn--large">
+          <Link to="/production-orders" className="validation-btn validation-btn--link validation-btn--large">
             <ArrowLeft size={18} aria-hidden="true" />
             {d.backToBacklog}
           </Link>

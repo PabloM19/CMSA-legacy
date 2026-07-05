@@ -38,7 +38,7 @@ export function PlantElementDrawer({
   const cellAlarms = getAlarmsForCell(cellCode ?? element.name)
   const activeAlarm = cellAlarms.find((alarm) => alarm.status === 'active') ?? cellAlarms[0]
 
-  const etaDisplay = element.eta ?? d.noEta
+  const etaDisplay = element.eta
   const occupancyDisplay = isFree
     ? d.available
     : element.occupancyPercent != null
@@ -81,10 +81,12 @@ export function PlantElementDrawer({
               </dd>
             </div>
           )}
-          <div>
-            <dt>{d.drawerEta}</dt>
-            <dd>{etaDisplay}</dd>
-          </div>
+          {etaDisplay && (
+            <div>
+              <dt>{d.drawerEtc}</dt>
+              <dd>{etaDisplay}</dd>
+            </div>
+          )}
           <div>
             <dt>{d.drawerOccupancy}</dt>
             <dd>{occupancyDisplay}</dd>
@@ -159,17 +161,11 @@ export function PlantElementDrawer({
 
         {activeAlarm && (
           <section className="plant-drawer__section">
-            <h3 className="plant-drawer__section-title">{d.drawerActiveAlarm}</h3>
+            <h3 className="plant-drawer__section-title">{d.drawerActiveEvent}</h3>
             <dl className="plant-drawer__dl">
               <div>
-                <dt>{d.alarmTypeLabel}</dt>
+                <dt>{d.eventTypeLabel}</dt>
                 <dd>{activeAlarm.type}</dd>
-              </div>
-              <div>
-                <dt>{d.alarmSeverityLabel}</dt>
-                <dd>
-                  {activeAlarm.severity === 'critical' ? d.alarmSeverityHigh : d.alarmSeverityMedium}
-                </dd>
               </div>
             </dl>
             <p className="plant-drawer__alert">

@@ -188,7 +188,7 @@ export function buildAttentionItems(data: DashboardSnapshot): AttentionItem[] {
         kind: 'finishing',
         title: o.reference,
         detail: o.alerts[0] ?? `${o.product} · ${o.variety}`,
-        actionTo: '/backlog',
+        actionTo: '/production-orders',
         actionKey: 'goBacklog',
       })
     })
@@ -201,7 +201,7 @@ export function buildAttentionItems(data: DashboardSnapshot): AttentionItem[] {
         kind: 'blocked',
         title: o.reference,
         detail: o.alerts.join(' · '),
-        actionTo: '/backlog',
+        actionTo: '/production-orders',
         actionKey: 'goBacklog',
       })
     })

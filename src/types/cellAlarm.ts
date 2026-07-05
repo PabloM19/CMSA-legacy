@@ -15,4 +15,8 @@ export interface CellAlarm {
   variety: string
   message: string
   status: CellAlarmStatus
+  /** Evento operativo vs alarma real de seguridad (esta no va en tabla de eventos). */
+  category?: 'operational' | 'safety'
+  /** Situación crítica — alto volumen / high runner afectado. */
+  isCritical?: boolean
 }

@@ -52,6 +52,10 @@ export interface AuditEntry {
 
 export interface BacklogOrder {
   id: string
+  /** Pedido del día origen (orden de producción parcial). */
+  pedidoDiaId?: string
+  estilo?: string
+  barcode?: string
   company: OrderCompany
   reference: string
   productId?: string
@@ -60,12 +64,21 @@ export interface BacklogOrder {
   product: string
   variety: string
   boxes: number
+  /** Cajas ya producidas (mock) — p. ej. al retirar parcialmente. */
+  boxesProduced?: number
   boxesPerHour: number
   column: BacklogColumnId
   preparationStatus?: PreparationStatus
   productionState?: ProductionVisualState
-  eta: string
+  /** Estimated Time of Completion (visible como ETC). */
+  etc: string
+  /** @deprecated Usar etc — se mantiene por migración localStorage. */
+  eta?: string
   endTime: string
+  occupancyPercent?: number
+  createdBy?: string
+  createdAt?: string
+  events?: string[]
   requiredTables: number
   assignedTableIds: string[]
   assignedTables: string[]

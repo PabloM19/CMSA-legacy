@@ -1,4 +1,4 @@
-import { Bell, ClipboardList, Map, PlusCircle, ShieldCheck } from 'lucide-react'
+import { Bell, ClipboardList, Map, PlusCircle, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
@@ -6,13 +6,23 @@ import { canAccessRoute, isSuperAdmin, isSupervisor } from '../../../utils/permi
 import type { LucideIcon } from 'lucide-react'
 
 interface QuickAction {
-  to: string
+  to?: string
   icon: LucideIcon
   label: string
   hint: string
+  onClick?: () => void
+  disabled?: boolean
 }
 
-export function PlantMapQuickActions() {
+interface PlantMapQuickActionsProps {
+  onSimulateSafetyAlarm?: () => void
+  safetyBlocked?: boolean
+}
+
+export function PlantMapQuickActions({
+  onSimulateSafetyAlarm,
+  safetyBlocked = false,
+}: PlantMapQuickActionsProps) {
   const { user } = useAuth()
   const { t } = useLanguage()
   const d = t.plantMap
@@ -27,15 +37,17 @@ export function PlantMapQuickActions() {
       icon: PlusCircle,
       label: d.quickNewObjective,
       hint: d.quickNewObjectiveHint,
+      disabled: safetyBlocked,
     })
   }
 
-  if (canAccessRoute(user, '/backlog')) {
+  if (canAccessRoute(user, '/daily-orders')) {
     actions.push({
-      to: '/backlog',
+      to: '/daily-orders',
       icon: ClipboardList,
       label: d.quickViewQueue,
       hint: d.quickViewQueueHint,
+      disabled: safetyBlocked,
     })
   }
 
@@ -45,13 +57,24 @@ export function PlantMapQuickActions() {
       icon: Map,
       label: d.quickNewReference,
       hint: d.quickNewReferenceHint,
+      disabled: safetyBlocked,
     })
     actions.push({
       to: '/alarms',
       icon: Bell,
-      label: d.quickViewAlarms,
-      hint: d.quickViewAlarmsHint,
+      label: d.quickViewEvents,
+      hint: d.quickViewEventsHint,
+      disabled: safetyBlocked,
     })
+    if (onSimulateSafetyAlarm) {
+      actions.push({
+        icon: ShieldAlert,
+        label: d.simulateSafetyAlarm,
+        hint: d.simulateSafetyAlarmHint,
+        onClick: onSimulateSafetyAlarm,
+        disabled: safetyBlocked,
+      })
+    }
   }
 
   if (isSuperAdmin(user)) {
@@ -60,6 +83,7 @@ export function PlantMapQuickActions() {
       icon: ShieldCheck,
       label: d.quickAdmin,
       hint: d.quickAdminHint,
+      disabled: safetyBlocked,
     })
   }
 
@@ -71,13 +95,41 @@ export function PlantMapQuickActions() {
       <div className="plant-map-quick__grid">
         {actions.map((action) => {
           const Icon = action.icon
-          return (
-            <Link key={action.to + action.label} to={action.to} className="plant-map-quick__btn">
+          const content = (
+            <>
               <span className="plant-map-quick__btn-icon" aria-hidden="true">
                 <Icon size={22} strokeWidth={1.75} />
               </span>
               <span className="plant-map-quick__btn-label">{action.label}</span>
               <span className="plant-map-quick__btn-hint">{action.hint}</span>
+            </>
+          )
+
+          if (action.onClick) {
+            return (
+              <button
+                key={action.label}
+                type="button"
+                className="plant-map-quick__btn"
+                onClick={action.onClick}
+                disabled={action.disabled}
+              >
+                {content}
+              </button>
+            )
+          }
+
+          return (
+            <Link
+              key={action.to! + action.label}
+              to={action.to!}
+              className={`plant-map-quick__btn${action.disabled ? ' plant-map-quick__btn--disabled' : ''}`}
+              aria-disabled={action.disabled}
+              onClick={(e) => {
+                if (action.disabled) e.preventDefault()
+              }}
+            >
+              {content}
             </Link>
           )
         })}

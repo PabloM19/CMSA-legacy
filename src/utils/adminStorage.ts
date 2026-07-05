@@ -71,6 +71,7 @@ function seedTableMeta(): Record<string, AdminTableMeta> {
   createSeedPlantTables().forEach((t) => {
     meta[t.id] = { capacity: t.type === 'automatic' ? 1200 : 800, active: true }
   })
+  meta['M3'] = { capacity: 800, active: false }
   return meta
 }
 
@@ -82,6 +83,106 @@ function seedPalletizerMeta(): Record<string, AdminPalletizerMeta> {
   return meta
 }
 
+function seedAuditLog(): AuditEvent[] {
+  const base = new Date('2025-01-15T08:00:00.000Z')
+  function at(minutes: number): string {
+    return new Date(base.getTime() + minutes * 60_000).toISOString()
+  }
+
+  return [
+    {
+      id: 'audit-seed-1',
+      timestamp: at(0),
+      username: 'sistema',
+      role: 'superadmin',
+      action: 'Inicialización admin',
+      entity: 'sistema',
+      detail: 'Datos mock de administración cargados',
+    },
+    {
+      id: 'audit-seed-2',
+      timestamp: at(15),
+      username: 'usuario_supervisor',
+      role: 'supervisor',
+      action: 'Orden lanzada',
+      entity: 'pedido',
+      detail: 'ORD-DISPLAY-PACK-01 · 10.000 cajas · Display Pack',
+    },
+    {
+      id: 'audit-seed-3',
+      timestamp: at(45),
+      username: 'operario_sumo',
+      role: 'user',
+      action: 'Orden aceptada',
+      entity: 'pedido',
+      detail: 'ORD-DISPLAY-PACK-01 · Aceptada en planta',
+    },
+    {
+      id: 'audit-seed-4',
+      timestamp: at(90),
+      username: 'usuario_supervisor',
+      role: 'supervisor',
+      action: 'Ampliación de pedido del día',
+      entity: 'pedido',
+      detail: 'Display Pack · +2.000 cajas solicitadas (mock)',
+    },
+    {
+      id: 'audit-seed-5',
+      timestamp: at(120),
+      username: 'usuario_supervisor',
+      role: 'supervisor',
+      action: 'Evento revisado',
+      entity: 'sistema',
+      detail: 'Exceso de cajas · R4 · Marcado como revisado',
+    },
+    {
+      id: 'audit-seed-6',
+      timestamp: at(180),
+      username: 'usuario_superadmin',
+      role: 'superadmin',
+      action: 'Referencia creada',
+      entity: 'configuracion',
+      detail: 'REF-DISPLAY-PACK · Display Pack · SUMO',
+    },
+    {
+      id: 'audit-seed-7',
+      timestamp: at(210),
+      username: 'usuario_supervisor',
+      role: 'supervisor',
+      action: 'Orden retirada',
+      entity: 'pedido',
+      detail: 'ORD-SMCSMR-01 · Incidencia operativa · Retirada de producción',
+    },
+    {
+      id: 'audit-seed-8',
+      timestamp: at(240),
+      username: 'usuario_superadmin',
+      role: 'superadmin',
+      action: 'Mesa desactivada',
+      entity: 'mesa',
+      detail: 'M3 · Desactivada en mock de demo',
+    },
+    {
+      id: 'audit-seed-9',
+      timestamp: at(300),
+      username: 'usuario_superadmin',
+      role: 'superadmin',
+      action: 'Alarma real simulada',
+      entity: 'sistema',
+      detail: 'Simulación de alarma de seguridad en mapa de planta',
+    },
+    {
+      id: 'audit-seed-10',
+      timestamp: at(360),
+      username: 'operario_maf',
+      role: 'user',
+      action: 'Orden lanzada',
+      entity: 'pedido',
+      detail: 'ORD-CARTONS-01 · 9.000 cajas · Cartons',
+    },
+  ]
+}
+
 function seedAdminData(): AdminPersistedData {
   return {
     users: seedUsers(),
@@ -89,17 +190,7 @@ function seedAdminData(): AdminPersistedData {
     tableMeta: seedTableMeta(),
     palletizerMeta: seedPalletizerMeta(),
     productionConfig: { ...DEFAULT_CONFIG },
-    auditLog: [
-      {
-        id: 'audit-seed-1',
-        timestamp: nowIso(),
-        username: 'sistema',
-        role: 'superadmin',
-        action: 'Inicialización admin',
-        entity: 'sistema',
-        detail: 'Datos mock de administración cargados',
-      },
-    ],
+    auditLog: seedAuditLog(),
   }
 }
 

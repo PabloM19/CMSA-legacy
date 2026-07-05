@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router-dom'
 import { CmsaBackgroundDecor } from './CmsaBackgroundDecor'
+import { CmsaLogo } from '../ui/CmsaLogo'
 import { LangSwitcher } from '../ui/LangSwitcher'
 import { useLanguage } from '../../i18n/LanguageContext'
 import './public-layout.css'
@@ -12,7 +13,7 @@ export function PublicLayout() {
       <CmsaBackgroundDecor />
       <header className="public-layout__header">
         <div className="public-layout__header-inner public-layout__header-inner--wide">
-          <span className="public-layout__brand">CMSA</span>
+          <CmsaLogo variant="light" size="sm" className="public-layout__brand" />
           <div className="public-layout__actions">
             <LangSwitcher />
             <Link to="/login" className="public-layout__login ui-btn ui-btn--primary">

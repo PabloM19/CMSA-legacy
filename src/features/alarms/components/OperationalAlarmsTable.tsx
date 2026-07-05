@@ -7,7 +7,6 @@ import { isOperator, isSupervisor } from '../../../utils/permissions'
 import { AdminEmptyState } from '../../admin/components/AdminEmptyState'
 import { AdminSearchBar } from '../../admin/components/AdminSearchBar'
 import {
-  alarmSeverityLabel,
   alarmStatusLabel,
   filterAlarmsByStatus,
   matchesAlarmQuery,
@@ -43,11 +42,6 @@ export function OperationalAlarmsTable({
   const [filter, setFilter] = useState<AlarmFilter>('all')
   const [detail, setDetail] = useState<CellAlarm | null>(null)
 
-  const severityLabels = useMemo(
-    () => ({ high: pm.alarmSeverityHigh, medium: pm.alarmSeverityMedium }),
-    [pm.alarmSeverityHigh, pm.alarmSeverityMedium],
-  )
-
   const base = useMemo(
     () => (hideResolved ? alarms.filter((a) => a.status !== 'resolved') : alarms),
     [alarms, hideResolved],
@@ -55,8 +49,8 @@ export function OperationalAlarmsTable({
 
   const filtered = useMemo(() => {
     const byStatus = filterAlarmsByStatus(base, filter)
-    return byStatus.filter((alarm) => matchesAlarmQuery(alarm, query, lang, severityLabels))
-  }, [base, filter, query, lang, severityLabels])
+    return byStatus.filter((alarm) => matchesAlarmQuery(alarm, query, lang))
+  }, [base, filter, query, lang])
 
   function handleViewDetail(alarm: CellAlarm) {
     if (onViewDetail) {
@@ -108,7 +102,6 @@ export function OperationalAlarmsTable({
                 <th>{pm.alarmTableCompany}</th>
                 <th>{pm.alarmTableCell}</th>
                 <th>{pm.alarmTableType}</th>
-                <th>{pm.alarmTableSeverity}</th>
                 <th>{pm.alarmTableStatus}</th>
                 <th>{pm.alarmTableAction}</th>
               </tr>
@@ -117,12 +110,21 @@ export function OperationalAlarmsTable({
               {filtered.map((alarm) => (
                 <tr
                   key={alarm.id}
-                  className={`operational-alarms-table__row operational-alarms-table__row--${alarm.severity}${
-                    alarm.status === 'reviewed' ? ' operational-alarms-table__row--reviewed' : ''
+                  className={`operational-alarms-table__row operational-alarms-table__row--${alarm.status}${
+                    alarm.isCritical ? ' operational-alarms-table__row--critical' : ''
                   }`}
                 >
                   <td className="admin-table__cell-mono">{alarm.time}</td>
-                  <td className="admin-table__cell-ref">{alarm.orderReference}</td>
+                  <td className="admin-table__cell-ref">
+                    <div className="operational-alarms-table__order-cell">
+                      {alarm.isCritical && (
+                        <span className="operational-alarms-table__critical-badge" title={pm.criticalSituationHint}>
+                          {pm.criticalSituationBadge}
+                        </span>
+                      )}
+                      <span>{alarm.orderReference}</span>
+                    </div>
+                  </td>
                   <td>
                     <span className={`admin-badge admin-badge--${alarm.company.toLowerCase()}`}>
                       {alarm.company}
@@ -130,19 +132,6 @@ export function OperationalAlarmsTable({
                   </td>
                   <td>{alarm.cellCode}</td>
                   <td>{alarm.type}</td>
-                  <td>
-                    <span
-                      className={`admin-badge admin-badge--${
-                        alarm.severity === 'critical'
-                          ? 'danger'
-                          : alarm.severity === 'warning'
-                            ? 'warn'
-                            : 'info'
-                      }`}
-                    >
-                      {alarmSeverityLabel(alarm.severity, lang, severityLabels)}
-                    </span>
-                  </td>
                   <td>
                     <span
                       className={`admin-badge admin-badge--${
@@ -216,10 +205,6 @@ export function OperationalAlarmsTable({
               <div className="order-modal__row">
                 <dt>{d.typeLabel}</dt>
                 <dd>{detail.type}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.severityLabel}</dt>
-                <dd>{alarmSeverityLabel(detail.severity, lang, severityLabels)}</dd>
               </div>
               <div className="order-modal__row">
                 <dt>{d.timeLabel}</dt>

@@ -383,7 +383,7 @@ export function NewOrderPage() {
         <NewOrderSuccessModal
           reference={acceptedReference}
           onCreateAnother={() => resetWizard(true)}
-          onGoToQueue={() => navigate('/backlog', { replace: true })}
+          onGoToQueue={() => navigate('/production-orders', { replace: true })}
         />
       )}
 

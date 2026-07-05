@@ -17,12 +17,12 @@ export function PlantMapAlerts({ alarms: alarmsProp, onSelectAlarm, onMarkReview
   const source = alarmsProp ?? getCellAlarms()
 
   return (
-    <section className="plant-map-alarms-table" aria-label={d.activeAlertsTitle}>
+    <section className="plant-map-alarms-table" aria-label={d.activeEventsTitle}>
       <OperationalAlarmsTable
         alarms={source}
         onViewDetail={onSelectAlarm}
         onMarkReviewed={onMarkReviewed}
-        sectionTitle={d.activeAlertsTitle}
+        sectionTitle={d.activeEventsTitle}
       />
     </section>
   )

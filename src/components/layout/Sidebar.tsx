@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
+  BarChart3,
   Bell,
   BookOpen,
+  Factory,
   ListOrdered,
   Map,
   Menu,
@@ -22,8 +24,10 @@ import './sidebar.css'
 
 const NAV_ICONS: Record<NavKey, LucideIcon> = {
   newOrder: PlusCircle,
-  backlog: ListOrdered,
+  dailyOrders: ListOrdered,
+  productionOrders: Factory,
   plantMap: Map,
+  performance: BarChart3,
   references: BookOpen,
   alarms: Bell,
   admin: ShieldCheck,

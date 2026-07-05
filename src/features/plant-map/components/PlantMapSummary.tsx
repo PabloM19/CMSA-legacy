@@ -62,8 +62,8 @@ export function PlantMapSummary({ stats }: PlantMapSummaryProps) {
     },
     {
       key: 'alarms',
-      label: d.summaryActiveAlarms,
-      hint: d.summaryActiveAlarmsHint,
+      label: d.summaryActiveEvents,
+      hint: d.summaryActiveEventsHint,
       value: stats.activeAlarms,
       icon: AlertTriangle,
       tone: 'warn' as const,

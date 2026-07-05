@@ -29,7 +29,7 @@ export function QuickActionsGrid() {
     },
     {
       id: 'backlog',
-      to: '/backlog',
+      to: '/daily-orders',
       icon: LayoutGrid,
       labelKey: 'actionBacklog',
       hintKey: 'actionBacklogHint',

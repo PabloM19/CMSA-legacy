@@ -5,7 +5,7 @@ import { MobileShell } from './MobileShell'
 import { Sidebar } from './Sidebar'
 import { useBreakpoint } from '../../hooks/useBreakpoint'
 
-const WIDE_ROUTES = new Set(['/backlog', '/plant-map'])
+const WIDE_ROUTES = new Set(['/daily-orders', '/production-orders', '/backlog', '/plant-map'])
 
 function useWideContent(): boolean {
   const { pathname } = useLocation()

@@ -4,31 +4,10 @@ import type {
   NewOrderFormErrors,
   OrderCalculation,
 } from '../types/newOrder'
-
-interface AlertMessages {
-  overload: string
-  slowFlow: string
-  fastFlow: string
-  incompleteLayer: string
-}
-
-function getAlertMessages(lang: Lang): AlertMessages {
-  return lang === 'es'
-    ? {
-        overload: 'Sobrecarga: el volumen supera el límite operativo (5.000 cajas).',
-        slowFlow: 'Aviso: flujo lento (< 100 cajas/h).',
-        fastFlow: 'Aviso: flujo rápido (> 800 cajas/h).',
-        incompleteLayer:
-          'Las cajas no completan una capa de 10. Puede quedar en espera temporal.',
-      }
-    : {
-        overload: 'Overload: volume exceeds operational limit (5,000 boxes).',
-        slowFlow: 'Warning: slow flow (< 100 boxes/h).',
-        fastFlow: 'Warning: fast flow (> 800 boxes/h).',
-        incompleteLayer:
-          'Boxes do not complete a layer of 10. May remain on temporary hold.',
-      }
-}
+import {
+  validateBoxesPerHour,
+  validateProductionOrderBoxes,
+} from './productionOrderValidation'
 
 export function validateNewOrderForm(
   data: NewOrderFormData,
@@ -91,41 +70,36 @@ export function calculateOrder(
   boxesPerHour: number,
   lang: Lang,
 ): OrderCalculation {
-  const alerts: OrderCalculation['alerts'] = []
-  const messages = getAlertMessages(lang)
+  const boxCheck = validateProductionOrderBoxes(boxes, lang)
+  const rateCheck = validateBoxesPerHour(boxesPerHour, lang)
 
-  let blocked = false
-  let blockReason: string | undefined
+  const alerts: OrderCalculation['alerts'] = [
+    ...boxCheck.warnings.map((message) => ({
+      type: (boxCheck.blocked ? 'critical' : 'warning') as 'warning' | 'critical',
+      message,
+    })),
+    ...rateCheck.warnings.map((message) => ({
+      type: (rateCheck.blocked ? 'critical' : 'warning') as 'warning' | 'critical',
+      message,
+    })),
+  ]
 
-  if (boxes > 5000) {
-    blocked = true
-    blockReason = messages.overload
-    alerts.push({ type: 'critical', message: messages.overload })
-  }
+  const blocked = boxCheck.blocked || rateCheck.blocked
+  const blockReason = alerts.find((a) => a.type === 'critical')?.message
 
-  if (boxesPerHour < 100) {
-    alerts.push({ type: 'warning', message: messages.slowFlow })
-  }
-
-  if (boxesPerHour > 800) {
-    alerts.push({ type: 'warning', message: messages.fastFlow })
-  }
-
-  if (boxes % 10 !== 0) {
-    alerts.push({ type: 'warning', message: messages.incompleteLayer })
-  }
-
-  const requiredTables = Math.max(2, Math.ceil(boxes / 1200))
-  const durationHours = boxes / boxesPerHour
+  const requiredTables = Math.max(2, Math.ceil(boxes / 4000))
+  const durationHours = boxes / Math.max(boxesPerHour, 1)
   const durationMinutes = Math.round(durationHours * 60)
   const now = new Date()
-  const etaDate = addMinutes(now, 30)
-  const endDate = addMinutes(etaDate, durationMinutes)
-  const capacityConsumed = Math.min(100, Math.round((boxes / 5000) * 100))
+  const etcDate = addMinutes(now, 30)
+  const endDate = addMinutes(etcDate, durationMinutes)
+  const capacityConsumed = Math.min(100, Math.round((boxes / 20_000) * 100))
+  const etc = formatTime(etcDate)
 
   return {
     requiredTables,
-    eta: formatTime(etaDate),
+    etc,
+    eta: etc,
     estimatedEnd: formatTime(endDate),
     capacityConsumed,
     alerts,

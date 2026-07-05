@@ -34,6 +34,8 @@ export function migrateBacklogOrder(order: BacklogOrder): BacklogOrder {
     column,
     preparationStatus,
     productionState,
+    etc: order.etc ?? order.eta ?? '—',
+    eta: order.eta ?? order.etc,
     requiredTables: Math.max(2, order.requiredTables),
   }
 }

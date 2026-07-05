@@ -11,14 +11,8 @@ interface PlantAlarmDrawerProps {
   onMarkReviewed: (alarm: CellAlarm) => void
 }
 
-function severityLabel(severity: CellAlarm['severity'], lang: 'es' | 'en'): string {
-  const es = { info: 'Informativa', warning: 'Media', critical: 'Alta' }
-  const en = { info: 'Info', warning: 'Medium', critical: 'High' }
-  return (lang === 'es' ? es : en)[severity]
-}
-
 function statusLabel(status: CellAlarm['status'], lang: 'es' | 'en'): string {
-  const es = { active: 'Activa', reviewed: 'Revisada', resolved: 'Resuelta' }
+  const es = { active: 'Activo', reviewed: 'Revisado', resolved: 'Resuelto' }
   const en = { active: 'Active', reviewed: 'Reviewed', resolved: 'Resolved' }
   return (lang === 'es' ? es : en)[status]
 }
@@ -58,10 +52,9 @@ export function PlantAlarmDrawer({
           </button>
         </header>
 
-        <div className={`plant-alarm-drawer__severity plant-alarm-drawer__severity--${alarm.severity}`}>
-          <AlertTriangle size={18} aria-hidden="true" />
-          <span>{severityLabel(alarm.severity, lang)}</span>
-        </div>
+        {alarm.isCritical && (
+          <p className="plant-alarm-drawer__critical-note">{d.criticalSituationHint}</p>
+        )}
 
         <dl className="plant-drawer__dl">
           <div>
@@ -103,7 +96,7 @@ export function PlantAlarmDrawer({
         </dl>
 
         <section className="plant-drawer__section">
-          <h3 className="plant-drawer__section-title">{d.alarmMessageTitle}</h3>
+          <h3 className="plant-drawer__section-title">{d.eventMessageTitle}</h3>
           <p className="plant-drawer__alert">
             <AlertTriangle size={16} aria-hidden="true" />
             {alarm.message}

@@ -4,6 +4,8 @@ import type { User, UserRole } from '../types/auth'
 
 const OPERATOR_ROUTES = [
   '/orders/new',
+  '/daily-orders',
+  '/production-orders',
   '/backlog',
   '/plant-map',
   '/alarms',
@@ -12,7 +14,7 @@ const OPERATOR_ROUTES = [
   '/profile',
 ] as const
 
-const SUPERVISOR_EXTRA_ROUTES = ['/admin', '/references'] as const
+const SUPERVISOR_EXTRA_ROUTES = ['/admin', '/references', '/performance'] as const
 
 export function normalizePath(path: string): string {
   return path.split('?')[0].replace(/\/$/, '') || '/'
@@ -20,6 +22,11 @@ export function normalizePath(path: string): string {
 
 export function isSuperAdmin(user: User): boolean {
   return user.role === 'superadmin'
+}
+
+/** Alias visible — mismo rol que superadmin. */
+export function isSuperMaster(user: User): boolean {
+  return isSuperAdmin(user)
 }
 
 export function isSupervisor(user: User): boolean {
@@ -32,6 +39,14 @@ export function isOperator(user: User): boolean {
 
 export function canAccessAdmin(user: User): boolean {
   return isSupervisor(user)
+}
+
+export function canAccessPerformance(user: User): boolean {
+  return isSupervisor(user)
+}
+
+export function canViewGlobalActivityLog(user: User): boolean {
+  return isSuperAdmin(user)
 }
 
 export function getAdminTabsForUser(user: User): AdminTabId[] {
@@ -55,6 +70,14 @@ export function canAccessRoute(user: User, path: string): boolean {
     return true
   }
 
+  if (normalized === '/backlog') {
+    return canAccessRoute(user, '/daily-orders')
+  }
+
+  if (normalized === '/performance') {
+    return canAccessPerformance(user)
+  }
+
   if (isSuperAdmin(user)) return true
 
   if (normalized === '/admin') {
@@ -70,7 +93,9 @@ export function canAccessRoute(user: User, path: string): boolean {
   }
 
   if (user.role === 'supervisor') {
-    return [...OPERATOR_ROUTES, ...SUPERVISOR_EXTRA_ROUTES].includes(normalized as (typeof OPERATOR_ROUTES)[number] | (typeof SUPERVISOR_EXTRA_ROUTES)[number])
+    return [...OPERATOR_ROUTES, ...SUPERVISOR_EXTRA_ROUTES].includes(
+      normalized as (typeof OPERATOR_ROUTES)[number] | (typeof SUPERVISOR_EXTRA_ROUTES)[number],
+    )
   }
 
   if (user.role === 'user') {
@@ -80,14 +105,17 @@ export function canAccessRoute(user: User, path: string): boolean {
   return false
 }
 
-export function getDefaultRoute(_user: User): string {
+export function getDefaultRoute(user: User): string {
+  if (user.role === 'supervisor') return '/performance'
   return '/plant-map'
 }
 
 export const NAV_ITEMS: { to: string; key: NavKey }[] = [
   { to: '/plant-map', key: 'plantMap' },
+  { to: '/performance', key: 'performance' },
+  { to: '/daily-orders', key: 'dailyOrders' },
+  { to: '/production-orders', key: 'productionOrders' },
   { to: '/orders/new', key: 'newOrder' },
-  { to: '/backlog', key: 'backlog' },
   { to: '/references', key: 'references' },
   { to: '/alarms', key: 'alarms' },
   { to: '/admin', key: 'admin' },
@@ -133,8 +161,11 @@ export function getMobileNavItems(user: User) {
     { to: '/plant-map', key: 'plantMap' },
   ]
 
-  if (canAccessRoute(user, '/backlog')) {
-    items.push({ to: '/backlog', key: 'backlog' })
+  if (canAccessRoute(user, '/daily-orders')) {
+    items.push({ to: '/daily-orders', key: 'dailyOrders' })
+  }
+  if (canAccessRoute(user, '/production-orders')) {
+    items.push({ to: '/production-orders', key: 'productionOrders' })
   }
 
   return items
@@ -143,10 +174,16 @@ export function getMobileNavItems(user: User) {
 export function getVisibleNavItems(user: User) {
   return NAV_ITEMS.filter((item) => {
     if (item.key === 'profile') return false
+    if (item.key === 'performance') return canAccessPerformance(user)
     if (item.key === 'admin' || item.key === 'references') {
       return isSupervisor(user)
     }
-    if (item.key === 'newOrder' || item.key === 'backlog' || item.key === 'alarms') {
+    if (
+      item.key === 'newOrder' ||
+      item.key === 'dailyOrders' ||
+      item.key === 'productionOrders' ||
+      item.key === 'alarms'
+    ) {
       return canAccessRoute(user, item.to)
     }
     return canAccessRoute(user, item.to)
