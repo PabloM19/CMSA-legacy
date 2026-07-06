@@ -6,6 +6,7 @@ import {
   BookOpen,
   Factory,
   ListOrdered,
+  LogIn,
   Map,
   Menu,
   PanelLeftClose,
@@ -18,8 +19,13 @@ import { CmsaLogo } from '../ui/CmsaLogo'
 import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { NavKey } from '../../i18n/translations'
-import { getVisibleNavItems } from '../../utils/permissions'
-import { readSidebarCollapsed, saveSidebarCollapsed } from '../../utils/sidebarPrefs'
+import { getGuestNavItems, getVisibleNavItems } from '../../utils/permissions'
+import {
+  readGuestSidebarCollapsed,
+  readSidebarCollapsed,
+  saveGuestSidebarCollapsed,
+  saveSidebarCollapsed,
+} from '../../utils/sidebarPrefs'
 import './sidebar.css'
 
 const NAV_ICONS: Record<NavKey, LucideIcon> = {
@@ -40,21 +46,26 @@ export function Sidebar() {
   const { user } = useAuth()
   const { t } = useLanguage()
   const [collapsed, setCollapsed] = useState(false)
+  const isGuest = !user
 
   useEffect(() => {
-    if (!user) return
+    if (isGuest) {
+      setCollapsed(readGuestSidebarCollapsed())
+      return
+    }
     setCollapsed(readSidebarCollapsed(user.username))
-  }, [user])
+  }, [user, isGuest])
 
-  if (!user) return null
-
-  const username = user.username
-  const navItems = getVisibleNavItems(user)
+  const navItems = isGuest ? getGuestNavItems() : getVisibleNavItems(user)
 
   function toggleCollapsed() {
     setCollapsed((prev) => {
       const next = !prev
-      saveSidebarCollapsed(username, next)
+      if (isGuest) {
+        saveGuestSidebarCollapsed(next)
+      } else {
+        saveSidebarCollapsed(user.username, next)
+      }
       return next
     })
   }
@@ -101,7 +112,7 @@ export function Sidebar() {
               className={({ isActive }) =>
                 `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
               }
-              title={collapsed ? undefined : label}
+              title={collapsed ? label : undefined}
             >
               <span className="sidebar__link-icon" aria-hidden="true">
                 <Icon size={20} strokeWidth={2} />
@@ -115,6 +126,26 @@ export function Sidebar() {
             </NavLink>
           )
         })}
+
+        {isGuest && (
+          <NavLink
+            to="/login"
+            className={({ isActive }) =>
+              `sidebar__link sidebar__link--sign-in${isActive ? ' sidebar__link--active' : ''}`
+            }
+            title={collapsed ? t.common.signIn : undefined}
+          >
+            <span className="sidebar__link-icon" aria-hidden="true">
+              <LogIn size={20} strokeWidth={2} />
+            </span>
+            <span className="sidebar__link-label">{t.common.signIn}</span>
+            {collapsed && (
+              <span className="sidebar__tooltip" role="tooltip">
+                {t.common.signIn}
+              </span>
+            )}
+          </NavLink>
+        )}
       </nav>
 
       <footer className="sidebar__footer">

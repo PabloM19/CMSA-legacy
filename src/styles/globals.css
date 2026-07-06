@@ -134,14 +134,9 @@ a {
   text-transform: capitalize;
 }
 
-.header__actions {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  margin-left: auto;
-  position: relative;
-  z-index: 1;
+.header__login {
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 /* Language switcher */

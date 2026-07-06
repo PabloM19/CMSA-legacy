@@ -2,19 +2,17 @@ import type { ReactNode } from 'react'
 import {
   AlertTriangle,
   Ban,
-  Bot,
   CheckCircle2,
   Lock,
-  Package,
   PauseCircle,
   TrendingDown,
   TrendingUp,
-  UserRound,
 } from 'lucide-react'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { PlantElementView, PlantSpeedStatus } from '../../../types/plant'
 import { getSpeedTooltip } from '../../../utils/plantMapCopyHelpers'
 import { getStatusLabel, hasCriticalBlink, statusCssClass } from '../../../utils/plantMapHelpers'
+import { PlantTypeAnimatedIcon } from './PlantTypeAnimatedIcon'
 
 export interface PlantElementCardProps {
   id: string
@@ -37,18 +35,11 @@ export interface PlantElementCardProps {
 }
 
 const ICON_SIZE = 14
-const TYPE_ICON_SIZE = 15
 
 function SpeedIcon({ speed }: { speed: PlantSpeedStatus }) {
   if (speed === 'slow') return <TrendingDown size={ICON_SIZE} aria-hidden="true" />
   if (speed === 'fast') return <TrendingUp size={ICON_SIZE} aria-hidden="true" />
   return null
-}
-
-function TypeIcon({ type }: { type: PlantElementView['type'] }) {
-  if (type === 'automatic') return <Bot size={TYPE_ICON_SIZE} aria-hidden="true" />
-  if (type === 'palletizer') return <Package size={TYPE_ICON_SIZE} aria-hidden="true" />
-  return <UserRound size={TYPE_ICON_SIZE} aria-hidden="true" />
 }
 
 function StatusIcon({
@@ -135,7 +126,7 @@ export function PlantElementCard({
             }
             aria-hidden="true"
           >
-            <TypeIcon type={type} />
+            <PlantTypeAnimatedIcon type={type} />
           </span>
           <span className="plant-element__name">{name}</span>
         </div>

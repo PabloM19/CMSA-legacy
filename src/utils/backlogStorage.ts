@@ -1,5 +1,5 @@
 import { mockBacklogOrders, convertCreatedOrder, getSeedDailyOrders } from '../data/mockBacklogOrders'
-import { syncAllDailyOrders } from './dailyOrderHelpers'
+import { syncAllDailyOrders, applyDailyOrderSeedLabels } from './dailyOrderHelpers'
 import type { DailyOrder } from '../types/dailyOrder'
 import { createSeedPalletizers, createSeedPlantTables } from '../data/mockPlantTables'
 import type { BacklogOrder } from '../types/backlog'
@@ -95,7 +95,10 @@ function syncLegacyCreatedOrders(orders: BacklogOrder[]): BacklogOrder[] {
 
 function seedInitialState(): CmsaPersistedState {
   const orders = normalizePriorities([...mockBacklogOrders])
-  const dailyOrders = syncAllDailyOrders(getSeedDailyOrders(), orders)
+  const dailyOrders = syncAllDailyOrders(
+    applyDailyOrderSeedLabels(getSeedDailyOrders()),
+    orders,
+  )
   const plantTables = rebuildPlantTablesFromOrders(createSeedPlantTables(), orders)
   return { dailyOrders, orders, plantTables, plantPalletizers: createSeedPalletizers() }
 }
@@ -133,7 +136,9 @@ function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
   )
   orders = normalizePriorities(orders)
   const dailyOrders = syncAllDailyOrders(
-    state.dailyOrders?.length ? state.dailyOrders : getSeedDailyOrders(),
+    applyDailyOrderSeedLabels(
+      state.dailyOrders?.length ? state.dailyOrders : getSeedDailyOrders(),
+    ),
     orders,
   )
   const plantTables = applyAdminPlantOverrides(

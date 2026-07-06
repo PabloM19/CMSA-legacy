@@ -21,6 +21,7 @@ import { BacklogToast } from './components/BacklogToast'
 import '../dashboard/dashboard.css'
 import './backlog.css'
 import '../admin/admin.css'
+import '../alarms/alarms.css'
 
 export function DailyOrdersPage() {
   const { user } = useAuth()

@@ -4,7 +4,6 @@ import { useAuth } from '../../auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { CellAlarm } from '../../../types/cellAlarm'
 import { isOperator, isSupervisor } from '../../../utils/permissions'
-import { AdminEmptyState } from '../../admin/components/AdminEmptyState'
 import { AdminSearchBar } from '../../admin/components/AdminSearchBar'
 import {
   alarmStatusLabel,
@@ -36,6 +35,7 @@ export function OperationalAlarmsTable({
   const { user, isAuthenticated } = useAuth()
   const { t, lang } = useLanguage()
   const d = t.alarms
+  const admin = t.admin
   const pm = t.plantMap
 
   const [query, setQuery] = useState('')
@@ -70,28 +70,35 @@ export function OperationalAlarmsTable({
     <>
       {sectionTitle && <h2 className="operational-alarms__section-title">{sectionTitle}</h2>}
 
-      <AdminSearchBar
-        value={query}
-        onChange={setQuery}
-        placeholder={d.searchPlaceholder}
-        resultCount={filtered.length}
-      />
+      <div className="operational-data-panel__toolbar">
+        <div className="operational-data-panel__toolbar-row">
+          <AdminSearchBar
+            value={query}
+            onChange={setQuery}
+            placeholder={d.searchPlaceholder}
+            resultCount={filtered.length}
+          />
+          <span className="operational-data-panel__results">
+            {admin.resultsCount.replace('{count}', String(filtered.length))}
+          </span>
+        </div>
 
-      <div className="admin-filter-bar operational-alarms__filters">
-        {filterOptions.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            className={`admin-filter-bar__btn${filter === opt.id ? ' admin-filter-bar__btn--active' : ''}`}
-            onClick={() => setFilter(opt.id)}
-          >
-            {opt.label}
-          </button>
-        ))}
+        <div className="admin-filter-bar operational-alarms__filters">
+          {filterOptions.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`admin-filter-bar__btn${filter === opt.id ? ' admin-filter-bar__btn--active' : ''}`}
+              onClick={() => setFilter(opt.id)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <AdminEmptyState message={d.noResults} />
+        <p className="admin-empty">{d.noResults}</p>
       ) : (
         <div className="admin-table-wrap" role="region" aria-label={d.title}>
           <table className="admin-table operational-alarms-table">

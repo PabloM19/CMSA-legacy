@@ -27,12 +27,20 @@ export function DailyOrderDetailModal({ daily, onClose }: DailyOrderDetailModalP
         <h2 className="order-modal__title">{d.detailTitle}</h2>
         <dl className="order-modal__dl">
           <div className="order-modal__row">
-            <dt>{b.colStyle}</dt>
-            <dd>{daily.estilo}</dd>
+            <dt>{b.colVariety}</dt>
+            <dd>{daily.variedad}</dd>
           </div>
           <div className="order-modal__row">
             <dt>{b.reference}</dt>
             <dd>{daily.referencia}</dd>
+          </div>
+          <div className="order-modal__row">
+            <dt>{b.colBoxFormat}</dt>
+            <dd>{daily.estilo}</dd>
+          </div>
+          <div className="order-modal__row">
+            <dt>{b.colBarcode}</dt>
+            <dd className="admin-table__cell-mono">{daily.barcode}</dd>
           </div>
           <div className="order-modal__row">
             <dt>{b.company}</dt>

@@ -119,6 +119,10 @@
   padding-inline: var(--space-2);
 }
 
+.sidebar__link--sign-in {
+  margin-top: auto;
+}
+
 .sidebar__link {
   position: relative;
   display: flex;

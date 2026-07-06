@@ -1,25 +1,171 @@
 .alarms-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-5);
   width: 100%;
 }
 
 .alarms-page__table {
-  padding: var(--space-5);
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* Panel operativo compartido — Eventos + Pedidos del día */
+.operational-data-panel {
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.operational-data-panel__title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.operational-data-panel__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.operational-data-panel__toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.operational-data-panel__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.operational-data-panel .admin-search {
+  flex: 1;
+  min-width: min(100%, 280px);
+  max-width: 420px;
+  gap: 0;
+}
+
+.operational-data-panel .admin-search__field {
+  width: 100%;
+}
+
+.operational-data-panel .admin-search__input {
+  min-height: 44px;
+  padding: 8px 36px 8px 40px;
+  font-size: 0.8125rem;
+  border-radius: var(--radius-md);
+  border-color: var(--border-soft);
+  background: var(--surface-strong);
+  color: var(--text-main);
+}
+
+.operational-data-panel .admin-search__input:focus {
+  outline: 2px solid rgba(0, 160, 210, 0.25);
+  border-color: rgba(0, 160, 210, 0.4);
+}
+
+.operational-data-panel .admin-search__icon {
+  left: 12px;
+  width: 16px;
+  height: 16px;
+}
+
+.operational-data-panel .admin-search__count {
+  display: none;
+}
+
+.operational-data-panel .admin-filter-bar {
+  margin-bottom: 0;
+  gap: 6px;
+}
+
+.operational-data-panel .admin-filter-bar__btn {
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-strong);
+}
+
+.operational-data-panel .admin-filter-bar__btn--active {
+  background: rgba(0, 160, 210, 0.08);
+  border-color: rgba(0, 160, 210, 0.35);
+  color: var(--color-brand-deep);
+}
+
+.operational-data-panel .admin-table-wrap {
+  border-color: var(--border-soft);
+  background: var(--surface-strong);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.operational-data-panel .admin-table thead {
+  background: var(--app-surface-glass-subtle);
+}
+
+.operational-data-panel .admin-table th {
+  padding: 8px 12px;
+  font-size: 0.625rem;
+}
+
+.operational-data-panel .admin-table td {
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  background: inherit;
+}
+
+.operational-data-panel .admin-table tbody tr:hover td {
+  background: inherit;
+}
+
+.operational-data-panel .admin-table__actions {
+  gap: 4px;
+}
+
+.operational-data-panel .admin-btn--sm {
+  min-height: 28px;
+  padding: 2px 8px;
+  font-size: 0.6875rem;
+  gap: 4px;
+}
+
+.operational-data-panel__results {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.operational-data-panel__clear {
+  margin-left: auto;
 }
 
 .operational-alarms__section-title {
-  margin: 0 0 var(--space-2);
-  font-size: var(--font-size-lg);
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-base);
   font-weight: 700;
 }
 
 .operational-alarms__filters {
-  margin-top: calc(-1 * var(--space-2));
+  margin-top: 0;
 }
 
 .operational-alarms-table__row--reviewed {
@@ -27,31 +173,31 @@
 }
 
 .operational-alarms-table__row--critical td:first-child {
-  box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.65);
+  box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.55);
 }
 
 .operational-alarms-table__order-cell {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 3px;
 }
 
 .operational-alarms-table__critical-badge {
   display: inline-flex;
   padding: 1px 6px;
   border-radius: 999px;
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: #991b1b;
   background: rgba(254, 226, 226, 0.95);
-  border: 1px solid rgba(220, 38, 38, 0.35);
+  border: 1px solid rgba(220, 38, 38, 0.28);
 }
 
 .operational-alarms-table__row--warning td:first-child {
-  box-shadow: inset 3px 0 0 rgba(234, 179, 8, 0.65);
+  box-shadow: inset 3px 0 0 rgba(234, 179, 8, 0.55);
 }
 
 .operational-alarms__reassign-note {
@@ -64,13 +210,129 @@
 .alarms-page__v2 {
   font-size: var(--font-size-sm);
   color: var(--color-muted);
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-lg);
   border: 1px dashed var(--border-soft);
   background: var(--app-surface-glass-subtle);
   margin: 0;
 }
 
+.operational-data-panel .admin-empty,
+.operational-data-panel .admin-table__empty {
+  margin: 0;
+  padding: var(--space-4);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+/* Pedidos del día — filas por empresa */
+.daily-orders-panel .admin-table tbody tr.daily-orders-table__row--sumo {
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.daily-orders-panel .admin-table tbody tr.daily-orders-table__row--sumo td:first-child {
+  box-shadow: inset 3px 0 0 rgba(124, 58, 237, 0.35);
+}
+
+.daily-orders-panel .admin-table tbody tr.daily-orders-table__row--sumo:hover {
+  background: rgba(124, 58, 237, 0.07);
+}
+
+.daily-orders-panel .admin-table tbody tr.daily-orders-table__row--maf {
+  background: rgba(249, 115, 22, 0.04);
+}
+
+.daily-orders-panel .admin-table tbody tr.daily-orders-table__row--maf td:first-child {
+  box-shadow: inset 3px 0 0 rgba(249, 115, 22, 0.4);
+}
+
+.daily-orders-panel .admin-table tbody tr.daily-orders-table__row--maf:hover {
+  background: rgba(249, 115, 22, 0.07);
+}
+
+.daily-orders-panel .admin-table tbody tr:hover {
+  background: inherit;
+}
+
+.daily-orders-table__variety,
+.daily-orders-table__style {
+  font-weight: 600;
+}
+
+.daily-orders-table__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 108px;
+}
+
+.daily-orders-table__progress-bar {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-gray-100);
+  overflow: hidden;
+}
+
+.daily-orders-table__progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+}
+
+.daily-orders-table__progress-fill--assigned {
+  background: rgba(0, 160, 210, 0.45);
+  z-index: 1;
+}
+
+.daily-orders-table__progress-fill--done {
+  background: rgba(34, 197, 94, 0.65);
+  z-index: 2;
+}
+
+.daily-orders-table__progress-label {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.daily-orders-table__over-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.24);
+}
+
+.daily-orders-panel .admin-filter-bar--status {
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--border-soft);
+}
+
+@media (max-width: 900px) {
+  .operational-data-panel__toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .operational-data-panel .admin-search {
+    max-width: none;
+  }
+
+  .daily-orders-panel .admin-filter-bar--status {
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+/* Mapa — sin tocar lógica, overrides locales intactos */
 .plant-map-alarms-table .operational-alarms__section-title {
   font-size: var(--font-size-base);
   font-weight: 700;

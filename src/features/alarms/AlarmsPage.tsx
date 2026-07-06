@@ -27,7 +27,7 @@ export function AlarmsPage() {
     <div className="alarms-page">
       <PageHeader title={d.title} description={d.subtitle} showMockBadge badgeLabel={d.mockBadge} />
 
-      <section className="alarms-page__table dash-card">
+      <section className="operational-data-panel alarms-page__table">
         <OperationalAlarmsTable alarms={alarms} onMarkReviewed={handleMarkReviewed} />
       </section>
 

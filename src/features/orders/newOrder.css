@@ -445,6 +445,12 @@
   color: var(--color-muted);
 }
 
+.order-modal__meta {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-muted);
+}
+
 .order-modal__hero {
   padding: var(--space-5) !important;
   margin-bottom: var(--space-4);

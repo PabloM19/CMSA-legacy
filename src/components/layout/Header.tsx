@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { useLogout } from '../../features/auth/useLogout'
 import { useLanguage } from '../../i18n/LanguageContext'
@@ -11,10 +12,8 @@ interface HeaderProps {
 
 export function Header({ wide = false }: HeaderProps) {
   const { user } = useAuth()
-  const { dateLocale } = useLanguage()
+  const { t, dateLocale } = useLanguage()
   const handleLogout = useLogout()
-
-  if (!user) return null
 
   const innerClass = wide
     ? 'app-layout__header-inner app-layout__header-inner--wide'
@@ -28,7 +27,13 @@ export function Header({ wide = false }: HeaderProps) {
         </time>
         <div className="header__actions">
           <LangSwitcher />
-          <UserMenu user={user} onLogout={handleLogout} />
+          {user ? (
+            <UserMenu user={user} onLogout={handleLogout} />
+          ) : (
+            <Link to="/login" className="header__login ui-btn ui-btn--primary ui-btn--sm">
+              {t.common.signIn}
+            </Link>
+          )}
         </div>
       </div>
     </header>

@@ -4,26 +4,35 @@ import type { BacklogColumnId, BacklogOrder } from '../../../types/backlog'
 import { BacklogOrderCard } from './BacklogOrderCard'
 
 interface BacklogColumnDrawerProps {
-  columnId: BacklogColumnId
+  columnId?: BacklogColumnId
+  title?: string
+  subtitle?: string
   orders: BacklogOrder[]
   onClose: () => void
   onViewDetail: (order: BacklogOrder) => void
-  onPrepare: (order: BacklogOrder) => void
-  onConfirmRecipe: (order: BacklogOrder) => void
+  onPrepare?: (order: BacklogOrder) => void
+  onConfirmRecipe?: (order: BacklogOrder) => void
   onWithdraw?: (order: BacklogOrder) => void
+  completed?: boolean
 }
 
 export function BacklogColumnDrawer({
   columnId,
+  title,
+  subtitle,
   orders,
   onClose,
   onViewDetail,
   onPrepare,
   onConfirmRecipe,
   onWithdraw,
+  completed = false,
 }: BacklogColumnDrawerProps) {
   const { t } = useLanguage()
   const d = t.backlog
+  const drawerTitle = title ?? (columnId ? d.columns[columnId] : d.viewAll)
+  const drawerSubtitle =
+    subtitle ?? d.drawerSubtitle.replace('{count}', String(orders.length))
 
   return (
     <div className="backlog-drawer-overlay" role="presentation" onClick={onClose}>
@@ -37,11 +46,9 @@ export function BacklogColumnDrawer({
         <header className="backlog-drawer__head">
           <div>
             <h2 id="backlog-drawer-title" className="backlog-drawer__title">
-              {d.columns[columnId]}
+              {drawerTitle}
             </h2>
-            <p className="backlog-drawer__subtitle">
-              {d.drawerSubtitle.replace('{count}', String(orders.length))}
-            </p>
+            <p className="backlog-drawer__subtitle">{drawerSubtitle}</p>
           </div>
           <button type="button" className="backlog-drawer__close" onClick={onClose} aria-label={d.drawerClose}>
             <X size={22} />
@@ -57,7 +64,7 @@ export function BacklogColumnDrawer({
                 key={order.id}
                 order={order}
                 sortable={false}
-                completed={columnId === 'finalizado'}
+                completed={completed || columnId === 'finalizado'}
                 onViewDetail={onViewDetail}
                 onPrepare={onPrepare}
                 onConfirmRecipe={onConfirmRecipe}

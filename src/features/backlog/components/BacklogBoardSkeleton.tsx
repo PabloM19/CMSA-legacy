@@ -1,9 +1,15 @@
 import { BACKLOG_COLUMNS } from './BacklogColumn'
 
-export function BacklogBoardSkeleton() {
+interface BacklogBoardSkeletonProps {
+  columnCount?: number
+}
+
+export function BacklogBoardSkeleton({ columnCount = BACKLOG_COLUMNS.length }: BacklogBoardSkeletonProps) {
+  const columns = BACKLOG_COLUMNS.slice(0, columnCount)
+
   return (
     <div className="backlog-board backlog-board--skeleton" aria-hidden="true">
-      {BACKLOG_COLUMNS.map((columnId) => (
+      {columns.map((columnId) => (
         <div key={columnId} className="backlog-column backlog-column--skeleton dash-card">
           <div className="backlog-skeleton__head">
             <div className="backlog-skeleton__icon" />

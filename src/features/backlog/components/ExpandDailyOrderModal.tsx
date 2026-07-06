@@ -54,7 +54,8 @@ export function ExpandDailyOrderModal({
       >
         <header className="order-modal__head">
           <h2 className="order-modal__title">{d.expandModalTitle}</h2>
-          <p className="order-modal__subtitle">{daily.estilo}</p>
+          <p className="order-modal__subtitle">{daily.variedad}</p>
+          <p className="order-modal__meta">{d.colBoxFormat}: {daily.estilo}</p>
         </header>
 
         <label className="order-modal__label" htmlFor="expand-boxes">

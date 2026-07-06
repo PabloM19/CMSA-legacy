@@ -41,8 +41,8 @@ export function canAccessAdmin(user: User): boolean {
   return isSupervisor(user)
 }
 
-export function canAccessPerformance(user: User): boolean {
-  return isSupervisor(user)
+export function canAccessPerformance(_user?: User | null): boolean {
+  return true
 }
 
 export function canViewGlobalActivityLog(user: User): boolean {
@@ -75,7 +75,7 @@ export function canAccessRoute(user: User, path: string): boolean {
   }
 
   if (normalized === '/performance') {
-    return canAccessPerformance(user)
+    return true
   }
 
   if (isSuperAdmin(user)) return true
@@ -108,6 +108,15 @@ export function canAccessRoute(user: User, path: string): boolean {
 export function getDefaultRoute(user: User): string {
   if (user.role === 'supervisor') return '/performance'
   return '/plant-map'
+}
+
+export const GUEST_NAV_ITEMS: { to: string; key: NavKey }[] = [
+  { to: '/plant-map', key: 'plantMap' },
+  { to: '/performance', key: 'performance' },
+]
+
+export function getGuestNavItems() {
+  return GUEST_NAV_ITEMS
 }
 
 export const NAV_ITEMS: { to: string; key: NavKey }[] = [
@@ -174,7 +183,7 @@ export function getMobileNavItems(user: User) {
 export function getVisibleNavItems(user: User) {
   return NAV_ITEMS.filter((item) => {
     if (item.key === 'profile') return false
-    if (item.key === 'performance') return canAccessPerformance(user)
+    if (item.key === 'performance') return true
     if (item.key === 'admin' || item.key === 'references') {
       return isSupervisor(user)
     }

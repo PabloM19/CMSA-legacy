@@ -1,5 +1,6 @@
 import type { DailyOrder, DailyOrderEvent, DailyOrdersSummaryStats } from '../types/dailyOrder'
 import type { BacklogOrder } from '../types/backlog'
+import { mockDailyOrders } from '../data/mockDailyOrders'
 
 export function pct(part: number, total: number): number {
   if (total <= 0) return 0
@@ -109,6 +110,25 @@ export function syncAllDailyOrders(
   productionOrders: BacklogOrder[],
 ): DailyOrder[] {
   return dailyOrders.map((d) => syncDailyOrderFromProduction(d, productionOrders))
+}
+
+/** Sincroniza etiquetas de presentación desde seed sin alterar cantidades ni progreso. */
+export function applyDailyOrderSeedLabels(orders: DailyOrder[]): DailyOrder[] {
+  const seedById = new Map(mockDailyOrders.map((d) => [d.id, d]))
+
+  return orders.map((order) => {
+    const seed = seedById.get(order.id)
+    if (!seed) return order
+
+    return {
+      ...order,
+      variedad: seed.variedad,
+      referencia: seed.referencia,
+      estilo: seed.estilo,
+      barcode: seed.barcode,
+      producto: seed.producto,
+    }
+  })
 }
 
 export function isPendingAcceptanceColumn(order: BacklogOrder): boolean {

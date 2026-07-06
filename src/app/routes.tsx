@@ -2,7 +2,6 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { DashboardRedirect, ValidationRedirect } from './RouteRedirects'
 import { RootRedirect } from './RootRedirect'
 import { AppLayout } from '../components/layout/AppLayout'
-import { PlantMapShell } from '../components/layout/PlantMapShell'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ProtectedRoute } from '../features/auth/ProtectedRoute'
 import { NewOrderPage } from '../features/orders/NewOrderPage'
@@ -27,8 +26,13 @@ export const router = createBrowserRouter([
       },
       {
         path: '/plant-map',
-        element: <PlantMapShell />,
+        element: <AppLayout />,
         children: [{ index: true, element: <PlantMapPage /> }],
+      },
+      {
+        path: '/performance',
+        element: <AppLayout />,
+        children: [{ index: true, element: <PerformancePage /> }],
       },
       {
         element: <ProtectedRoute />,
@@ -47,7 +51,6 @@ export const router = createBrowserRouter([
               { path: '/admin', element: <AdminPage /> },
               { path: '/alarms', element: <AlarmsPage /> },
               { path: '/references', element: <ReferencesPage /> },
-              { path: '/performance', element: <PerformancePage /> },
               { path: '/profile', element: <ProfilePage /> },
             ],
           },

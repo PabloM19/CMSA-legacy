@@ -105,8 +105,9 @@ export function LaunchProductionOrderModal({
         <header className="order-modal__head">
           <h2 className="order-modal__title">{d.launchModalTitle}</h2>
           <p className="order-modal__subtitle">
-            {daily.estilo} · {daily.referencia}
+            {daily.variedad} · {daily.referencia}
           </p>
+          <p className="order-modal__meta">{d.colBoxFormat}: {daily.estilo}</p>
         </header>
 
         <dl className="order-modal__dl">
