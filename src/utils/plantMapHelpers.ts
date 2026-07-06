@@ -161,11 +161,11 @@ export function getSpeedLabel(speed: PlantSpeedStatus, lang: Lang): string | nul
 
 export function getTypeLabel(type: PlantElementView['type'], lang: Lang): string {
   if (lang === 'es') {
-    if (type === 'automatic') return 'Robot (robotino)'
+    if (type === 'automatic') return 'Robot'
     if (type === 'manual') return 'Mesa manual'
     return 'Paletizador'
   }
-  if (type === 'automatic') return 'Robot cell'
+  if (type === 'automatic') return 'Robot'
   if (type === 'manual') return 'Manual table'
   return 'Palletizer'
 }
