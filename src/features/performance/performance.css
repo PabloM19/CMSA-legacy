@@ -115,6 +115,46 @@
   justify-content: center;
   gap: var(--space-2);
   min-height: 168px;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.performance-summary__card:hover .circular-metric__ring,
+.performance-summary__card:hover .performance-trend svg {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.performance-summary .circular-metric__ring,
+.performance-summary .performance-trend svg {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  animation: cmsa-soft-float 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+.performance-summary__card:nth-child(2) .circular-metric__ring {
+  animation-delay: 0.2s;
+}
+
+.performance-summary__card:nth-child(3) .circular-metric__ring {
+  animation-delay: 0.35s;
+}
+
+.performance-summary__card:nth-child(4) .circular-metric__ring {
+  animation-delay: 0.5s;
+}
+
+.performance-summary__card--trend .performance-trend svg {
+  animation: cmsa-soft-float 3.2s ease-in-out infinite;
+  animation-delay: 0.15s;
+}
+
+@keyframes cmsa-soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 .performance-summary__card--trend {
@@ -211,6 +251,13 @@
   height: 28px;
   border-radius: var(--radius-md);
   flex-shrink: 0;
+  transition: transform 180ms ease;
+  animation: cmsa-soft-float 3.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+.performance-stations__table tbody tr:hover .station-type-icon {
+  transform: translateY(-2px) scale(1.05);
 }
 
 .station-type-icon--robot {

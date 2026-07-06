@@ -13,13 +13,13 @@ import { AdminAccessDenied } from './components/AdminAccessDenied'
 import { ActivityTab } from './components/ActivityTab'
 import { AlarmsTab } from './components/AlarmsTab'
 import { CompaniesTab } from './components/CompaniesTab'
-import { DemoModePanel } from './components/DemoModePanel'
 import { PalletizersTab } from './components/PalletizersTab'
 import { ProductionTab } from './components/ProductionTab'
 import { ReferencesTab } from './components/ReferencesTab'
 import { TablesTab } from './components/TablesTab'
 import { UsersTab } from './components/UsersTab'
 import { WithdrawProductionModal } from '../backlog/components/WithdrawProductionModal'
+import { BacklogToast } from '../backlog/components/BacklogToast'
 import './admin.css'
 import '../orders/newOrder.css'
 
@@ -39,6 +39,7 @@ export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTabId>(() => tabs[0] ?? 'references')
   const [refreshKey, setRefreshKey] = useState(0)
   const [withdrawOrder, setWithdrawOrder] = useState<BacklogOrder | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
 
   if (!user || !canAccessAdmin(user)) {
     return <AdminAccessDenied />
@@ -46,6 +47,11 @@ export function AdminPage() {
 
   function bumpRefresh() {
     setRefreshKey((k) => k + 1)
+  }
+
+  function handleAdminSaved() {
+    bumpRefresh()
+    setToast(d.savedDemo)
   }
 
   function handleWithdrawConfirm(reason: WithdrawReason, comment: string) {
@@ -92,19 +98,19 @@ export function AdminPage() {
       </nav>
 
       {activeTab === 'users' && isSupervisor(user) && (
-        <UsersTab refreshKey={refreshKey} onChanged={bumpRefresh} />
+        <UsersTab refreshKey={refreshKey} onChanged={handleAdminSaved} />
       )}
       {activeTab === 'companies' && isSuperAdmin(user) && (
-        <CompaniesTab refreshKey={refreshKey} onChanged={bumpRefresh} />
+        <CompaniesTab refreshKey={refreshKey} onChanged={handleAdminSaved} />
       )}
       {activeTab === 'references' && (
-        <ReferencesTab refreshKey={refreshKey} canManage onChanged={bumpRefresh} />
+        <ReferencesTab refreshKey={refreshKey} canManage onChanged={handleAdminSaved} />
       )}
       {activeTab === 'tables' && isSuperAdmin(user) && (
-        <TablesTab refreshKey={refreshKey} onChanged={bumpRefresh} />
+        <TablesTab refreshKey={refreshKey} onChanged={handleAdminSaved} />
       )}
       {activeTab === 'palletizers' && isSuperAdmin(user) && (
-        <PalletizersTab refreshKey={refreshKey} onChanged={bumpRefresh} />
+        <PalletizersTab refreshKey={refreshKey} onChanged={handleAdminSaved} />
       )}
       {activeTab === 'alarms' && <AlarmsTab />}
       {activeTab === 'production' && (
@@ -114,8 +120,6 @@ export function AdminPage() {
         <ActivityTab refreshKey={refreshKey} />
       )}
 
-      {isSuperAdmin(user) && <DemoModePanel onChanged={bumpRefresh} />}
-
       {withdrawOrder && (
         <WithdrawProductionModal
           order={withdrawOrder}
@@ -123,6 +127,8 @@ export function AdminPage() {
           onConfirm={handleWithdrawConfirm}
         />
       )}
+
+      <BacklogToast message={toast} type="success" onClear={() => setToast(null)} />
     </div>
   )
 }

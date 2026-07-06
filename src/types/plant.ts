@@ -73,6 +73,7 @@ export interface PlantElementView {
 }
 
 export interface CmsaPersistedState {
+  scenarioVersion?: string
   dailyOrders: import('./dailyOrder').DailyOrder[]
   orders: BacklogOrder[]
   plantTables: PlantTable[]

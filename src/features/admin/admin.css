@@ -359,6 +359,219 @@
   border-top: 1px solid var(--color-gray-100);
 }
 
+/* Admin modal dialog — portaled, fixed center */
+.admin-modal-dialog {
+  width: 100%;
+  max-width: 720px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-modal-dialog--wide {
+  max-width: 780px;
+}
+
+.admin-modal-dialog--detail {
+  max-width: 560px;
+}
+
+.admin-modal-dialog__head {
+  flex-shrink: 0;
+  position: relative;
+  padding: var(--space-5) var(--space-6) var(--space-3);
+  border-bottom: 1px solid var(--border-soft, var(--color-gray-100));
+}
+
+.admin-modal-dialog__title {
+  margin-bottom: 0;
+  padding-right: var(--space-8);
+}
+
+.admin-modal-dialog__subtitle {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted, var(--color-gray-500));
+  line-height: 1.45;
+}
+
+.admin-modal-dialog__close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-soft, var(--color-gray-200));
+  border-radius: var(--radius-md);
+  background: var(--surface-strong, var(--color-white));
+  color: var(--color-gray-500);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.admin-modal-dialog__close:hover {
+  background: var(--button-ghost-hover-bg);
+  color: var(--color-gray-800);
+  border-color: var(--color-gray-300);
+}
+
+.admin-modal-dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-6);
+}
+
+.admin-modal-dialog__body .admin-form {
+  gap: var(--space-md);
+}
+
+.admin-modal-dialog__foot {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: 0;
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--border-soft, var(--color-gray-100));
+  background: var(--surface-strong, var(--color-white));
+}
+
+/* Activity log panel */
+.admin-activity-panel {
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.admin-activity-panel .admin-search {
+  flex: 1;
+  min-width: min(100%, 280px);
+  max-width: 480px;
+}
+
+.admin-activity-panel .admin-table-wrap {
+  border-color: var(--border-soft);
+  background: var(--surface-strong);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.admin-activity-panel .admin-table {
+  min-width: 880px;
+}
+
+.admin-activity-panel .admin-table thead {
+  background: var(--app-surface-glass-subtle);
+}
+
+.admin-activity-panel .admin-table th {
+  padding: 8px 12px;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-activity-panel .admin-table td {
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  vertical-align: middle;
+}
+
+.admin-activity-panel .admin-table tbody tr:hover td {
+  background: rgba(0, 160, 210, 0.03);
+}
+
+.admin-activity-panel .admin-filter-bar {
+  margin-bottom: 0;
+  gap: 6px;
+}
+
+.admin-activity-panel .admin-filter-bar__btn {
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-strong);
+}
+
+.admin-activity-panel .admin-filter-bar__btn--active {
+  background: rgba(0, 160, 210, 0.08);
+  border-color: rgba(0, 160, 210, 0.35);
+  color: var(--color-brand-deep);
+}
+
+.admin-activity-panel__detail-cell {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.admin-activity-panel__entity-chip {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text-main);
+  border: 1px solid var(--border-soft);
+  white-space: nowrap;
+}
+
+.admin-activity-panel__role-chip {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: rgba(0, 160, 210, 0.08);
+  color: var(--color-brand-deep);
+  white-space: nowrap;
+}
+
+.admin-activity-panel__empty-row td {
+  text-align: center;
+  padding: var(--space-5);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Toast (reuses BacklogToast component) */
+.admin-page .backlog-toast {
+  position: fixed;
+  bottom: var(--space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 600;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  max-width: min(480px, calc(100vw - 2rem));
+  text-align: center;
+}
+
+.admin-page .backlog-toast--success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
 .admin-denied {
   max-width: 480px;
   margin: var(--space-xl) auto;

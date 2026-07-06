@@ -127,11 +127,35 @@ a {
 }
 
 /* Header */
+.header__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: max-content;
+  margin-left: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.header__actions .lang-switcher {
+  flex: 0 0 auto;
+}
+
+.header__actions .user-menu {
+  flex: 0 0 auto;
+}
+
 .header__date {
   flex: 1;
+  min-width: 0;
   font-size: var(--font-size-sm);
   color: var(--color-gray-500);
   text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header__login {

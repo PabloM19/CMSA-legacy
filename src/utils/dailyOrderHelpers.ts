@@ -1,6 +1,6 @@
 import type { DailyOrder, DailyOrderEvent, DailyOrdersSummaryStats } from '../types/dailyOrder'
 import type { BacklogOrder } from '../types/backlog'
-import { mockDailyOrders } from '../data/mockDailyOrders'
+import { DEMO_DAILY_ORDER_TEMPLATES } from '../data/demoScenario'
 
 export function pct(part: number, total: number): number {
   if (total <= 0) return 0
@@ -112,9 +112,17 @@ export function syncAllDailyOrders(
   return dailyOrders.map((d) => syncDailyOrderFromProduction(d, productionOrders))
 }
 
+export function buildSyncedDailyOrders(
+  productionOrders: BacklogOrder[],
+  dailyOrdersBase?: DailyOrder[],
+): DailyOrder[] {
+  const base = dailyOrdersBase ?? DEMO_DAILY_ORDER_TEMPLATES
+  return syncAllDailyOrders([...base], productionOrders)
+}
+
 /** Sincroniza etiquetas de presentación desde seed sin alterar cantidades ni progreso. */
 export function applyDailyOrderSeedLabels(orders: DailyOrder[]): DailyOrder[] {
-  const seedById = new Map(mockDailyOrders.map((d) => [d.id, d]))
+  const seedById = new Map(DEMO_DAILY_ORDER_TEMPLATES.map((d) => [d.id, d]))
 
   return orders.map((order) => {
     const seed = seedById.get(order.id)

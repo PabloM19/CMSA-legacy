@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { useAuth } from '../auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
@@ -9,11 +8,7 @@ import {
   findStationPerformance,
 } from '../../data/mockPerformance'
 import { PerformanceSummary } from './components/PerformanceSummary'
-import {
-  PerformanceGuestActions,
-  PerformanceStationsTable,
-  StationPerformanceDrawer,
-} from './components/PerformanceStationsTable'
+import { PerformanceStationsTable, StationPerformanceDrawer } from './components/PerformanceStationsTable'
 import '../admin/admin.css'
 import '../dashboard/dashboard.css'
 import './performance.css'
@@ -39,7 +34,6 @@ export function PerformancePage() {
         description={d.subtitle}
         showMockBadge
         badgeLabel={isAuthenticated ? d.mockBadge : d.publicBadge}
-        action={!isAuthenticated ? <PerformanceGuestActions /> : undefined}
       />
 
       <PerformanceSummary summary={summary} />
@@ -74,15 +68,6 @@ export function PerformancePage() {
         rows={MOCK_STATION_PERFORMANCE}
         onSelect={(row) => setSelectedId(row.id)}
       />
-
-      {!isAuthenticated && (
-        <p className="performance-page__guest-note">
-          {d.guestReadOnlyNote}{' '}
-          <Link to="/login" className="performance-page__guest-link">
-            {d.guestSignInLink}
-          </Link>
-        </p>
-      )}
 
       {selected && (
         <StationPerformanceDrawer station={selected} onClose={() => setSelectedId(null)} />

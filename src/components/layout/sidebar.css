@@ -77,6 +77,14 @@
   letter-spacing: 0.06em;
 }
 
+.sidebar__brand-iso {
+  display: block;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+}
+
 .sidebar__toggle {
   display: inline-flex;
   align-items: center;

@@ -13,7 +13,9 @@ import {
 import { filterAdminPalletizers } from '../../../utils/adminViewHelpers'
 import { getStatusLabel } from '../../../utils/plantMapHelpers'
 import { AdminConfirmModal } from './AdminConfirmModal'
+import { AdminDetailModal } from './AdminDetailModal'
 import { AdminEmptyState } from './AdminEmptyState'
+import { AdminFormModal } from './AdminFormModal'
 import { AdminSearchBar } from './AdminSearchBar'
 
 interface PalletizersTabProps {
@@ -171,107 +173,93 @@ export function PalletizersTab({ refreshKey, onChanged }: PalletizersTabProps) {
       )}
 
       {(modal === 'create' || modal === 'edit') && (
-        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
-          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">
-              {modal === 'create' ? d.createPalletizer : d.editPalletizer}
-            </h2>
-            <div className="admin-form">
-              {modal === 'create' && (
-                <div className="admin-form__row">
-                  <label>{d.colCode}</label>
-                  <input
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="P1"
-                  />
-                </div>
-              )}
-              <div className="admin-form__grid">
-                <div className="admin-form__row">
-                  <label>{d.colTableStatus}</label>
-                  <select
-                    value={form.status}
-                    onChange={(e) => setForm({ ...form, status: e.target.value as PlantPalletizerStatus })}
-                  >
-                    {STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {getStatusLabel(s, lang)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="admin-form__row">
-                  <label>{d.colCapacity}</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={form.capacity}
-                    onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
-                  />
-                </div>
+        <AdminFormModal
+          title={modal === 'create' ? d.createPalletizer : d.editPalletizer}
+          subtitle={d.formMockSubtitle}
+          cancelLabel={d.cancel}
+          saveLabel={d.save}
+          onClose={() => setModal(null)}
+          onSave={handleSave}
+        >
+          <div className="admin-form">
+            {modal === 'create' && (
+              <div className="admin-form__row">
+                <label>{d.colCode}</label>
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="P1"
+                />
+              </div>
+            )}
+            <div className="admin-form__grid">
+              <div className="admin-form__row">
+                <label>{d.colTableStatus}</label>
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value as PlantPalletizerStatus })}
+                >
+                  {STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {getStatusLabel(s, lang)}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="admin-form__row">
-                <label>{d.colAlert}</label>
-                <input value={form.alert} onChange={(e) => setForm({ ...form, alert: e.target.value })} />
-              </div>
-              <label className="admin-form__check">
+                <label>{d.colCapacity}</label>
                 <input
-                  type="checkbox"
-                  checked={form.active}
-                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                  type="number"
+                  min={1}
+                  value={form.capacity}
+                  onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
                 />
-                {d.colActive}
-              </label>
-              {error && <p className="admin-form__error">{error}</p>}
-              <p className="admin-form__note">{d.palletizerSecondary}</p>
+              </div>
             </div>
-            <div className="admin-modal__foot">
-              <button type="button" className="admin-btn" onClick={() => setModal(null)}>
-                {d.cancel}
-              </button>
-              <button type="button" className="admin-btn admin-btn--primary" onClick={handleSave}>
-                {d.save}
-              </button>
+            <div className="admin-form__row">
+              <label>{d.colAlert}</label>
+              <input value={form.alert} onChange={(e) => setForm({ ...form, alert: e.target.value })} />
             </div>
+            <label className="admin-form__check">
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) => setForm({ ...form, active: e.target.checked })}
+              />
+              {d.colActive}
+            </label>
+            {error && <p className="admin-form__error">{error}</p>}
+            <p className="admin-form__note">{d.palletizerSecondary}</p>
           </div>
-        </div>
+        </AdminFormModal>
       )}
 
       {modal === 'detail' && selected && (
-        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
-          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{d.palletizerDetail}</h2>
-            <dl className="order-modal__dl">
-              <div className="order-modal__row">
-                <dt>{d.colCode}</dt>
-                <dd>{selected.name}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colTableStatus}</dt>
-                <dd>{getStatusLabel(selected.status, lang)}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colAlert}</dt>
-                <dd>{selected.alert ?? '—'}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colCapacity}</dt>
-                <dd>{selected.capacity}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colActive}</dt>
-                <dd>{selected.active ? d.yes : d.no}</dd>
-              </div>
-            </dl>
-            <p className="admin-form__note">{d.palletizerSecondary}</p>
-            <div className="admin-modal__foot">
-              <button type="button" className="admin-btn admin-btn--primary" onClick={() => setModal(null)}>
-                {d.close}
-              </button>
+        <AdminDetailModal title={d.palletizerDetail} closeLabel={d.close} onClose={() => setModal(null)}>
+          <dl className="order-modal__dl">
+            <div className="order-modal__row">
+              <dt>{d.colCode}</dt>
+              <dd>{selected.name}</dd>
             </div>
-          </div>
-        </div>
+            <div className="order-modal__row">
+              <dt>{d.colTableStatus}</dt>
+              <dd>{getStatusLabel(selected.status, lang)}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colAlert}</dt>
+              <dd>{selected.alert ?? '—'}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colCapacity}</dt>
+              <dd>{selected.capacity}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colActive}</dt>
+              <dd>{selected.active ? d.yes : d.no}</dd>
+            </div>
+          </dl>
+          <p className="admin-form__note">{d.palletizerSecondary}</p>
+        </AdminDetailModal>
       )}
 
       {confirmToggle && (

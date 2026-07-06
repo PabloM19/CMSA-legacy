@@ -7,6 +7,7 @@ import {
   toggleCustomReferenceActive,
 } from '../../../utils/productCatalogStorage'
 import { AddReferenceModal } from '../../orders/components/AddReferenceModal'
+import { AdminDetailModal } from './AdminDetailModal'
 import { AdminSearchBar } from './AdminSearchBar'
 import { AdminEmptyState } from './AdminEmptyState'
 
@@ -203,58 +204,47 @@ export function ReferencesTab({
       )}
 
       {detailProduct && (
-        <div className="order-modal-overlay" role="presentation" onClick={() => setDetailProduct(null)}>
-          <div
-            className="order-modal order-modal--neutral"
-            role="dialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <header className="order-modal__head">
-              <h2 className="order-modal__title">{detailProduct.referenciaProducto}</h2>
-              <p className="order-modal__subtitle">{detailProduct.nombre}</p>
-            </header>
-            <dl className="order-modal__dl">
-              <div className="order-modal__row">
-                <dt>{r.colBarcode}</dt>
-                <dd>{detailProduct.barcode}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{r.colProduct}</dt>
-                <dd>{detailProduct.producto}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{t.backlog.variety}</dt>
-                <dd>{detailProduct.variedad}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{r.colCalibre}</dt>
-                <dd>{detailProduct.calibre}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{r.colFormat}</dt>
-                <dd>{detailProduct.formatoCaja}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{r.colUsage}</dt>
-                <dd>{detailProduct.uso}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{t.backlog.boxesPerHour}</dt>
-                <dd>{detailProduct.cajasHoraSugeridas}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colStatus}</dt>
-                <dd>{detailProduct.activo ? d.statusActiveF : d.statusInactiveF}</dd>
-              </div>
-            </dl>
-            <div className="order-modal__actions">
-              <button type="button" className="order-btn order-btn--primary" onClick={() => setDetailProduct(null)}>
-                {t.backlog.close}
-              </button>
+        <AdminDetailModal
+          title={detailProduct.referenciaProducto}
+          subtitle={detailProduct.nombre}
+          closeLabel={t.backlog.close}
+          onClose={() => setDetailProduct(null)}
+        >
+          <dl className="order-modal__dl">
+            <div className="order-modal__row">
+              <dt>{r.colBarcode}</dt>
+              <dd>{detailProduct.barcode}</dd>
             </div>
-          </div>
-        </div>
+            <div className="order-modal__row">
+              <dt>{r.colProduct}</dt>
+              <dd>{detailProduct.producto}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{t.backlog.variety}</dt>
+              <dd>{detailProduct.variedad}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{r.colCalibre}</dt>
+              <dd>{detailProduct.calibre}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{r.colFormat}</dt>
+              <dd>{detailProduct.formatoCaja}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{r.colUsage}</dt>
+              <dd>{detailProduct.uso}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{t.backlog.boxesPerHour}</dt>
+              <dd>{detailProduct.cajasHoraSugeridas}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colStatus}</dt>
+              <dd>{detailProduct.activo ? d.statusActiveF : d.statusInactiveF}</dd>
+            </div>
+          </dl>
+        </AdminDetailModal>
       )}
     </section>
   )

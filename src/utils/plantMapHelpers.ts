@@ -31,7 +31,7 @@ function isCriticalElement(tableName: string, order: BacklogOrder | null): boole
   const events = getAlarmsForCell(tableName)
   if (events.some((e) => e.isCritical)) return true
   if (order?.boxes != null && order.boxes >= 10_000) return true
-  if (order?.reference && /REF-DISPLAY-PACK|REF-CARTONS|REF-SMCSMR/i.test(order.reference)) {
+  if (order?.reference && /REF-NAVELINA|REF-VALENCIA-LATE|REF-LANE-LATE/i.test(order.reference)) {
     return true
   }
   return false

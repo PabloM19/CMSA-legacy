@@ -165,16 +165,16 @@ export function canWithdrawProduction(user: User): boolean {
 }
 
 export function getMobileNavItems(user: User) {
-  const items: { to: string; key: NavKey }[] = [
-    { to: '/mobile', key: 'mobile' },
-    { to: '/plant-map', key: 'plantMap' },
-  ]
+  let items = getVisibleNavItems(user).filter(
+    (item) => item.key !== 'tablet' && item.key !== 'mobile',
+  )
 
-  if (canAccessRoute(user, '/daily-orders')) {
-    items.push({ to: '/daily-orders', key: 'dailyOrders' })
+  if (isOperator(user)) {
+    items = items.filter((item) => item.key !== 'newOrder')
   }
-  if (canAccessRoute(user, '/production-orders')) {
-    items.push({ to: '/production-orders', key: 'productionOrders' })
+
+  if (!items.some((item) => item.key === 'profile')) {
+    items.push({ to: '/profile', key: 'profile' })
   }
 
   return items

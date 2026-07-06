@@ -1,19 +1,17 @@
-import { mockDailyOrders } from '../data/mockDailyOrders'
 import { mockProductionOrders } from '../data/mockBacklogOrders'
 import { resetCellAlarmsMock } from '../data/mockCellAlarms'
 import {
-  createCleanPalletizers,
-  createCleanPlantTables,
-} from '../data/mockPlantTables'
-import type { CmsaPersistedState, PlantPalletizerElement, PlantTable } from '../types/plant'
+  DEMO_SCENARIO_VERSION,
+  buildCleanDemoState,
+  buildFullDemoState,
+} from '../data/demoScenario'
 import { resetAdminDataToSeed } from './adminStorage'
 import { ADMIN_PLANT_OVERRIDES_KEY, clearAdminPlantOverrides } from './adminPlantOverrides'
 import { BACKLOG_STORAGE_KEY, normalizePriorities, saveState } from './backlogStorage'
-import { syncAllDailyOrders } from './dailyOrderHelpers'
+import { buildSyncedDailyOrders } from './dailyOrderHelpers'
 import { clearBacklogViewPrefs } from './backlogViewPrefs'
 import { logSystemActivity } from './activityLog'
 import { clearCreatedOrders } from './orderStorage'
-import { rebuildPlantTablesFromOrders } from './plantSync'
 import {
   TABLET_OVERRIDES_KEY,
   TABLET_SNAPSHOTS_KEY,
@@ -32,61 +30,6 @@ export const CMSA_OPERATIONAL_KEYS = [
   'cmsa-cell-alarms',
   'cmsa-cell-alarms-version',
 ] as const
-
-function applyDemoFullPlantVisuals(
-  tables: PlantTable[],
-  palletizers: PlantPalletizerElement[],
-): { plantTables: PlantTable[]; plantPalletizers: PlantPalletizerElement[] } {
-  const plantTables = tables.map((table) => {
-    if (table.id === 'R1' || table.id === 'R2') {
-      return {
-        ...table,
-        speedStatus: 'slow' as const,
-        alert: 'Producción más lenta de lo habitual',
-      }
-    }
-    if (table.id === 'R5' || table.id === 'M4') {
-      return {
-        ...table,
-        alert: table.orderId ? 'Finalización prevista próxima' : table.alert,
-      }
-    }
-    if (table.id === 'R7' && !table.orderId) {
-      return {
-        ...table,
-        status: 'waiting' as const,
-        speedStatus: 'slow' as const,
-        alert: 'En espera temporal',
-      }
-    }
-    if (table.id === 'M2' && table.orderId) {
-      return {
-        ...table,
-        status: 'blocked' as const,
-        alert: 'Bloqueo por ocupación',
-      }
-    }
-    return table
-  })
-
-  const plantPalletizers = palletizers.map((p) => {
-    if (p.id === 'P2') {
-      return { ...p, status: 'conflict' as const, alert: 'Conflicto SUMO/MAF' }
-    }
-    if (p.id === 'P5') {
-      return { ...p, status: 'waiting' as const, alert: 'Cola de salida' }
-    }
-    if (p.id === 'P3') {
-      return { ...p, status: 'active' as const, company: 'SUMO' as const }
-    }
-    if (p.id === 'P7') {
-      return { ...p, status: 'active' as const, company: 'MAF' as const }
-    }
-    return p
-  })
-
-  return { plantTables, plantPalletizers }
-}
 
 /** Elimina datos operativos CMSA del localStorage (no auth ni idioma). */
 export function clearCmsaLocalStorage(): void {
@@ -107,23 +50,19 @@ export function seedBaseData(): void {
   clearCreatedOrders()
   clearBacklogViewPrefs()
 
-  const state: CmsaPersistedState = {
-    dailyOrders: syncAllDailyOrders([...mockDailyOrders], []),
-    orders: [],
-    plantTables: createCleanPlantTables(),
-    plantPalletizers: createCleanPalletizers(),
-  }
+  const dailyOrders = buildSyncedDailyOrders([])
+  const state = buildCleanDemoState(dailyOrders)
   saveState(state)
 }
 
-/** Demo limpia: sin pedidos ni estados temporales. */
+/** Demo limpia: pedidos del día base sin órdenes de producción. */
 export function resetDemoClean(): void {
   clearCmsaLocalStorage()
   seedBaseData()
   logSystemActivity('Demo limpia preparada', 'Reset operativo — pedidos e incidencias eliminados', 'sistema')
 }
 
-/** Demo completa: escenario con pedidos, validación, producción y avisos. */
+/** Demo completa: escenario coherente centralizado. */
 export function seedDemoFull(): void {
   clearCmsaLocalStorage()
   resetCellAlarmsMock()
@@ -134,22 +73,13 @@ export function seedDemoFull(): void {
   clearBacklogViewPrefs()
 
   const orders = normalizePriorities([...mockProductionOrders])
-  let plantTables = rebuildPlantTablesFromOrders(createCleanPlantTables(), orders)
-  let plantPalletizers = createCleanPalletizers()
+  const dailyOrders = buildSyncedDailyOrders(orders)
+  const state = buildFullDemoState(dailyOrders, orders)
 
-  const visuals = applyDemoFullPlantVisuals(plantTables, plantPalletizers)
-  plantTables = visuals.plantTables
-  plantPalletizers = visuals.plantPalletizers
-
-  saveState({
-    dailyOrders: syncAllDailyOrders([...mockDailyOrders], orders),
-    orders,
-    plantTables,
-    plantPalletizers,
-  })
+  saveState(state)
   logSystemActivity(
     'Demo completa cargada',
-    'Escenario simulado — cola, validación, producción y avisos',
+    `Escenario demo v${DEMO_SCENARIO_VERSION} — pedidos, órdenes, mapa y eventos alineados`,
     'sistema',
   )
 }

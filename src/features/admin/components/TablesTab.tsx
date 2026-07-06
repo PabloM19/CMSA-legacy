@@ -14,7 +14,9 @@ import {
 import { filterAdminTables } from '../../../utils/adminViewHelpers'
 import { getStatusLabel } from '../../../utils/plantMapHelpers'
 import { AdminConfirmModal } from './AdminConfirmModal'
+import { AdminDetailModal } from './AdminDetailModal'
 import { AdminEmptyState } from './AdminEmptyState'
+import { AdminFormModal } from './AdminFormModal'
 import { AdminSearchBar } from './AdminSearchBar'
 
 interface TablesTabProps {
@@ -220,132 +222,116 @@ export function TablesTab({ refreshKey, onChanged }: TablesTabProps) {
       )}
 
       {(modal === 'create' || modal === 'edit') && (
-        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
-          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">
-              {modal === 'create' ? d.createTable : d.editTable}
-            </h2>
-            <div className="admin-form">
+        <AdminFormModal
+          title={modal === 'create' ? d.createTable : d.editTable}
+          subtitle={d.formMockSubtitle}
+          cancelLabel={d.cancel}
+          saveLabel={d.save}
+          onClose={() => setModal(null)}
+          onSave={handleSave}
+        >
+          <div className="admin-form">
+            <div className="admin-form__row">
+              <label>{d.colCode}</label>
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="R10"
+                readOnly={modal === 'edit'}
+              />
+            </div>
+            <div className="admin-form__grid">
               <div className="admin-form__row">
-                <label>{d.colCode}</label>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="R10"
-                  readOnly={modal === 'edit'}
-                />
-              </div>
-              <div className="admin-form__grid">
-                <div className="admin-form__row">
-                  <label>{d.colType}</label>
-                  <select
-                    value={form.type}
-                    onChange={(e) => setForm({ ...form, type: e.target.value as PlantTableType })}
-                  >
-                    <option value="automatic">{d.typeAutomatic}</option>
-                    <option value="manual">{d.typeManual}</option>
-                  </select>
-                </div>
-                <div className="admin-form__row">
-                  <label>{d.colTableStatus}</label>
-                  <select
-                    value={form.status}
-                    onChange={(e) => setForm({ ...form, status: e.target.value as PlantTableStatus })}
-                  >
-                    {TABLE_STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {getStatusLabel(s, lang)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="admin-form__row">
-                <label>{d.colCompany}</label>
+                <label>{d.colType}</label>
                 <select
-                  value={form.company}
-                  onChange={(e) =>
-                    setForm({ ...form, company: e.target.value as OrderCompany | '' })
-                  }
+                  value={form.type}
+                  onChange={(e) => setForm({ ...form, type: e.target.value as PlantTableType })}
                 >
-                  <option value="">—</option>
-                  <option value="SUMO">SUMO</option>
-                  <option value="MAF">MAF</option>
+                  <option value="automatic">{d.typeAutomatic}</option>
+                  <option value="manual">{d.typeManual}</option>
                 </select>
               </div>
               <div className="admin-form__row">
-                <label>{d.colCapacity}</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={form.capacity}
-                  onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
-                />
+                <label>{d.colTableStatus}</label>
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value as PlantTableStatus })}
+                >
+                  {TABLE_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {getStatusLabel(s, lang)}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <label className="admin-form__check">
-                <input
-                  type="checkbox"
-                  checked={form.active}
-                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
-                />
-                {d.colActive}
-              </label>
-              {error && <p className="admin-form__error">{error}</p>}
-              <p className="admin-form__note">{d.confirmToggleTableMsg}</p>
             </div>
-            <div className="admin-modal__foot">
-              <button type="button" className="admin-btn" onClick={() => setModal(null)}>
-                {d.cancel}
-              </button>
-              <button type="button" className="admin-btn admin-btn--primary" onClick={handleSave}>
-                {d.save}
-              </button>
+            <div className="admin-form__row">
+              <label>{d.colCompany}</label>
+              <select
+                value={form.company}
+                onChange={(e) => setForm({ ...form, company: e.target.value as OrderCompany | '' })}
+              >
+                <option value="">—</option>
+                <option value="SUMO">SUMO</option>
+                <option value="MAF">MAF</option>
+              </select>
             </div>
+            <div className="admin-form__row">
+              <label>{d.colCapacity}</label>
+              <input
+                type="number"
+                min={1}
+                value={form.capacity}
+                onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
+              />
+            </div>
+            <label className="admin-form__check">
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) => setForm({ ...form, active: e.target.checked })}
+              />
+              {d.colActive}
+            </label>
+            {error && <p className="admin-form__error">{error}</p>}
+            <p className="admin-form__note">{d.confirmToggleTableMsg}</p>
           </div>
-        </div>
+        </AdminFormModal>
       )}
 
       {modal === 'detail' && selected && (
-        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
-          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{d.tableDetail}</h2>
-            <dl className="order-modal__dl">
-              <div className="order-modal__row">
-                <dt>{d.colCode}</dt>
-                <dd>{selected.name}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colType}</dt>
-                <dd>{selected.type === 'automatic' ? d.typeAutomatic : d.typeManual}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colTableStatus}</dt>
-                <dd>{getStatusLabel(selected.status, lang)}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colCompany}</dt>
-                <dd>{selected.company ?? '—'}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colOrder}</dt>
-                <dd>{selected.orderReference ?? '—'}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colCapacity}</dt>
-                <dd>{selected.capacity}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colActive}</dt>
-                <dd>{selected.active ? d.yes : d.no}</dd>
-              </div>
-            </dl>
-            <div className="admin-modal__foot">
-              <button type="button" className="admin-btn admin-btn--primary" onClick={() => setModal(null)}>
-                {d.close}
-              </button>
+        <AdminDetailModal title={d.tableDetail} closeLabel={d.close} onClose={() => setModal(null)}>
+          <dl className="order-modal__dl">
+            <div className="order-modal__row">
+              <dt>{d.colCode}</dt>
+              <dd>{selected.name}</dd>
             </div>
-          </div>
-        </div>
+            <div className="order-modal__row">
+              <dt>{d.colType}</dt>
+              <dd>{selected.type === 'automatic' ? d.typeAutomatic : d.typeManual}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colTableStatus}</dt>
+              <dd>{getStatusLabel(selected.status, lang)}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colCompany}</dt>
+              <dd>{selected.company ?? '—'}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colOrder}</dt>
+              <dd>{selected.orderReference ?? '—'}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colCapacity}</dt>
+              <dd>{selected.capacity}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colActive}</dt>
+              <dd>{selected.active ? d.yes : d.no}</dd>
+            </div>
+          </dl>
+        </AdminDetailModal>
       )}
 
       {confirmToggle && (

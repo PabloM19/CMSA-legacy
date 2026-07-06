@@ -5,6 +5,21 @@
   width: 100%;
 }
 
+.alarms-page__tabs {
+  margin-bottom: var(--space-3);
+}
+
+.real-safety-alarms-table__message {
+  max-width: 280px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.operational-alarms-table__row--resolved {
+  opacity: 0.88;
+}
+
 .alarms-page__table {
   padding: 0;
   display: flex;

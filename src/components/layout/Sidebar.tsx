@@ -78,9 +78,13 @@ export function Sidebar() {
       <div className="sidebar__head">
         {collapsed ? (
           <div className="sidebar__brand sidebar__brand--compact">
-            <span className="sidebar__brand-mark" aria-hidden="true">
-              CMSA
-            </span>
+            <img
+              src="/logos/iso.jpg"
+              alt="CMSA"
+              className="sidebar__brand-iso"
+              width={36}
+              height={36}
+            />
           </div>
         ) : (
           <div className="sidebar__brand">

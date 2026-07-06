@@ -1,7 +1,15 @@
 import { mockBacklogOrders, convertCreatedOrder, getSeedDailyOrders } from '../data/mockBacklogOrders'
-import { syncAllDailyOrders, applyDailyOrderSeedLabels } from './dailyOrderHelpers'
+import {
+  DEMO_SCENARIO_VERSION,
+  DEMO_SCENARIO_ORDER_IDS,
+  applyScenarioPlantVisuals,
+  buildFullDemoState,
+  isLegacyScenarioState,
+  hasLegacyProductionOrderIds,
+} from '../data/demoScenario'
+import { buildSyncedDailyOrders, applyDailyOrderSeedLabels } from './dailyOrderHelpers'
 import type { DailyOrder } from '../types/dailyOrder'
-import { createSeedPalletizers, createSeedPlantTables } from '../data/mockPlantTables'
+import { createCleanPalletizers, createCleanPlantTables, createSeedPalletizers, createSeedPlantTables } from '../data/mockPlantTables'
 import type { BacklogOrder } from '../types/backlog'
 import type { CmsaPersistedState, PlantPalletizerElement, PlantPalletizerStatus, PlantTable } from '../types/plant'
 import { readTabletOverrides } from './tabletStorage'
@@ -95,61 +103,64 @@ function syncLegacyCreatedOrders(orders: BacklogOrder[]): BacklogOrder[] {
 
 function seedInitialState(): CmsaPersistedState {
   const orders = normalizePriorities([...mockBacklogOrders])
-  const dailyOrders = syncAllDailyOrders(
-    applyDailyOrderSeedLabels(getSeedDailyOrders()),
-    orders,
-  )
-  const plantTables = rebuildPlantTablesFromOrders(createSeedPlantTables(), orders)
-  return { dailyOrders, orders, plantTables, plantPalletizers: createSeedPalletizers() }
+  const dailyOrders = buildSyncedDailyOrders(orders)
+  return buildFullDemoState(dailyOrders, orders)
 }
 
-const DEMO_ALARM_IDS = ['bk-alm-1', 'bk-alm-2', 'bk-alm-3'] as const
-
-function ensureDemoAlarmOrders(orders: BacklogOrder[]): BacklogOrder[] {
+function ensureDemoScenarioOrders(orders: BacklogOrder[]): BacklogOrder[] {
   const map = new Map(orders.map((order) => [order.id, order]))
 
-  for (const id of DEMO_ALARM_IDS) {
+  for (const id of DEMO_SCENARIO_ORDER_IDS) {
     if (!map.has(id)) {
       const seed = mockBacklogOrders.find((order) => order.id === id)
       if (seed) map.set(id, seed)
     }
   }
 
-  const bk2 = map.get('bk-alm-1')
-  if (bk2?.assignedTableIds?.includes('R4')) {
-    const seed = mockBacklogOrders.find((order) => order.id === 'bk-alm-1')
-    if (seed) map.set('bk-alm-1', seed)
-  }
-
-  const bk7 = map.get('bk-alm-3')
-  if (bk7?.assignedTableIds?.includes('M2')) {
-    const seed = mockBacklogOrders.find((order) => order.id === 'bk-alm-3')
-    if (seed) map.set('bk-alm-3', seed)
-  }
-
   return Array.from(map.values())
 }
 
 function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
+  if (
+    isLegacyScenarioState(state.dailyOrders) ||
+    hasLegacyProductionOrderIds(state.orders) ||
+    state.scenarioVersion !== DEMO_SCENARIO_VERSION
+  ) {
+    const orders = normalizePriorities([...mockBacklogOrders])
+    const dailyOrders = buildSyncedDailyOrders(orders)
+    return buildFullDemoState(dailyOrders, orders)
+  }
+
   let orders = syncLegacyCreatedOrders(
-    ensureDemoAlarmOrders(migrateBacklogOrders(state.orders.map(normalizeOrderFields))),
+    ensureDemoScenarioOrders(migrateBacklogOrders(state.orders.map(normalizeOrderFields))),
   )
   orders = normalizePriorities(orders)
-  const dailyOrders = syncAllDailyOrders(
-    applyDailyOrderSeedLabels(
-      state.dailyOrders?.length ? state.dailyOrders : getSeedDailyOrders(),
-    ),
+  const labeledDaily = applyDailyOrderSeedLabels(
+    state.dailyOrders?.length ? state.dailyOrders : getSeedDailyOrders(),
+  )
+  const dailyOrders = buildSyncedDailyOrders(orders, labeledDaily)
+
+  const usesScenarioOrders = orders.some((o) => DEMO_SCENARIO_ORDER_IDS.includes(o.id))
+  const plantVisuals = usesScenarioOrders
+    ? applyScenarioPlantVisuals(createCleanPlantTables(), createCleanPalletizers(), orders)
+    : {
+        plantTables: rebuildPlantTablesFromOrders(
+          state.plantTables?.length > 0 ? state.plantTables : createSeedPlantTables(),
+          orders,
+        ),
+        plantPalletizers:
+          state.plantPalletizers?.length > 0 ? state.plantPalletizers : createSeedPalletizers(),
+      }
+
+  const plantTables = applyAdminPlantOverrides(plantVisuals.plantTables)
+  const plantPalletizers = plantVisuals.plantPalletizers
+  return {
+    scenarioVersion: DEMO_SCENARIO_VERSION,
+    dailyOrders,
     orders,
-  )
-  const plantTables = applyAdminPlantOverrides(
-    rebuildPlantTablesFromOrders(
-      state.plantTables?.length > 0 ? state.plantTables : createSeedPlantTables(),
-      orders,
-    ),
-  )
-  const plantPalletizers =
-    state.plantPalletizers?.length > 0 ? state.plantPalletizers : createSeedPalletizers()
-  return { dailyOrders, orders, plantTables, plantPalletizers }
+    plantTables,
+    plantPalletizers,
+  }
 }
 
 function applyTabletOverrides(state: CmsaPersistedState): CmsaPersistedState {
@@ -222,7 +233,7 @@ export function saveOrdersAndPlant(
   dailyOrders?: DailyOrder[],
 ): void {
   const current = getState()
-  const nextDaily = dailyOrders ?? syncAllDailyOrders(current.dailyOrders, orders)
+  const nextDaily = dailyOrders ?? buildSyncedDailyOrders(orders)
   saveState({ ...current, orders, plantTables, dailyOrders: nextDaily })
 }
 

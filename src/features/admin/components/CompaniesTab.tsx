@@ -12,7 +12,9 @@ import {
 } from '../../../utils/adminStorage'
 import { loadBacklogOrders } from '../../../utils/backlogStorage'
 import { enrichAdminCompanies, filterAdminCompanies } from '../../../utils/adminViewHelpers'
+import { AdminDetailModal } from './AdminDetailModal'
 import { AdminEmptyState } from './AdminEmptyState'
+import { AdminFormModal } from './AdminFormModal'
 import { AdminSearchBar } from './AdminSearchBar'
 
 interface CompaniesTabProps {
@@ -166,95 +168,81 @@ export function CompaniesTab({ refreshKey, onChanged }: CompaniesTabProps) {
       )}
 
       {(modal === 'create' || modal === 'edit') && (
-        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
-          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">
-              {modal === 'create' ? d.createCompany : d.editCompany}
-            </h2>
-            <div className="admin-form">
-              {modal === 'create' && (
-                <div className="admin-form__row">
-                  <label>{d.colName}</label>
-                  <input
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="SUMO"
-                  />
-                </div>
-              )}
+        <AdminFormModal
+          title={modal === 'create' ? d.createCompany : d.editCompany}
+          subtitle={d.formMockSubtitle}
+          cancelLabel={d.cancel}
+          saveLabel={d.save}
+          onClose={() => setModal(null)}
+          onSave={handleSave}
+        >
+          <div className="admin-form">
+            {modal === 'create' && (
               <div className="admin-form__row">
-                <label>{d.colColor}</label>
+                <label>{d.colName}</label>
                 <input
-                  type="color"
-                  value={form.color}
-                  onChange={(e) => setForm({ ...form, color: e.target.value })}
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="SUMO"
                 />
               </div>
-              <div className="admin-form__row">
-                <label>{d.colCapacity} (0–100)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={form.assignedCapacity}
-                  onChange={(e) => setForm({ ...form, assignedCapacity: Number(e.target.value) })}
-                />
-              </div>
-              {error && <p className="admin-form__error">{error}</p>}
-              <p className="admin-form__note">{d.inactiveHint}</p>
+            )}
+            <div className="admin-form__row">
+              <label>{d.colColor}</label>
+              <input
+                type="color"
+                value={form.color}
+                onChange={(e) => setForm({ ...form, color: e.target.value })}
+              />
             </div>
-            <div className="admin-modal__foot">
-              <button type="button" className="admin-btn" onClick={() => setModal(null)}>
-                {d.cancel}
-              </button>
-              <button type="button" className="admin-btn admin-btn--primary" onClick={handleSave}>
-                {d.save}
-              </button>
+            <div className="admin-form__row">
+              <label>{d.colCapacity} (0–100)</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={form.assignedCapacity}
+                onChange={(e) => setForm({ ...form, assignedCapacity: Number(e.target.value) })}
+              />
             </div>
+            {error && <p className="admin-form__error">{error}</p>}
+            <p className="admin-form__note">{d.inactiveHint}</p>
           </div>
-        </div>
+        </AdminFormModal>
       )}
 
       {modal === 'detail' && selectedEnriched && (
-        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
-          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{d.companyDetail}</h2>
-            <dl className="order-modal__dl">
-              <div className="order-modal__row">
-                <dt>{d.colName}</dt>
-                <dd>{selectedEnriched.name}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colCode}</dt>
-                <dd>{selectedEnriched.code}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colColor}</dt>
-                <dd>
-                  <span className="admin-color-swatch" style={{ background: selectedEnriched.color }} />{' '}
-                  {selectedEnriched.color}
-                </dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.associatedUsers}</dt>
-                <dd>{selectedEnriched.associatedUsers}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.activeOrders}</dt>
-                <dd>{selectedEnriched.activeOrders}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colStatus}</dt>
-                <dd>{selectedEnriched.status === 'activa' ? d.statusActiveF : d.statusInactiveF}</dd>
-              </div>
-            </dl>
-            <div className="admin-modal__foot">
-              <button type="button" className="admin-btn admin-btn--primary" onClick={() => setModal(null)}>
-                {d.close}
-              </button>
+        <AdminDetailModal title={d.companyDetail} closeLabel={d.close} onClose={() => setModal(null)}>
+          <dl className="order-modal__dl">
+            <div className="order-modal__row">
+              <dt>{d.colName}</dt>
+              <dd>{selectedEnriched.name}</dd>
             </div>
-          </div>
-        </div>
+            <div className="order-modal__row">
+              <dt>{d.colCode}</dt>
+              <dd>{selectedEnriched.code}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colColor}</dt>
+              <dd>
+                <span className="admin-color-swatch" style={{ background: selectedEnriched.color }} />{' '}
+                {selectedEnriched.color}
+              </dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.associatedUsers}</dt>
+              <dd>{selectedEnriched.associatedUsers}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.activeOrders}</dt>
+              <dd>{selectedEnriched.activeOrders}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colStatus}</dt>
+              <dd>{selectedEnriched.status === 'activa' ? d.statusActiveF : d.statusInactiveF}</dd>
+            </div>
+          </dl>
+        </AdminDetailModal>
       )}
     </section>
   )

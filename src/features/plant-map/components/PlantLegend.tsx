@@ -85,7 +85,7 @@ export function PlantLegend() {
     {
       key: 'block',
       icon: <Ban size={ICON_SIZE} aria-hidden="true" />,
-      label: d.legendConflict,
+      label: d.legendIconSafety,
     },
   ]
 

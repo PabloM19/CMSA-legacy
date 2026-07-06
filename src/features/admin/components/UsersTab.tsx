@@ -13,7 +13,9 @@ import {
 import { filterAdminUsers, getAdminUserEmail } from '../../../utils/adminViewHelpers'
 import { canEditAdminUser, getAssignableRoles } from '../../../utils/permissions'
 import { AdminConfirmModal } from './AdminConfirmModal'
+import { AdminDetailModal } from './AdminDetailModal'
 import { AdminEmptyState } from './AdminEmptyState'
+import { AdminFormModal } from './AdminFormModal'
 import { AdminSearchBar } from './AdminSearchBar'
 
 interface UsersTabProps {
@@ -202,116 +204,102 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
       )}
 
       {(modal === 'create' || modal === 'edit') && (
-        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
-          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">
-              {modal === 'create' ? d.createUser : d.editUser}
-            </h2>
-            <div className="admin-form">
+        <AdminFormModal
+          title={modal === 'create' ? d.createUser : d.editUser}
+          subtitle={d.formMockSubtitle}
+          cancelLabel={d.cancel}
+          saveLabel={d.save}
+          onClose={() => setModal(null)}
+          onSave={handleSave}
+        >
+          <div className="admin-form">
+            <div className="admin-form__row">
+              <label>{d.colName}</label>
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div className="admin-form__row">
+              <label>{d.colUsername}</label>
+              <input
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+              />
+            </div>
+            <div className="admin-form__grid">
               <div className="admin-form__row">
-                <label>{d.colName}</label>
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div className="admin-form__row">
-                <label>{d.colUsername}</label>
-                <input
-                  value={form.username}
-                  onChange={(e) => setForm({ ...form, username: e.target.value })}
-                />
-              </div>
-              <div className="admin-form__grid">
-                <div className="admin-form__row">
-                  <label>{d.colRole}</label>
-                  <select
-                    value={form.role}
-                    onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
-                  >
-                    {assignableRoles.map((role) => (
-                      <option key={role} value={role}>
-                        {t.roles[role]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="admin-form__row">
-                  <label>{d.colCompany}</label>
-                  <select
-                    value={form.company}
-                    onChange={(e) => setForm({ ...form, company: e.target.value as Company })}
-                  >
-                    <option value="SUMO">SUMO</option>
-                    <option value="MAF">MAF</option>
-                    <option value="GLOBAL">GLOBAL</option>
-                    <option value="CMSA">CMSA</option>
-                  </select>
-                </div>
-              </div>
-              <div className="admin-form__row">
-                <label>{d.colStatus}</label>
+                <label>{d.colRole}</label>
                 <select
-                  value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value as AdminUser['status'] })}
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
                 >
-                  <option value="activo">{d.statusActive}</option>
-                  <option value="inactivo">{d.statusInactive}</option>
+                  {assignableRoles.map((role) => (
+                    <option key={role} value={role}>
+                      {t.roles[role]}
+                    </option>
+                  ))}
                 </select>
               </div>
-              {error && <p className="admin-form__error">{error}</p>}
-              <p className="admin-form__note">{d.inactiveHint}</p>
+              <div className="admin-form__row">
+                <label>{d.colCompany}</label>
+                <select
+                  value={form.company}
+                  onChange={(e) => setForm({ ...form, company: e.target.value as Company })}
+                >
+                  <option value="SUMO">SUMO</option>
+                  <option value="MAF">MAF</option>
+                  <option value="GLOBAL">GLOBAL</option>
+                  <option value="CMSA">CMSA</option>
+                </select>
+              </div>
             </div>
-            <div className="admin-modal__foot">
-              <button type="button" className="admin-btn" onClick={() => setModal(null)}>
-                {d.cancel}
-              </button>
-              <button type="button" className="admin-btn admin-btn--primary" onClick={handleSave}>
-                {d.save}
-              </button>
+            <div className="admin-form__row">
+              <label>{d.colStatus}</label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value as AdminUser['status'] })}
+              >
+                <option value="activo">{d.statusActive}</option>
+                <option value="inactivo">{d.statusInactive}</option>
+              </select>
             </div>
+            {error && <p className="admin-form__error">{error}</p>}
+            <p className="admin-form__note">{d.inactiveHint}</p>
           </div>
-        </div>
+        </AdminFormModal>
       )}
 
       {modal === 'detail' && editingUser && (
-        <div className="order-modal-overlay" role="presentation" onClick={() => setModal(null)}>
-          <div className="order-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2 className="order-modal__title">{d.userDetail}</h2>
-            <dl className="order-modal__dl">
-              <div className="order-modal__row">
-                <dt>{d.colName}</dt>
-                <dd>{editingUser.name}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colUsername}</dt>
-                <dd>{editingUser.username}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colEmail}</dt>
-                <dd>{getAdminUserEmail(editingUser)}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colRole}</dt>
-                <dd>{t.roles[editingUser.role]}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colCompany}</dt>
-                <dd>{editingUser.company}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.colStatus}</dt>
-                <dd>{editingUser.status === 'activo' ? d.statusActive : d.statusInactive}</dd>
-              </div>
-              <div className="order-modal__row">
-                <dt>{d.lastAccess}</dt>
-                <dd>{editingUser.lastAccessMock}</dd>
-              </div>
-            </dl>
-            <div className="admin-modal__foot">
-              <button type="button" className="admin-btn admin-btn--primary" onClick={() => setModal(null)}>
-                {d.close}
-              </button>
+        <AdminDetailModal title={d.userDetail} closeLabel={d.close} onClose={() => setModal(null)}>
+          <dl className="order-modal__dl">
+            <div className="order-modal__row">
+              <dt>{d.colName}</dt>
+              <dd>{editingUser.name}</dd>
             </div>
-          </div>
-        </div>
+            <div className="order-modal__row">
+              <dt>{d.colUsername}</dt>
+              <dd>{editingUser.username}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colEmail}</dt>
+              <dd>{getAdminUserEmail(editingUser)}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colRole}</dt>
+              <dd>{t.roles[editingUser.role]}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colCompany}</dt>
+              <dd>{editingUser.company}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.colStatus}</dt>
+              <dd>{editingUser.status === 'activo' ? d.statusActive : d.statusInactive}</dd>
+            </div>
+            <div className="order-modal__row">
+              <dt>{d.lastAccess}</dt>
+              <dd>{editingUser.lastAccessMock}</dd>
+            </div>
+          </dl>
+        </AdminDetailModal>
       )}
 
       {confirmDeactivate && (

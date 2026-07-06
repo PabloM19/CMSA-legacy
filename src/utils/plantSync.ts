@@ -86,9 +86,7 @@ export function rebuildPlantTablesFromOrders(
     status: FREE,
     company: null,
     orderId: null,
-    alert: t.id === 'M5' && orders.some((o) => o.id === 'bk-5' && isBlockedProduction(o))
-      ? t.alert
-      : null,
+    alert: null,
   }))
 
   orders.forEach((order) => {
@@ -115,7 +113,7 @@ export function rebuildPlantTablesFromOrders(
       next = next.map((table) => {
         if (!ids.includes(table.id)) return table
         const speedStatus =
-          order.id === 'bk-alm-1' && table.type === 'automatic'
+          order.id === 'ORD-NAV-001' && table.type === 'automatic'
             ? ('slow' as const)
             : table.speedStatus
         return {

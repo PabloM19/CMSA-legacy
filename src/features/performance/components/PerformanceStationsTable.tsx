@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { Eye, X } from 'lucide-react'
 import { CircularMetric } from '../../../components/ui/CircularMetric'
 import { useLanguage } from '../../../i18n/LanguageContext'
@@ -189,15 +188,5 @@ export function PerformanceStationsTable({ rows, onSelect }: PerformanceStations
         </table>
       </div>
     </section>
-  )
-}
-
-export function PerformanceGuestActions() {
-  const { t } = useLanguage()
-
-  return (
-    <Link to="/login" className="ui-btn ui-btn--primary ui-btn--sm">
-      {t.common.signIn}
-    </Link>
   )
 }
