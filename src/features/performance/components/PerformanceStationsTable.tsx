@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { Eye, X } from 'lucide-react'
 import { CircularMetric } from '../../../components/ui/CircularMetric'
 import { useLanguage } from '../../../i18n/LanguageContext'
@@ -102,13 +103,56 @@ interface PerformanceStationsTableProps {
   onSelect: (row: StationPerformanceRow) => void
 }
 
+type CompanyFilter = 'all' | 'SUMO' | 'MAF'
+
+const COMPANY_SORT_ORDER: Record<'SUMO' | 'MAF', number> = {
+  SUMO: 0,
+  MAF: 1,
+}
+
+function sortRowsByCompany(rows: StationPerformanceRow[]): StationPerformanceRow[] {
+  return [...rows].sort((a, b) => {
+    const aOrder = a.company ? COMPANY_SORT_ORDER[a.company] ?? 2 : 2
+    const bOrder = b.company ? COMPANY_SORT_ORDER[b.company] ?? 2 : 2
+    if (aOrder !== bOrder) return aOrder - bOrder
+    return a.name.localeCompare(b.name, undefined, { numeric: true })
+  })
+}
+
 export function PerformanceStationsTable({ rows, onSelect }: PerformanceStationsTableProps) {
   const { t } = useLanguage()
   const d = t.performance
+  const [companyFilter, setCompanyFilter] = useState<CompanyFilter>('all')
+
+  const visibleRows = useMemo(() => {
+    if (companyFilter === 'all') return sortRowsByCompany(rows)
+    return sortRowsByCompany(rows.filter((row) => row.company === companyFilter))
+  }, [rows, companyFilter])
+
+  const companyOptions: { id: CompanyFilter; label: string }[] = [
+    { id: 'all', label: d.filterCompanyAll },
+    { id: 'SUMO', label: 'SUMO' },
+    { id: 'MAF', label: 'MAF' },
+  ]
 
   return (
     <section className="performance-stations dash-card">
-      <h2 className="performance-stations__title">{d.stationsTitle}</h2>
+      <div className="performance-stations__head">
+        <h2 className="performance-stations__title">{d.stationsTitle}</h2>
+        <div className="admin-filter-bar performance-stations__filters" role="group" aria-label={d.filterCompanyLabel}>
+          {companyOptions.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`admin-filter-bar__btn performance-stations__filter-btn performance-stations__filter-btn--${opt.id.toLowerCase()}${companyFilter === opt.id ? ' admin-filter-bar__btn--active' : ''}`}
+              onClick={() => setCompanyFilter(opt.id)}
+              aria-pressed={companyFilter === opt.id}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="admin-table-wrap">
         <table className="performance-stations__table">
           <thead>
@@ -124,7 +168,7 @@ export function PerformanceStationsTable({ rows, onSelect }: PerformanceStations
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
+            {visibleRows.map((row) => {
               const typeName = typeLabel(row.type, d)
               return (
                 <tr

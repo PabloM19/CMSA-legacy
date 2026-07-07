@@ -124,7 +124,6 @@ export const NAV_ITEMS: { to: string; key: NavKey }[] = [
   { to: '/performance', key: 'performance' },
   { to: '/daily-orders', key: 'dailyOrders' },
   { to: '/production-orders', key: 'productionOrders' },
-  { to: '/orders/new', key: 'newOrder' },
   { to: '/references', key: 'references' },
   { to: '/alarms', key: 'alarms' },
   { to: '/admin', key: 'admin' },
@@ -169,10 +168,6 @@ export function getMobileNavItems(user: User) {
     (item) => item.key !== 'tablet' && item.key !== 'mobile',
   )
 
-  if (isOperator(user)) {
-    items = items.filter((item) => item.key !== 'newOrder')
-  }
-
   if (!items.some((item) => item.key === 'profile')) {
     items.push({ to: '/profile', key: 'profile' })
   }
@@ -188,7 +183,6 @@ export function getVisibleNavItems(user: User) {
       return isSupervisor(user)
     }
     if (
-      item.key === 'newOrder' ||
       item.key === 'dailyOrders' ||
       item.key === 'productionOrders' ||
       item.key === 'alarms'

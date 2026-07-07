@@ -85,8 +85,7 @@ export function getOrderStatusBadge(order: BacklogOrder, lang: Lang): StatusBadg
   }
   if (
     order.column === 'en_preparacion' &&
-    order.preparationStatus === 'pending_preparation' &&
-    !(order.assignedTableIds?.length ?? 0)
+    order.preparationStatus === 'pending_preparation'
   ) {
     return lang === 'es'
       ? { label: 'Pendiente de aceptación', variant: 'pending' }

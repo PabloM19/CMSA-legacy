@@ -314,7 +314,8 @@
   color: var(--color-gray-600);
 }
 
-.new-order-summary__status--readyToCalculate {
+.new-order-summary__status--readyToCalculate,
+.new-order-summary__status--ready {
   background: var(--color-brand-pale);
   color: var(--color-brand-deep);
 }

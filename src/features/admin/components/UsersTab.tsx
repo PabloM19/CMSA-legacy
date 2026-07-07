@@ -7,6 +7,7 @@ import type { Company, UserRole } from '../../../types/auth'
 import {
   createAdminUser,
   getAdminUsers,
+  resetAdminUserPassword,
   toggleAdminUserStatus,
   updateAdminUser,
 } from '../../../utils/adminStorage'
@@ -53,14 +54,17 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
   const [modal, setModal] = useState<'create' | 'edit' | 'detail' | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<UserForm>(EMPTY_FORM)
+  const [formDirty, setFormDirty] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmDeactivate, setConfirmDeactivate] = useState<AdminUser | null>(null)
+  const [confirmResetPassword, setConfirmResetPassword] = useState<AdminUser | null>(null)
 
   const filtered = filterAdminUsers(users, search, lang)
   const editingUser = editingId ? users.find((u) => u.id === editingId) : null
 
   function openCreate() {
     setForm({ ...EMPTY_FORM, role: assignableRoles[0] ?? 'user' })
+    setFormDirty(false)
     setEditingId(null)
     setError(null)
     setModal('create')
@@ -75,6 +79,7 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
       company: u.company,
       status: u.status,
     })
+    setFormDirty(false)
     setEditingId(u.id)
     setError(null)
     setModal('edit')
@@ -105,6 +110,7 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
     }
 
     setModal(null)
+    setFormDirty(false)
     onChanged()
   }
 
@@ -127,6 +133,23 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
       return
     }
     setConfirmDeactivate(null)
+    onChanged()
+  }
+
+  function handleResetPassword(u: AdminUser) {
+    if (!actor || !canEditAdminUser(actor, u.role)) return
+    setConfirmResetPassword(u)
+  }
+
+  function confirmReset() {
+    if (!actor || !confirmResetPassword) return
+    const result = resetAdminUserPassword(actor, confirmResetPassword.id)
+    if (!result.ok) {
+      alert(d.errors[result.error as keyof typeof d.errors] ?? d.errors.generic)
+      setConfirmResetPassword(null)
+      return
+    }
+    setConfirmResetPassword(null)
     onChanged()
   }
 
@@ -175,6 +198,9 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
                   <div className="admin-card__tags">
                     <span className={`admin-badge admin-badge--${u.company.toLowerCase()}`}>{u.company}</span>
                     <span className="admin-badge admin-badge--master">{t.roles[u.role]}</span>
+                    {u.requiresPasswordSetup && (
+                      <span className="admin-badge admin-badge--warn">{d.passwordSetupPending}</span>
+                    )}
                   </div>
                   {u.lastAccessMock && (
                     <p className="admin-card__foot">
@@ -190,6 +216,9 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
                     <>
                       <button type="button" className="admin-btn" onClick={() => openEdit(u)}>
                         {d.editMock}
+                      </button>
+                      <button type="button" className="admin-btn" onClick={() => handleResetPassword(u)}>
+                        {d.resetPassword}
                       </button>
                       <button type="button" className="admin-btn" onClick={() => handleToggle(u)}>
                         {u.status === 'activo' ? d.deactivate : d.activate}
@@ -209,19 +238,32 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
           subtitle={d.formMockSubtitle}
           cancelLabel={d.cancel}
           saveLabel={d.save}
-          onClose={() => setModal(null)}
+          unsavedChanges={formDirty}
+          onClose={() => {
+            setModal(null)
+            setFormDirty(false)
+          }}
           onSave={handleSave}
         >
           <div className="admin-form">
             <div className="admin-form__row">
               <label>{d.colName}</label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <input
+                value={form.name}
+                onChange={(e) => {
+                  setForm({ ...form, name: e.target.value })
+                  setFormDirty(true)
+                }}
+              />
             </div>
             <div className="admin-form__row">
               <label>{d.colUsername}</label>
               <input
                 value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                onChange={(e) => {
+                  setForm({ ...form, username: e.target.value })
+                  setFormDirty(true)
+                }}
               />
             </div>
             <div className="admin-form__grid">
@@ -229,7 +271,10 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
                 <label>{d.colRole}</label>
                 <select
                   value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
+                  onChange={(e) => {
+                    setForm({ ...form, role: e.target.value as UserRole })
+                    setFormDirty(true)
+                  }}
                 >
                   {assignableRoles.map((role) => (
                     <option key={role} value={role}>
@@ -242,7 +287,10 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
                 <label>{d.colCompany}</label>
                 <select
                   value={form.company}
-                  onChange={(e) => setForm({ ...form, company: e.target.value as Company })}
+                  onChange={(e) => {
+                    setForm({ ...form, company: e.target.value as Company })
+                    setFormDirty(true)
+                  }}
                 >
                   <option value="SUMO">SUMO</option>
                   <option value="MAF">MAF</option>
@@ -255,14 +303,20 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
               <label>{d.colStatus}</label>
               <select
                 value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value as AdminUser['status'] })}
+                onChange={(e) => {
+                  setForm({ ...form, status: e.target.value as AdminUser['status'] })
+                  setFormDirty(true)
+                }}
               >
                 <option value="activo">{d.statusActive}</option>
                 <option value="inactivo">{d.statusInactive}</option>
               </select>
             </div>
             {error && <p className="admin-form__error">{error}</p>}
-            <p className="admin-form__note">{d.inactiveHint}</p>
+            {modal === 'create' && (
+              <p className="admin-form__note">{d.createUserPasswordHint}</p>
+            )}
+            {modal === 'edit' && <p className="admin-form__note">{d.inactiveHint}</p>}
           </div>
         </AdminFormModal>
       )}
@@ -295,11 +349,28 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
               <dd>{editingUser.status === 'activo' ? d.statusActive : d.statusInactive}</dd>
             </div>
             <div className="order-modal__row">
+              <dt>{d.colPasswordStatus}</dt>
+              <dd>
+                {editingUser.requiresPasswordSetup ? d.passwordSetupPending : d.passwordSetupDone}
+              </dd>
+            </div>
+            <div className="order-modal__row">
               <dt>{d.lastAccess}</dt>
               <dd>{editingUser.lastAccessMock}</dd>
             </div>
           </dl>
         </AdminDetailModal>
+      )}
+
+      {confirmResetPassword && (
+        <AdminConfirmModal
+          title={d.confirmResetPassword}
+          message={d.confirmResetPasswordMsg}
+          confirmLabel={d.resetPassword}
+          cancelLabel={d.cancel}
+          onConfirm={confirmReset}
+          onCancel={() => setConfirmResetPassword(null)}
+        />
       )}
 
       {confirmDeactivate && (

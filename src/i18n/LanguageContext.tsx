@@ -11,7 +11,7 @@ import {
 import { useAuth } from '../features/auth/AuthContext'
 import { getDateLocale, getTranslations, type Lang, type Translations } from './translations'
 import { readGuestLanguage, readUserPreferences, saveGuestLanguage, patchUserPreferences } from '../utils/userPreferences'
-import { getSession } from '../utils/auth'
+import { getValidSession } from '../utils/auth'
 
 interface LanguageContextValue {
   lang: Lang
@@ -23,7 +23,7 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null)
 
 function resolveInitialLang(): Lang {
-  const session = getSession()
+  const session = getValidSession()
   if (session?.user) {
     return readUserPreferences(session.user.username).language
   }

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { ModalPortal } from '../../../components/ui/ModalPortal'
+import { useSessionUnsaved } from '../../auth/useSessionUnsaved'
 
 interface AdminFormModalProps {
   title: string
@@ -11,6 +12,7 @@ interface AdminFormModalProps {
   onSave: () => void
   children: ReactNode
   wide?: boolean
+  unsavedChanges?: boolean
 }
 
 export function AdminFormModal({
@@ -22,7 +24,10 @@ export function AdminFormModal({
   onSave,
   children,
   wide = false,
+  unsavedChanges = false,
 }: AdminFormModalProps) {
+  useSessionUnsaved(unsavedChanges)
+
   return (
     <ModalPortal onEscape={onClose}>
       <div className="order-modal-overlay" role="presentation" onClick={onClose}>

@@ -56,3 +56,15 @@ export function isSearchActive(query: string): boolean {
 export function findProductById(id: string): MockProduct | undefined {
   return getAllCatalogProducts().find((p) => p.id === id)
 }
+
+export function findProductByReference(referencia: string): MockProduct | undefined {
+  const ref = referencia.trim().toLowerCase()
+  if (!ref) return undefined
+  return getAllCatalogProducts().find((p) => p.referenciaProducto.toLowerCase() === ref)
+}
+
+export function getCatalogReferenceOptions(): MockProduct[] {
+  return getAllCatalogProducts()
+    .filter((p) => p.activo && p.producto === 'Naranja')
+    .sort((a, b) => a.referenciaProducto.localeCompare(b.referenciaProducto, 'es'))
+}

@@ -41,7 +41,7 @@ function product(
 export const MOCK_PRODUCTS: MockProduct[] = [
   product({
     id: 'orange-001',
-    referenciaProducto: 'NAR-NAV-001',
+    referenciaProducto: 'REF-NAVELINA',
     nombre: 'Naranja Navelina calibre S',
     variedad: 'Navelina',
     grupo: 'Navel',
@@ -77,7 +77,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-004',
-    referenciaProducto: 'NAR-NEW-004',
+    referenciaProducto: 'REF-NEWHALL',
     nombre: 'Naranja Newhall calibre M',
     variedad: 'Newhall',
     grupo: 'Temprana',
@@ -101,7 +101,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-006',
-    referenciaProducto: 'NAR-WAS-006',
+    referenciaProducto: 'REF-WASHINGTON-NAVEL',
     nombre: 'Naranja Washington Navel calibre M',
     variedad: 'Washington Navel',
     grupo: 'Navel',
@@ -137,7 +137,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-009',
-    referenciaProducto: 'NAR-CAR-009',
+    referenciaProducto: 'REF-CARA-CARA',
     nombre: 'Naranja Cara Cara calibre M',
     variedad: 'Cara Cara',
     grupo: 'Navel',
@@ -161,7 +161,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-011',
-    referenciaProducto: 'NAR-LAN-011',
+    referenciaProducto: 'REF-LANE-LATE',
     nombre: 'Naranja Lane Late calibre M',
     variedad: 'Lane Late',
     grupo: 'Tardía',
@@ -185,7 +185,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-013',
-    referenciaProducto: 'NAR-NVL-013',
+    referenciaProducto: 'REF-NAVELATE',
     nombre: 'Naranja Navelate calibre M',
     variedad: 'Navelate',
     grupo: 'Navel',
@@ -257,7 +257,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-019',
-    referenciaProducto: 'NAR-SAL-019',
+    referenciaProducto: 'REF-SALUSTIANA',
     nombre: 'Naranja Salustiana caja zumo 15 kg',
     variedad: 'Salustiana',
     grupo: 'Blanca / Valencia',
@@ -281,7 +281,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-021',
-    referenciaProducto: 'NAR-VAL-021',
+    referenciaProducto: 'REF-VALENCIA-LATE',
     nombre: 'Naranja Valencia Late calibre L',
     variedad: 'Valencia Late',
     grupo: 'Blanca / Valencia',
@@ -317,7 +317,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-024',
-    referenciaProducto: 'NAR-SAN-024',
+    referenciaProducto: 'REF-SANGUINELLI',
     nombre: 'Naranja Sanguinelli especial calibre M',
     variedad: 'Sanguinelli',
     grupo: 'Sanguina',
@@ -329,7 +329,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-025',
-    referenciaProducto: 'NAR-TAR-025',
+    referenciaProducto: 'REF-TAROCCO-ROSSO',
     nombre: 'Naranja Tarocco Rosso sanguina calibre M',
     variedad: 'Tarocco Rosso',
     grupo: 'Sanguina',
@@ -341,7 +341,7 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   }),
   product({
     id: 'orange-026',
-    referenciaProducto: 'NAR-MOR-026',
+    referenciaProducto: 'REF-MORO',
     nombre: 'Naranja Moro calibre M',
     variedad: 'Moro',
     grupo: 'Sanguina',

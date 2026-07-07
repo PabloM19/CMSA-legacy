@@ -74,7 +74,7 @@ export function reserveStationsForOrder(
     if (!idSet.has(t.id)) return t
     return {
       ...t,
-      status: 'preparing' as const,
+      status: 'occupied' as const,
       company: order.company,
       orderId: order.id,
     }
@@ -82,19 +82,20 @@ export function reserveStationsForOrder(
 
   const nextOrder: BacklogOrder = {
     ...order,
-    column: 'en_preparacion',
-    preparationStatus: 'waiting_cell',
+    column: 'en_produccion',
+    productionState: 'producing',
+    preparationStatus: undefined,
     assignedTableIds: selectedIds,
     assignedTables: selectedIds,
     assignmentMode,
-    validationTables,
-    tablesValidated: false,
+    validationTables: validationTables.map((vt) => ({ ...vt, status: 'validada' as const })),
+    tablesValidated: true,
     alerts: order.alerts.filter((a) => !a.includes('Pendiente de aceptación')),
     auditTrail: [
       ...order.auditTrail,
       {
         id: `audit-${Date.now()}`,
-        action: 'Orden aceptada — en preparación',
+        action: 'Orden aceptada — en producción',
         timestamp: new Date().toISOString(),
       },
     ],

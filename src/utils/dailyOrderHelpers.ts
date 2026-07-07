@@ -140,18 +140,11 @@ export function applyDailyOrderSeedLabels(orders: DailyOrder[]): DailyOrder[] {
 }
 
 export function isPendingAcceptanceColumn(order: BacklogOrder): boolean {
-  if (order.column === 'en_backlog') return true
-  if (order.column !== 'en_preparacion') return false
-  const hasTables = (order.assignedTableIds?.length ?? 0) > 0
-  return !hasTables && order.preparationStatus === 'pending_preparation'
+  return order.column === 'en_preparacion' && order.preparationStatus === 'pending_preparation'
 }
 
 export function isInProductionColumn(order: BacklogOrder): boolean {
-  if (order.column === 'en_produccion') return true
-  if (order.column !== 'en_preparacion') return false
-  const hasTables = (order.assignedTableIds?.length ?? 0) > 0
-  if (hasTables) return true
-  return order.preparationStatus === 'waiting_cell' || order.preparationStatus === 'preparing_recipe'
+  return order.column === 'en_produccion'
 }
 
 export function canConfirmCellReady(order: BacklogOrder): boolean {

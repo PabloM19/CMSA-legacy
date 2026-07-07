@@ -1392,6 +1392,57 @@
   font-style: italic;
 }
 
+.create-daily-order-modal {
+  max-width: 36rem;
+}
+
+.create-daily-order-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.create-daily-order-modal__company-lock {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+}
+
+.reference-autofill {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-gray-50);
+}
+
+.reference-autofill__hint {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.reference-autofill__grid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.reference-autofill--compact {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.reference-autofill--compact .reference-autofill__hint {
+  display: none;
+}
+
+.launch-order-modal__reference {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
 @media (max-width: 960px) {
   .production-orders-panel__columns {
     grid-template-columns: 1fr;

@@ -20,17 +20,22 @@ export function PlantMapViewFilterBar({ value, onChange }: PlantMapViewFilterBar
   }
 
   return (
-    <div className="plant-map-view-filter admin-filter-bar" role="group" aria-label={d.viewFilterLabel}>
-      {FILTERS.map((id) => (
-        <button
-          key={id}
-          type="button"
-          className={`admin-filter-bar__btn${value === id ? ' admin-filter-bar__btn--active' : ''}`}
-          onClick={() => onChange(id)}
-        >
-          {labels[id]}
-        </button>
-      ))}
-    </div>
+    <section className="plant-map-view-filter-section" aria-labelledby="plant-map-view-filter-title">
+      <h2 id="plant-map-view-filter-title" className="plant-map-view-filter-section__title">
+        {d.viewFilterSectionTitle}
+      </h2>
+      <div className="plant-map-view-filter admin-filter-bar" role="group" aria-label={d.viewFilterLabel}>
+        {FILTERS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            className={`admin-filter-bar__btn${value === id ? ' admin-filter-bar__btn--active' : ''}`}
+            onClick={() => onChange(id)}
+          >
+            {labels[id]}
+          </button>
+        ))}
+      </div>
+    </section>
   )
 }

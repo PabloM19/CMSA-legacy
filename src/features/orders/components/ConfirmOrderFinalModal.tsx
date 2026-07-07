@@ -1,19 +1,19 @@
 import { AlertTriangle } from 'lucide-react'
 import { useLanguage } from '../../../i18n/LanguageContext'
-import type { NewOrderFormData, OrderCalculation } from '../../../types/newOrder'
+import type { NewOrderFormData } from '../../../types/newOrder'
 
 interface ConfirmOrderFinalModalProps {
   form: NewOrderFormData
-  calculation: OrderCalculation
   onBackToModify: () => void
   onAcceptFinal: () => void
+  submitting?: boolean
 }
 
 export function ConfirmOrderFinalModal({
   form,
-  calculation,
   onBackToModify,
   onAcceptFinal,
+  submitting = false,
 }: ConfirmOrderFinalModalProps) {
   const { t } = useLanguage()
   const d = t.newOrder
@@ -43,19 +43,13 @@ export function ConfirmOrderFinalModal({
             <AlertTriangle size={20} aria-hidden="true" />
             <p>{d.criticalNotice}</p>
           </div>
-
-          {calculation.blocked && (
-            <p className="order-modal__blocked" role="alert">
-              <strong>{d.acceptBlocked}</strong>
-              <span>{calculation.blockReason ?? d.acceptBlockedHint}</span>
-            </p>
-          )}
         </div>
 
         <div className="order-modal__actions">
           <button
             type="button"
             className="order-btn order-btn--ghost order-btn--large"
+            disabled={submitting}
             onClick={onBackToModify}
           >
             {d.backToModify}
@@ -63,11 +57,10 @@ export function ConfirmOrderFinalModal({
           <button
             type="button"
             className="order-btn order-btn--primary order-btn--large"
-            disabled={calculation.blocked}
-            title={calculation.blockReason}
+            disabled={submitting}
             onClick={onAcceptFinal}
           >
-            {d.acceptFinal}
+            {submitting ? d.creating : d.acceptFinal}
           </button>
         </div>
       </div>

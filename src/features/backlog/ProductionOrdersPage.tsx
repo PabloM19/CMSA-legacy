@@ -11,7 +11,6 @@ import { getState, saveOrdersAndPlant } from '../../utils/backlogStorage'
 import { applyWithdrawToDailyOrder } from '../../utils/dailyOrderOperations'
 import { canWithdrawProduction } from '../../utils/permissions'
 import { logOrderWithdrawn } from '../../utils/activityLogActions'
-import { confirmRecipeForOrder } from '../../utils/preparationHelpers'
 import { withdrawOrderFromProduction, type WithdrawReason } from '../../utils/withdrawProduction'
 import { ProductionOrdersPanel } from './components/ProductionOrdersPanel'
 import { BacklogToast } from './components/BacklogToast'
@@ -103,15 +102,7 @@ export function ProductionOrdersPage() {
     const nextOrders = orders.map((o) => (o.id === nextOrder.id ? nextOrder : o))
     persist(nextOrders, nextPlant)
     setPrepareOrder(null)
-    showToast(b.prepareSuccess, 'success')
-  }
-
-  function handleConfirmCell(order: BacklogOrder) {
-    if (!user) return
-    const result = confirmRecipeForOrder(order, plantTables, user.name)
-    const nextOrders = orders.map((o) => (o.id === order.id ? result.order : o))
-    persist(nextOrders, result.plantTables)
-    showToast(b.confirmRecipeSuccess, 'success')
+    showToast(b.acceptOrderSuccess, 'success')
   }
 
   function handleRefresh() {
@@ -156,7 +147,6 @@ export function ProductionOrdersPage() {
         orders={orders}
         onViewDetail={setDetailOrder}
         onPrepare={setPrepareOrder}
-        onConfirmCell={handleConfirmCell}
         onWithdraw={(order) => {
           if (!user || !canWithdrawProduction(user)) {
             showToast(b.noPermission, 'error')

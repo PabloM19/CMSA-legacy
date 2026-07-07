@@ -29,6 +29,7 @@ import { PlantMapSummary } from '../components/PlantMapSummary'
 import { PlantMapViewFilterBar } from '../components/PlantMapViewFilterBar'
 import { SafetyAlarmModal } from '../components/SafetyAlarmModal'
 import type { PlantElementView } from '../../../types/plant'
+import '../../dashboard/dashboard.css'
 import '../plant-map.css'
 
 /** Vista escritorio — se activa por ancho (≥1100px) dentro de /plant-map */
@@ -117,11 +118,11 @@ export function PlantMapDesktopView() {
 
       <PlantLegend />
 
-      <PlantMapViewFilterBar value={viewFilter} onChange={setViewFilter} />
-
       {isAuthenticated && (
         <PlantMapQuickActions onSimulateSafetyAlarm={handleSimulateSafetyAlarm} safetyBlocked={blocked} />
       )}
+
+      <PlantMapViewFilterBar value={viewFilter} onChange={setViewFilter} />
 
       <PlantLayout
         elements={elements}

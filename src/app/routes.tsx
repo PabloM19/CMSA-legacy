@@ -4,7 +4,7 @@ import { RootRedirect } from './RootRedirect'
 import { AppLayout } from '../components/layout/AppLayout'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ProtectedRoute } from '../features/auth/ProtectedRoute'
-import { NewOrderPage } from '../features/orders/NewOrderPage'
+import { SessionGuard } from '../features/auth/SessionGuard'
 import { DailyOrdersPage } from '../features/backlog/DailyOrdersPage'
 import { ProductionOrdersPage } from '../features/backlog/ProductionOrdersPage'
 import { PlantMapPage } from '../features/plant-map/PlantMapPage'
@@ -15,10 +15,16 @@ import { AlarmsPage } from '../features/alarms/AlarmsPage'
 import { ReferencesPage } from '../features/references/ReferencesPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
 import { PerformancePage } from '../features/performance/PerformancePage'
+import { NewOrderPage } from '../features/orders/NewOrderPage'
 
 export const router = createBrowserRouter([
   {
-    element: <Outlet />,
+    element: (
+      <>
+        <SessionGuard />
+        <Outlet />
+      </>
+    ),
     children: [
       {
         path: '/login',

@@ -4,12 +4,12 @@ import './styles/globals.css'
 import './styles/plant-tables.css'
 import App from './app/App'
 import { registerDemoConsoleApi } from './utils/demoSeed'
-import { getSession } from './utils/auth'
+import { getValidSession } from './utils/auth'
 import { applyThemeToDocument, readStoredTheme } from './theme/themeStorage'
 
 registerDemoConsoleApi()
 
-const session = getSession()
+const session = getValidSession()
 applyThemeToDocument(
   session?.user ? readStoredTheme(session.user.username) : 'light',
 )

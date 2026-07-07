@@ -15,7 +15,6 @@ import { DailyOrdersSummary } from './components/DailyOrdersSummary'
 import { DailyOrdersTable } from './components/DailyOrdersTable'
 import { ExpandDailyOrderModal } from './components/ExpandDailyOrderModal'
 import { LaunchProductionOrderModal } from './components/LaunchProductionOrderModal'
-import { CreateDailyOrderModal } from './components/CreateDailyOrderModal'
 import { DailyOrderDetailModal } from './components/DailyOrderDetailModal'
 import { BacklogToast } from './components/BacklogToast'
 import '../dashboard/dashboard.css'
@@ -35,7 +34,6 @@ export function DailyOrdersPage() {
   const [launchDaily, setLaunchDaily] = useState<DailyOrder | null>(null)
   const [expandDaily, setExpandDaily] = useState<DailyOrder | null>(null)
   const [detailDaily, setDetailDaily] = useState<DailyOrder | null>(null)
-  const [showCreate, setShowCreate] = useState(false)
   const [toast, setToast] = useState<{
     message: string
     type: 'error' | 'success' | 'info'
@@ -90,13 +88,15 @@ export function DailyOrdersPage() {
         <section className="dash-quick">
           <h2 className="dash-quick__title">{b.quickActionsTitle}</h2>
           <div className="dash-quick__grid">
-            <button type="button" className="dash-quick__btn" onClick={() => setShowCreate(true)}>
-              <span className="dash-quick__btn-icon">
-                <Plus size={24} strokeWidth={1.75} />
-              </span>
-              <span className="dash-quick__btn-label">{d.newDailyOrder}</span>
-              <span className="dash-quick__btn-hint">{d.newDailyOrderHint}</span>
-            </button>
+            {canAccessRoute(user, '/orders/new') && (
+              <Link to="/orders/new" className="dash-quick__btn">
+                <span className="dash-quick__btn-icon">
+                  <Plus size={24} strokeWidth={1.75} />
+                </span>
+                <span className="dash-quick__btn-label">{d.newDailyOrder}</span>
+                <span className="dash-quick__btn-hint">{d.newDailyOrderHint}</span>
+              </Link>
+            )}
             {canAccessRoute(user, '/production-orders') && (
               <Link to="/production-orders" className="dash-quick__btn">
                 <span className="dash-quick__btn-icon">
@@ -162,18 +162,6 @@ export function DailyOrdersPage() {
           onExpanded={(nextDaily) => {
             persist(orders, plantTables, nextDaily)
             showToast(b.expandSuccess, 'success')
-          }}
-        />
-      )}
-
-      {showCreate && user && (
-        <CreateDailyOrderModal
-          user={user}
-          dailyOrders={dailyOrders}
-          onClose={() => setShowCreate(false)}
-          onCreated={(nextDaily) => {
-            persist(orders, plantTables, nextDaily)
-            showToast(d.createSuccess, 'success')
           }}
         />
       )}

@@ -1,33 +1,21 @@
-import { AlertTriangle } from 'lucide-react'
 import { CompanyBadge } from '../../../components/ui/StatusBadge'
 import { useLanguage } from '../../../i18n/LanguageContext'
-import type { NewOrderFormData, OrderCalculation } from '../../../types/newOrder'
+import type { NewOrderFormData } from '../../../types/newOrder'
 import { BarcodeDisplay } from './BarcodeDisplay'
 
 interface ConfirmOrderModalProps {
   form: NewOrderFormData
-  boxes: number
-  boxesPerHour: number
-  calculation: OrderCalculation
   onModify: () => void
   onAccept: () => void
 }
 
-export function ConfirmOrderModal({
-  form,
-  boxes,
-  boxesPerHour,
-  calculation,
-  onModify,
-  onAccept,
-}: ConfirmOrderModalProps) {
+export function ConfirmOrderModal({ form, onModify, onAccept }: ConfirmOrderModalProps) {
   const { t } = useLanguage()
   const d = t.newOrder
 
   const productLine =
-    form.productName.trim() || (form.product.trim() && form.variety.trim()
-      ? `${form.product} · ${form.variety}`
-      : '—')
+    form.productName.trim() ||
+    (form.product.trim() && form.variety.trim() ? `${form.product} · ${form.variety}` : '—')
 
   return (
     <div className="order-modal-overlay" role="presentation" onClick={onModify}>
@@ -42,6 +30,7 @@ export function ConfirmOrderModal({
           <h2 id="confirm-order-title" className="order-modal__title">
             {d.confirmTitle}
           </h2>
+          <p className="order-modal__subtitle">{d.confirmSummaryDesc}</p>
         </header>
 
         <div className="order-modal__body order-modal__body--compact">
@@ -58,73 +47,32 @@ export function ConfirmOrderModal({
             </div>
             <div className="order-modal__grid-item order-modal__grid-item--full">
               <dt>{d.barcode}</dt>
-              <dd>
-                {form.barcode ? (
-                  <BarcodeDisplay value={form.barcode} />
-                ) : (
-                  '—'
-                )}
-              </dd>
+              <dd>{form.barcode ? <BarcodeDisplay value={form.barcode} /> : '—'}</dd>
             </div>
             <div className="order-modal__grid-item order-modal__grid-item--full">
               <dt>{d.product}</dt>
               <dd>{productLine}</dd>
             </div>
             <div className="order-modal__grid-item">
-              <dt>{d.boxes}</dt>
-              <dd>{boxes.toLocaleString()}</dd>
+              <dt>{d.variety}</dt>
+              <dd>{form.variety || '—'}</dd>
             </div>
             <div className="order-modal__grid-item">
-              <dt>{d.boxesPerHour}</dt>
-              <dd>{boxesPerHour.toLocaleString()}</dd>
-            </div>
-            <div className="order-modal__grid-item">
-              <dt>{d.requiredTables}</dt>
-              <dd>{calculation.requiredTables}</dd>
-            </div>
-            <div className="order-modal__grid-item">
-              <dt>{d.eta}</dt>
-              <dd>{calculation.eta}</dd>
+              <dt>{d.type}</dt>
+              <dd>{form.type || '—'}</dd>
             </div>
             <div className="order-modal__grid-item order-modal__grid-item--full">
-              <dt>{d.estimatedEnd}</dt>
-              <dd>{calculation.estimatedEnd}</dd>
+              <dt>{d.boxFormat}</dt>
+              <dd>{form.boxFormat || '—'}</dd>
             </div>
           </dl>
-
-          {calculation.alerts.length > 0 && (
-            <ul className="order-modal__alerts order-modal__alerts--compact">
-              {calculation.alerts.map((alert) => (
-                <li
-                  key={alert.message}
-                  className={`order-modal__alert order-modal__alert--${alert.type}`}
-                >
-                  <AlertTriangle size={14} aria-hidden="true" />
-                  {alert.message}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {calculation.blocked && (
-            <p className="order-modal__blocked" role="alert">
-              <strong>{d.acceptBlocked}</strong>
-              <span>{calculation.blockReason ?? d.acceptBlockedHint}</span>
-            </p>
-          )}
         </div>
 
         <div className="order-modal__actions order-modal__actions--sticky">
           <button type="button" className="order-btn order-btn--ghost order-btn--large" onClick={onModify}>
             {d.modify}
           </button>
-          <button
-            type="button"
-            className="order-btn order-btn--primary order-btn--large"
-            disabled={calculation.blocked}
-            title={calculation.blockReason}
-            onClick={onAccept}
-          >
+          <button type="button" className="order-btn order-btn--primary order-btn--large" onClick={onAccept}>
             {d.accept}
           </button>
         </div>

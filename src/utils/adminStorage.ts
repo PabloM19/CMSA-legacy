@@ -63,6 +63,7 @@ function seedUsers(): AdminUser[] {
     company: cred.user.company,
     status: 'activo' as const,
     lastAccessMock: mockLastAccess(index),
+    requiresPasswordSetup: false,
   }))
 }
 
@@ -186,6 +187,7 @@ function seedAuditLog(): AuditEvent[] {
 function seedAdminData(): AdminPersistedData {
   return {
     users: seedUsers(),
+    userPasswords: {},
     companies: [...DEFAULT_COMPANIES],
     tableMeta: seedTableMeta(),
     palletizerMeta: seedPalletizerMeta(),
@@ -194,11 +196,22 @@ function seedAdminData(): AdminPersistedData {
   }
 }
 
+function normalizeAdminData(data: AdminPersistedData): AdminPersistedData {
+  return {
+    ...data,
+    userPasswords: data.userPasswords ?? {},
+    users: data.users.map((user) => ({
+      ...user,
+      requiresPasswordSetup: user.requiresPasswordSetup ?? false,
+    })),
+  }
+}
+
 function readAdminData(): AdminPersistedData | null {
   try {
     const raw = localStorage.getItem(ADMIN_STORAGE_KEY)
     if (!raw) return null
-    return JSON.parse(raw) as AdminPersistedData
+    return normalizeAdminData(JSON.parse(raw) as AdminPersistedData)
   } catch {
     return null
   }
@@ -260,6 +273,68 @@ export function getAdminUsers(): AdminUser[] {
   return getAdminData().users
 }
 
+export function getAdminUserByUsername(username: string): AdminUser | undefined {
+  const trimmed = username.trim()
+  return getAdminData().users.find((user) => user.username === trimmed)
+}
+
+export function adminUserToAuthUser(user: AdminUser): User {
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    company: user.company,
+    role: user.role,
+  }
+}
+
+export function getUserPassword(username: string): string | null {
+  const trimmed = username.trim()
+  const data = getAdminData()
+  const adminUser = data.users.find((user) => user.username === trimmed)
+
+  if (adminUser?.requiresPasswordSetup) return null
+
+  if (data.userPasswords[trimmed]) return data.userPasswords[trimmed]
+
+  const cred = mockCredentials.find((c) => c.username === trimmed)
+  return cred?.password ?? null
+}
+
+export function saveUserPassword(username: string, password: string): AdminUser | null {
+  const trimmed = username.trim()
+  const data = getAdminData()
+  const index = data.users.findIndex((user) => user.username === trimmed)
+  if (index < 0) return null
+
+  data.users[index] = {
+    ...data.users[index],
+    requiresPasswordSetup: false,
+  }
+  data.userPasswords[trimmed] = password.trim()
+  saveAdminData(data)
+  return data.users[index]
+}
+
+export function resetAdminUserPassword(
+  actor: User,
+  id: string,
+): { ok: true; user: AdminUser } | { ok: false; error: string } {
+  const data = getAdminData()
+  const user = data.users.find((u) => u.id === id)
+  if (!user) return { ok: false, error: 'not_found' }
+
+  if (!canEditAdminUser(actor, user.role)) {
+    return { ok: false, error: 'forbidden_role' }
+  }
+
+  user.requiresPasswordSetup = true
+  delete data.userPasswords[user.username]
+  saveAdminData(data)
+  addAuditEvent(actor, 'Contraseña restablecida', 'usuario', user.username)
+  return { ok: true, user }
+}
+
 function countActiveSuperAdmins(users: AdminUser[]): number {
   return users.filter((u) => u.role === 'superadmin' && u.status === 'activo').length
 }
@@ -286,6 +361,7 @@ export function createAdminUser(
     name: input.name.trim(),
     username: input.username.trim(),
     lastAccessMock: '—',
+    requiresPasswordSetup: true,
   }
   data.users = [...data.users, user]
   saveAdminData(data)

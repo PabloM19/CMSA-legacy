@@ -1,4 +1,4 @@
-import { Bell, ClipboardList, Map, PlusCircle, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { Bell, ClipboardList, Factory, Map, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
@@ -31,22 +31,22 @@ export function PlantMapQuickActions({
 
   const actions: QuickAction[] = []
 
-  if (canAccessRoute(user, '/orders/new')) {
-    actions.push({
-      to: '/orders/new',
-      icon: PlusCircle,
-      label: d.quickNewObjective,
-      hint: d.quickNewObjectiveHint,
-      disabled: safetyBlocked,
-    })
-  }
-
   if (canAccessRoute(user, '/daily-orders')) {
     actions.push({
       to: '/daily-orders',
       icon: ClipboardList,
       label: d.quickViewQueue,
       hint: d.quickViewQueueHint,
+      disabled: safetyBlocked,
+    })
+  }
+
+  if (canAccessRoute(user, '/production-orders')) {
+    actions.push({
+      to: '/production-orders',
+      icon: Factory,
+      label: d.quickProductionOrders,
+      hint: d.quickProductionOrdersHint,
       disabled: safetyBlocked,
     })
   }
@@ -90,18 +90,18 @@ export function PlantMapQuickActions({
   if (actions.length === 0) return null
 
   return (
-    <section className="plant-map-quick">
-      <h2 className="plant-map-quick__title">{d.quickActionsTitle}</h2>
-      <div className="plant-map-quick__grid">
+    <section className="dash-quick plant-map-quick">
+      <h2 className="dash-quick__title">{d.quickActionsTitle}</h2>
+      <div className="dash-quick__grid">
         {actions.map((action) => {
           const Icon = action.icon
           const content = (
             <>
-              <span className="plant-map-quick__btn-icon" aria-hidden="true">
-                <Icon size={22} strokeWidth={1.75} />
+              <span className="dash-quick__btn-icon" aria-hidden="true">
+                <Icon size={24} strokeWidth={1.75} />
               </span>
-              <span className="plant-map-quick__btn-label">{action.label}</span>
-              <span className="plant-map-quick__btn-hint">{action.hint}</span>
+              <span className="dash-quick__btn-label">{action.label}</span>
+              <span className="dash-quick__btn-hint">{action.hint}</span>
             </>
           )
 
@@ -110,7 +110,7 @@ export function PlantMapQuickActions({
               <button
                 key={action.label}
                 type="button"
-                className="plant-map-quick__btn"
+                className="dash-quick__btn"
                 onClick={action.onClick}
                 disabled={action.disabled}
               >
@@ -119,14 +119,16 @@ export function PlantMapQuickActions({
             )
           }
 
+          const disabled = action.disabled
+
           return (
             <Link
               key={action.to! + action.label}
               to={action.to!}
-              className={`plant-map-quick__btn${action.disabled ? ' plant-map-quick__btn--disabled' : ''}`}
-              aria-disabled={action.disabled}
+              className={`dash-quick__btn${disabled ? ' dash-quick__btn--disabled' : ''}`}
+              aria-disabled={disabled}
               onClick={(e) => {
-                if (action.disabled) e.preventDefault()
+                if (disabled) e.preventDefault()
               }}
             >
               {content}

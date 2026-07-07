@@ -14,4 +14,6 @@ export interface User {
 export interface AuthSession {
   user: User
   loggedInAt: string
+  /** ISO — fin de sesión mock (login + 24 h). */
+  sessionExpiresAt: string
 }

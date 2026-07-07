@@ -1,25 +1,22 @@
 import { CompanyBadge } from '../../../components/ui/StatusBadge'
 import { useLanguage } from '../../../i18n/LanguageContext'
-import type { NewOrderFormData, OrderCalculation } from '../../../types/newOrder'
+import type { NewOrderFormData } from '../../../types/newOrder'
 import { getSummaryStatus, type OrderSummaryStatus } from '../../../utils/newOrderViewHelpers'
 import { BarcodeDisplay } from './BarcodeDisplay'
 
 interface NewOrderLiveSummaryProps {
   form: NewOrderFormData
-  calculation: OrderCalculation | null
 }
 
-const STATUS_LABEL: Record<OrderSummaryStatus, 'summaryIncomplete' | 'summaryReady' | 'summaryCalculated' | 'summaryBlocked'> = {
+const STATUS_LABEL: Record<OrderSummaryStatus, 'summaryIncomplete' | 'summaryReady'> = {
   incomplete: 'summaryIncomplete',
-  readyToCalculate: 'summaryReady',
-  calculated: 'summaryCalculated',
-  blocked: 'summaryBlocked',
+  ready: 'summaryReady',
 }
 
-export function NewOrderLiveSummary({ form, calculation }: NewOrderLiveSummaryProps) {
+export function NewOrderLiveSummary({ form }: NewOrderLiveSummaryProps) {
   const { t } = useLanguage()
   const d = t.newOrder
-  const status = getSummaryStatus(form, calculation)
+  const status = getSummaryStatus(form)
 
   return (
     <aside className={`new-order-summary order-card--${form.company.toLowerCase()} dash-card`}>
@@ -59,25 +56,11 @@ export function NewOrderLiveSummary({ form, calculation }: NewOrderLiveSummaryPr
             <dd>{form.variety}</dd>
           </div>
         )}
-        <div>
-          <dt>{d.boxes}</dt>
-          <dd>{form.boxes.trim() ? Number(form.boxes).toLocaleString() : '—'}</dd>
-        </div>
-        <div>
-          <dt>{d.boxesPerHour}</dt>
-          <dd>{form.boxesPerHour.trim() ? Number(form.boxesPerHour).toLocaleString() : '—'}</dd>
-        </div>
-        {calculation && (
-          <>
-            <div>
-              <dt>{d.requiredTables}</dt>
-              <dd>{calculation.requiredTables}</dd>
-            </div>
-            <div>
-              <dt>{d.estimatedEnd}</dt>
-              <dd>{calculation.estimatedEnd}</dd>
-            </div>
-          </>
+        {form.boxFormat.trim() && (
+          <div>
+            <dt>{d.boxFormat}</dt>
+            <dd>{form.boxFormat}</dd>
+          </div>
         )}
       </dl>
     </aside>

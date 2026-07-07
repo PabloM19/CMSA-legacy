@@ -3,25 +3,20 @@ import type { LucideIcon } from 'lucide-react'
 import { ClipboardList, Factory } from 'lucide-react'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../../types/backlog'
-import {
-  isCompletedProductionOrder,
-  isInProductionColumn,
-  isPendingAcceptanceColumn,
-} from '../../../utils/dailyOrderHelpers'
-import { resolveVisibleLimit, type BacklogViewMode } from '../../../utils/backlogViewPrefs'
+import { isInProductionColumn, isPendingAcceptanceColumn } from '../../../utils/dailyOrderHelpers'
+import { resolveVisibleLimit } from '../../../utils/backlogViewPrefs'
 import { useBacklogView } from '../hooks/useBacklogView'
 import { BacklogBoardSkeleton } from './BacklogBoardSkeleton'
 import { BacklogColumnDrawer } from './BacklogColumnDrawer'
 import { BacklogOrderCard } from './BacklogOrderCard'
 import { BacklogViewControls } from './BacklogViewControls'
 
-type ProductionDrawerColumn = 'pending' | 'in_production' | 'completed'
+type ProductionDrawerColumn = 'pending' | 'in_production'
 
 interface ProductionOrdersPanelProps {
   orders: BacklogOrder[]
   onViewDetail: (order: BacklogOrder) => void
   onPrepare?: (order: BacklogOrder) => void
-  onConfirmCell?: (order: BacklogOrder) => void
   onWithdraw?: (order: BacklogOrder) => void
 }
 
@@ -33,17 +28,13 @@ interface KanbanColumnProps {
   emptyMessage: string
   orders: BacklogOrder[]
   allOrdersInColumn: BacklogOrder[]
-  completedOrders?: BacklogOrder[]
-  showCompletedSection?: boolean
   visibleLimit: number | null
   scrollable: boolean
   compactCards: boolean
   summaryMode: boolean
   onViewAll?: () => void
-  onViewAllCompleted?: () => void
   onViewDetail: (order: BacklogOrder) => void
   onPrepare?: (order: BacklogOrder) => void
-  onConfirmCell?: (order: BacklogOrder) => void
   onWithdraw?: (order: BacklogOrder) => void
 }
 
@@ -55,17 +46,13 @@ function ProductionKanbanColumn({
   emptyMessage,
   orders,
   allOrdersInColumn,
-  completedOrders = [],
-  showCompletedSection = false,
   visibleLimit,
   scrollable,
   compactCards,
   summaryMode,
   onViewAll,
-  onViewAllCompleted,
   onViewDetail,
   onPrepare,
-  onConfirmCell,
   onWithdraw,
 }: KanbanColumnProps) {
   const { t } = useLanguage()
@@ -74,12 +61,7 @@ function ProductionKanbanColumn({
   const displayOrders = visibleLimit != null ? orders.slice(0, visibleLimit) : orders
   const hiddenCount = allOrdersInColumn.length - displayOrders.length
   const showMoreFooter = visibleLimit != null && hiddenCount > 0 && onViewAll
-  const isEmpty = count === 0 && completedOrders.length === 0
-
-  const completedVisible =
-    visibleLimit != null ? completedOrders.slice(0, visibleLimit) : completedOrders
-  const completedHidden =
-    visibleLimit != null ? completedOrders.length - completedVisible.length : 0
+  const isEmpty = count === 0
 
   return (
     <section
@@ -108,10 +90,8 @@ function ProductionKanbanColumn({
             order={order}
             sortable={false}
             compact={compactCards}
-            completed={isCompletedProductionOrder(order)}
             onViewDetail={onViewDetail}
             onPrepare={onPrepare}
-            onConfirmRecipe={onConfirmCell}
             onWithdraw={onWithdraw}
           />
         ))}
@@ -128,56 +108,19 @@ function ProductionKanbanColumn({
             </button>
           </div>
         )}
-
-        {showCompletedSection && completedOrders.length > 0 && (
-          <div className="production-orders-column__completed">
-            <h3 className="production-orders-column__completed-title">{d.completedSectionTitle}</h3>
-            {completedVisible.map((order) => (
-              <BacklogOrderCard
-                key={order.id}
-                order={order}
-                sortable={false}
-                compact={compactCards}
-                completed
-                onViewDetail={onViewDetail}
-              />
-            ))}
-            {completedHidden > 0 && onViewAllCompleted && (
-              <button
-                type="button"
-                className="backlog-column__view-all backlog-column__view-all--completed"
-                onClick={onViewAllCompleted}
-              >
-                {d.viewAllCompleted}
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </section>
   )
 }
 
-function filterForProductionView(
-  pending: BacklogOrder[],
-  inProduction: BacklogOrder[],
-  completed: BacklogOrder[],
-  viewMode: BacklogViewMode,
-) {
-  if (viewMode === 'completed') {
-    return { pending: [] as BacklogOrder[], inProduction: completed, completed: [] as BacklogOrder[] }
-  }
-  if (viewMode === 'in_progress') {
-    return { pending, inProduction, completed: [] as BacklogOrder[] }
-  }
-  return { pending, inProduction, completed }
+function isVisibleProductionOrder(order: BacklogOrder): boolean {
+  return order.column !== 'finalizado'
 }
 
 export function ProductionOrdersPanel({
   orders,
   onViewDetail,
   onPrepare,
-  onConfirmCell,
   onWithdraw,
 }: ProductionOrdersPanelProps) {
   const { t } = useLanguage()
@@ -193,34 +136,24 @@ export function ProductionOrdersPanel({
   } = useBacklogView()
   const [drawerColumn, setDrawerColumn] = useState<ProductionDrawerColumn | null>(null)
 
-  const pendingAll = useMemo(
-    () => orders.filter(isPendingAcceptanceColumn).sort((a, b) => a.priority - b.priority),
-    [orders],
-  )
-  const inProductionAll = useMemo(
-    () => orders.filter(isInProductionColumn).sort((a, b) => a.priority - b.priority),
-    [orders],
-  )
-  const completedAll = useMemo(
-    () => orders.filter(isCompletedProductionOrder).sort((a, b) => a.priority - b.priority),
+  const activeOrders = useMemo(
+    () => orders.filter(isVisibleProductionOrder),
     [orders],
   )
 
-  const { pending, inProduction, completed } = useMemo(
-    () => filterForProductionView(pendingAll, inProductionAll, completedAll, viewMode),
-    [pendingAll, inProductionAll, completedAll, viewMode],
+  const pendingAll = useMemo(
+    () => activeOrders.filter(isPendingAcceptanceColumn).sort((a, b) => a.priority - b.priority),
+    [activeOrders],
+  )
+  const inProductionAll = useMemo(
+    () => activeOrders.filter(isInProductionColumn).sort((a, b) => a.priority - b.priority),
+    [activeOrders],
   )
 
   const visibleLimit = resolveVisibleLimit(viewMode, density)
   const scrollable = viewMode === 'full'
   const compactCards = viewMode !== 'full'
   const isSummaryMode = viewMode === 'summary'
-  const isCompletedView = viewMode === 'completed'
-  const isInProgressView = viewMode === 'in_progress'
-  const showCompletedInProduction = !isCompletedView && !isInProgressView
-
-  const pendingCount = isCompletedView ? 0 : pendingAll.length
-  const inProductionCount = isCompletedView ? completedAll.length : inProductionAll.length
 
   const drawerConfig = useMemo(() => {
     if (!drawerColumn) return null
@@ -228,22 +161,13 @@ export function ProductionOrdersPanel({
       return {
         title: d.colPendingAcceptance,
         orders: pendingAll,
-        completed: false,
-      }
-    }
-    if (drawerColumn === 'in_production') {
-      return {
-        title: d.colInProduction,
-        orders: inProductionAll,
-        completed: false,
       }
     }
     return {
-      title: d.completedSectionTitle,
-      orders: completedAll,
-      completed: true,
+      title: d.colInProduction,
+      orders: inProductionAll,
     }
-  }, [drawerColumn, d, pendingAll, inProductionAll, completedAll])
+  }, [drawerColumn, d, pendingAll, inProductionAll])
 
   return (
     <section className="production-orders" aria-label={p.title}>
@@ -253,6 +177,7 @@ export function ProductionOrdersPanel({
         densityDisabled={densityDisabled}
         onViewModeChange={changeViewMode}
         onDensityChange={changeDensity}
+        modes={['summary', 'full']}
       />
 
       {isLoading ? (
@@ -266,9 +191,9 @@ export function ProductionOrdersPanel({
               icon={ClipboardList}
               title={d.colPendingAcceptance}
               hint={d.productionKanbanPendingHint}
-              count={pendingCount}
-              emptyMessage={isCompletedView ? d.emptyInProgressColumn : d.emptyPendingAcceptance}
-              orders={pending}
+              count={pendingAll.length}
+              emptyMessage={d.emptyPendingAcceptance}
+              orders={pendingAll}
               allOrdersInColumn={pendingAll}
               visibleLimit={visibleLimit}
               scrollable={scrollable}
@@ -281,36 +206,26 @@ export function ProductionOrdersPanel({
               }
               onViewDetail={onViewDetail}
               onPrepare={onPrepare}
-              onConfirmCell={onConfirmCell}
             />
 
             <ProductionKanbanColumn
               icon={Factory}
               title={d.colInProduction}
               hint={d.productionKanbanInProductionHint}
-              count={inProductionCount}
-              emptyMessage={isCompletedView ? d.emptyCompleted : d.emptyInProduction}
-              orders={inProduction}
-              allOrdersInColumn={isCompletedView ? completedAll : inProductionAll}
-              completedOrders={showCompletedInProduction ? completed : []}
-              showCompletedSection={showCompletedInProduction && completed.length > 0}
+              count={inProductionAll.length}
+              emptyMessage={d.emptyInProduction}
+              orders={inProductionAll}
+              allOrdersInColumn={inProductionAll}
               visibleLimit={visibleLimit}
               scrollable={scrollable}
               compactCards={compactCards}
               summaryMode={isSummaryMode}
               onViewAll={
-                visibleLimit != null &&
-                (isCompletedView ? completedAll.length : inProductionAll.length) > visibleLimit
-                  ? () => setDrawerColumn(isCompletedView ? 'completed' : 'in_production')
-                  : undefined
-              }
-              onViewAllCompleted={
-                visibleLimit != null && completedAll.length > visibleLimit
-                  ? () => setDrawerColumn('completed')
+                visibleLimit != null && inProductionAll.length > visibleLimit
+                  ? () => setDrawerColumn('in_production')
                   : undefined
               }
               onViewDetail={onViewDetail}
-              onConfirmCell={onConfirmCell}
               onWithdraw={onWithdraw}
             />
           </div>
@@ -321,11 +236,9 @@ export function ProductionOrdersPanel({
         <BacklogColumnDrawer
           title={drawerConfig.title}
           orders={drawerConfig.orders}
-          completed={drawerConfig.completed}
           onClose={() => setDrawerColumn(null)}
           onViewDetail={onViewDetail}
           onPrepare={onPrepare}
-          onConfirmRecipe={onConfirmCell}
           onWithdraw={onWithdraw}
         />
       )}

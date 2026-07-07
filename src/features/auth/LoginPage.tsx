@@ -1,12 +1,17 @@
 import { Eye, EyeOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CmsaBackgroundDecor } from '../../components/layout/CmsaBackgroundDecor'
 import { LangSwitcher } from '../../components/ui/LangSwitcher'
 import { getVisibleMockCredentials } from '../../data/mockUsers'
 import { useLanguage } from '../../i18n/LanguageContext'
-import { authenticate, getPostLoginPath } from '../../utils/auth'
+import type { User } from '../../types/auth'
+import {
+  completePasswordSetup,
+  getPostLoginPath,
+  resolveLogin,
+} from '../../utils/auth'
 import { readUserPreferences } from '../../utils/userPreferences'
 import { useAuth } from './AuthContext'
 import './login.css'
@@ -53,11 +58,29 @@ function LockIcon() {
   )
 }
 
+function finishLogin(
+  user: User,
+  login: (user: User) => void,
+  setLang: (lang: 'es' | 'en') => void,
+  navigate: ReturnType<typeof useNavigate>,
+) {
+  login(user)
+  setLang(readUserPreferences(user.username).language)
+  navigate(getPostLoginPath(user), { replace: true })
+}
+
 export function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { isAuthenticated, login, defaultRoute } = useAuth()
   const { t, setLang } = useLanguage()
   const copy = t.login
+
+  const sessionNotice = searchParams.get('expired')
+    ? copy.expiredMessage
+    : searchParams.get('inactive')
+      ? copy.inactiveMessage
+      : null
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -65,6 +88,13 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  const [setupUser, setSetupUser] = useState<User | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [setupError, setSetupError] = useState<string | null>(null)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -81,15 +111,56 @@ export function LoginPage() {
 
     await new Promise((resolve) => setTimeout(resolve, LOGIN_DELAY_MS))
 
-    const user = authenticate(username.trim(), password)
-    if (user) {
-      login(user)
-      setLang(readUserPreferences(user.username).language)
-      navigate(getPostLoginPath(user), { replace: true })
-    } else {
-      setError(true)
-      setLoading(false)
+    const result = resolveLogin(username.trim(), password)
+    if (result.type === 'success') {
+      finishLogin(result.user, login, setLang, navigate)
+      return
     }
+    if (result.type === 'password_setup_required') {
+      setSetupUser(result.user)
+      setNewPassword('')
+      setConfirmPassword('')
+      setSetupError(null)
+      setLoading(false)
+      return
+    }
+
+    setError(true)
+    setLoading(false)
+  }
+
+  async function handleSetupSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!setupUser || loading) return
+
+    setSetupError(null)
+    setLoading(true)
+
+    await new Promise((resolve) => setTimeout(resolve, LOGIN_DELAY_MS))
+
+    const result = completePasswordSetup(setupUser.username, newPassword, confirmPassword)
+    if (!result.ok) {
+      if (result.error === 'missing_fields') {
+        setSetupError(copy.setupIncomplete)
+      } else if (result.error === 'mismatch') {
+        setSetupError(copy.setupMismatch)
+      } else {
+        setSetupError(copy.error)
+      }
+      setLoading(false)
+      return
+    }
+
+    finishLogin(result.user, login, setLang, navigate)
+  }
+
+  function handleBackToLogin() {
+    setSetupUser(null)
+    setNewPassword('')
+    setConfirmPassword('')
+    setSetupError(null)
+    setPassword('')
+    setError(false)
   }
 
   return (
@@ -101,100 +172,210 @@ export function LoginPage() {
 
       <div className="login-page__inner">
         <header className="login-page__heading">
-          <h1 className="login-page__title">{copy.title}</h1>
-          <p className="login-page__subtitle">{copy.subtitle}</p>
+          <h1 className="login-page__title">
+            {setupUser ? copy.setupTitle : copy.title}
+          </h1>
+          <p className="login-page__subtitle">
+            {setupUser
+              ? copy.setupSubtitle.replace('{username}', setupUser.username)
+              : copy.subtitle}
+          </p>
         </header>
 
         <div className="login-card">
-          <form className="login-card__form" onSubmit={handleSubmit} noValidate>
-            <div className="login-card__field">
-              <label className="login-card__label" htmlFor="username">
-                {copy.username}
-              </label>
-              <div className="login-card__input-wrap">
-                <UserIcon />
-                <input
-                  id="username"
-                  className={`login-card__input${error ? ' login-card__input--error' : ''}`}
-                  type="text"
-                  autoComplete="username"
-                  placeholder={copy.usernamePlaceholder}
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value)
-                    setError(false)
-                  }}
-                  disabled={loading}
-                />
+          {sessionNotice && (
+            <p className="login-card__notice" role="status">
+              {sessionNotice}
+            </p>
+          )}
+          {setupUser ? (
+            <form className="login-card__form" onSubmit={handleSetupSubmit} noValidate>
+              <div className="login-card__field">
+                <label className="login-card__label" htmlFor="new-password">
+                  {copy.setupNewPassword}
+                </label>
+                <div className="login-card__input-wrap">
+                  <LockIcon />
+                  <input
+                    id="new-password"
+                    className={`login-card__input login-card__input--password${setupError ? ' login-card__input--error' : ''}`}
+                    type={showNewPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder={copy.setupNewPasswordPlaceholder}
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value)
+                      setSetupError(null)
+                    }}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="login-card__password-toggle"
+                    aria-label={showNewPassword ? copy.hidePassword : copy.showPassword}
+                    onClick={() => setShowNewPassword((v) => !v)}
+                    disabled={loading}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff size={18} aria-hidden="true" />
+                    ) : (
+                      <Eye size={18} aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
               </div>
+
+              <div className="login-card__field">
+                <label className="login-card__label" htmlFor="confirm-password">
+                  {copy.setupConfirmPassword}
+                </label>
+                <div className="login-card__input-wrap">
+                  <LockIcon />
+                  <input
+                    id="confirm-password"
+                    className={`login-card__input login-card__input--password${setupError ? ' login-card__input--error' : ''}`}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder={copy.setupConfirmPasswordPlaceholder}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value)
+                      setSetupError(null)
+                    }}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="login-card__password-toggle"
+                    aria-label={showConfirmPassword ? copy.hidePassword : copy.showPassword}
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    disabled={loading}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} aria-hidden="true" />
+                    ) : (
+                      <Eye size={18} aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {setupError && (
+                <p className="login-card__error" role="alert">
+                  {setupError}
+                </p>
+              )}
+
+              <button type="submit" className="login-card__submit" disabled={loading}>
+                {loading ? copy.setupLoading : copy.setupSubmit}
+              </button>
+
+              <button
+                type="button"
+                className="login-card__help-btn login-card__back-btn"
+                onClick={handleBackToLogin}
+                disabled={loading}
+              >
+                {copy.setupBack}
+              </button>
+            </form>
+          ) : (
+            <form className="login-card__form" onSubmit={handleSubmit} noValidate>
+              <div className="login-card__field">
+                <label className="login-card__label" htmlFor="username">
+                  {copy.username}
+                </label>
+                <div className="login-card__input-wrap">
+                  <UserIcon />
+                  <input
+                    id="username"
+                    className={`login-card__input${error ? ' login-card__input--error' : ''}`}
+                    type="text"
+                    autoComplete="username"
+                    placeholder={copy.usernamePlaceholder}
+                    value={username}
+                    onChange={(e) => {
+                      setUsername(e.target.value)
+                      setError(false)
+                    }}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <div className="login-card__field">
+                <label className="login-card__label" htmlFor="password">
+                  {copy.password}
+                </label>
+                <div className="login-card__input-wrap">
+                  <LockIcon />
+                  <input
+                    id="password"
+                    className={`login-card__input login-card__input--password${error ? ' login-card__input--error' : ''}`}
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder={copy.passwordPlaceholder}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      setError(false)
+                    }}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="login-card__password-toggle"
+                    aria-label={showPassword ? copy.hidePassword : copy.showPassword}
+                    onClick={() => setShowPassword((v) => !v)}
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={18} aria-hidden="true" />
+                    ) : (
+                      <Eye size={18} aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <p className="login-card__error" role="alert">
+                  {copy.error}
+                </p>
+              )}
+
+              <button type="submit" className="login-card__submit" disabled={loading}>
+                {loading ? copy.loading : copy.submit}
+              </button>
+            </form>
+          )}
+
+          {!setupUser && (
+            <div className="login-card__help">
+              <button
+                type="button"
+                className="login-card__help-btn"
+                onClick={() => setShowHelp((v) => !v)}
+              >
+                {showHelp ? copy.helpHide : copy.helpToggle}
+              </button>
+
+              {showHelp && (
+                <div className="login-card__help-panel">
+                  <p className="login-card__help-title">{copy.helpTitle}</p>
+                  <ul className="login-card__help-list">
+                    {getVisibleMockCredentials().map((cred) => (
+                      <li key={cred.username}>
+                        {cred.roleLabel ?? cred.user.role}
+                        {' · '}
+                        <code>{cred.username}</code> / <code>{cred.password}</code>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-
-            <div className="login-card__field">
-              <label className="login-card__label" htmlFor="password">
-                {copy.password}
-              </label>
-              <div className="login-card__input-wrap">
-                <LockIcon />
-                <input
-                  id="password"
-                  className={`login-card__input login-card__input--password${error ? ' login-card__input--error' : ''}`}
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder={copy.passwordPlaceholder}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    setError(false)
-                  }}
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="login-card__password-toggle"
-                  aria-label={showPassword ? copy.hidePassword : copy.showPassword}
-                  onClick={() => setShowPassword((v) => !v)}
-                  disabled={loading}
-                >
-                  {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <p className="login-card__error" role="alert">
-                {copy.error}
-              </p>
-            )}
-
-            <button type="submit" className="login-card__submit" disabled={loading}>
-              {loading ? copy.loading : copy.submit}
-            </button>
-          </form>
-
-          <div className="login-card__help">
-            <button
-              type="button"
-              className="login-card__help-btn"
-              onClick={() => setShowHelp((v) => !v)}
-            >
-              {showHelp ? copy.helpHide : copy.helpToggle}
-            </button>
-
-            {showHelp && (
-              <div className="login-card__help-panel">
-                <p className="login-card__help-title">{copy.helpTitle}</p>
-                <ul className="login-card__help-list">
-                  {getVisibleMockCredentials().map((cred) => (
-                    <li key={cred.username}>
-                      {cred.roleLabel ?? cred.user.role}
-                      {' · '}
-                      <code>{cred.username}</code> / <code>{cred.password}</code>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         <p className="login-page__footer">{t.common.wireframeFooter}</p>

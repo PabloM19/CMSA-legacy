@@ -1,4 +1,8 @@
 import { useMemo, useState } from 'react'
+import {
+  ReferenceAutofillFields,
+  ReferenceSelectField,
+} from '../../../components/reference/ReferenceSelectField'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { DailyOrder } from '../../../types/dailyOrder'
 import type { User } from '../../../types/auth'
@@ -10,6 +14,7 @@ import {
   validateBoxesPerHour,
   validateProductionOrderBoxes,
 } from '../../../utils/productionOrderValidation'
+import { findProductByReference } from '../../../utils/productSearch'
 import type { BacklogOrder } from '../../../types/backlog'
 import { isSupervisor } from '../../../utils/permissions'
 
@@ -32,6 +37,12 @@ export function LaunchProductionOrderModal({
 }: LaunchProductionOrderModalProps) {
   const { t, lang } = useLanguage()
   const d = t.backlog
+  const page = t.dailyOrdersPage
+
+  const catalogProduct = useMemo(
+    () => findProductByReference(daily.referencia) ?? null,
+    [daily.referencia],
+  )
 
   const [boxes, setBoxes] = useState('10000')
   const [boxesPerHour, setBoxesPerHour] = useState('2400')
@@ -40,6 +51,7 @@ export function LaunchProductionOrderModal({
 
   const boxesNum = Number(boxes)
   const rateNum = Number(boxesPerHour)
+  const referenceMissing = !catalogProduct
 
   const validation = useMemo(() => {
     const boxCheck = validateProductionOrderBoxes(boxesNum, lang)
@@ -50,6 +62,7 @@ export function LaunchProductionOrderModal({
   const exceedsRemaining = boxesNum > daily.cajasRestantes
   const needsJustification = exceedsRemaining && isSupervisor(user)
   const blocked =
+    referenceMissing ||
     validation.boxCheck.blocked ||
     validation.rateCheck.blocked ||
     (exceedsRemaining && !isSupervisor(user)) ||
@@ -68,6 +81,10 @@ export function LaunchProductionOrderModal({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (referenceMissing) {
+      setError(page.createReferenceRequired)
+      return
+    }
     if (blocked) {
       setError(
         exceedsRemaining && !isSupervisor(user)
@@ -104,11 +121,23 @@ export function LaunchProductionOrderModal({
       >
         <header className="order-modal__head">
           <h2 className="order-modal__title">{d.launchModalTitle}</h2>
-          <p className="order-modal__subtitle">
-            {daily.variedad} · {daily.referencia}
-          </p>
-          <p className="order-modal__meta">{d.colBoxFormat}: {daily.estilo}</p>
+          <p className="order-modal__subtitle">{daily.variedad}</p>
         </header>
+
+        <div className="launch-order-modal__reference">
+          <ReferenceSelectField
+            id="launch-reference-select"
+            selectedProductId={catalogProduct?.id ?? null}
+            onSelectProduct={() => {}}
+            readOnly
+            error={referenceMissing ? page.createReferenceRequired : undefined}
+          />
+          <ReferenceAutofillFields
+            product={catalogProduct}
+            company={daily.empresa}
+            className="reference-autofill--compact"
+          />
+        </div>
 
         <dl className="order-modal__dl">
           <div className="order-modal__row">

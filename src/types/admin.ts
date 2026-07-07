@@ -13,6 +13,8 @@ export interface AdminUser {
   company: Company
   status: AdminUserStatus
   lastAccessMock: string
+  /** Si true, el usuario debe crear contraseña en el primer acceso. */
+  requiresPasswordSetup?: boolean
 }
 
 export interface AdminCompany {
@@ -103,6 +105,8 @@ export interface AuditEvent {
 
 export interface AdminPersistedData {
   users: AdminUser[]
+  /** Contraseñas mock por username (localStorage). */
+  userPasswords: Record<string, string>
   companies: AdminCompany[]
   tableMeta: Record<string, AdminTableMeta>
   palletizerMeta: Record<string, AdminPalletizerMeta>

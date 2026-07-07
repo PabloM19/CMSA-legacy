@@ -163,10 +163,11 @@ export interface CreateDailyOrderInput {
   estilo: string
   referencia: string
   barcode: string
+  variedad: string
+  producto?: string
   empresa: DailyOrder['empresa']
-  totalCajasDia: number
-  boxesPerHour?: number
-  formato?: string
+  fecha?: string
+  observaciones?: string
 }
 
 export function createDailyOrder(
@@ -175,22 +176,25 @@ export function createDailyOrder(
   user: User,
 ): { dailyOrders: DailyOrder[]; order: DailyOrder } {
   const id = `pd-${Date.now().toString(36).slice(2, 8)}`
+  const fecha = input.fecha?.trim() || new Date().toISOString().slice(0, 10)
+  const detailParts = [input.variedad.trim(), input.observaciones?.trim()].filter(Boolean)
+
   const order: DailyOrder = recalcDailyOrder({
     id,
-    fecha: new Date().toISOString().slice(0, 10),
+    fecha,
     estilo: input.estilo.trim(),
     referencia: input.referencia.trim(),
     barcode: input.barcode.trim(),
     empresa: input.empresa,
-    producto: 'Naranja',
-    variedad: input.formato?.trim() || 'Embalaje / estilo',
-    totalCajasDia: input.totalCajasDia,
+    producto: input.producto?.trim() || 'Naranja',
+    variedad: input.variedad.trim(),
+    totalCajasDia: 0,
     cajasAsignadas: 0,
     cajasCompletadas: 0,
-    cajasRestantes: input.totalCajasDia,
+    cajasRestantes: 0,
     porcentajeAsignado: 0,
     porcentajeCompletado: 0,
-    porcentajeRestante: 100,
+    porcentajeRestante: 0,
     estado: 'pendiente',
     ordenesProduccionIds: [],
     events: [
@@ -199,7 +203,7 @@ export function createDailyOrder(
         at: new Date().toISOString(),
         action: 'Pedido del día creado',
         user: user.name,
-        detail: input.estilo,
+        detail: detailParts.join(' · ') || input.estilo.trim(),
       },
     ],
   })

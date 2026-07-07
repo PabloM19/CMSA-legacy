@@ -7,6 +7,7 @@ interface BacklogViewControlsProps {
   densityDisabled: boolean
   onViewModeChange: (mode: BacklogViewMode) => void
   onDensityChange: (density: BacklogDensity) => void
+  modes?: BacklogViewMode[]
 }
 
 const MODES: BacklogViewMode[] = ['summary', 'full', 'in_progress', 'completed']
@@ -24,6 +25,7 @@ export function BacklogViewControls({
   densityDisabled,
   onViewModeChange,
   onDensityChange,
+  modes = MODES,
 }: BacklogViewControlsProps) {
   const { t } = useLanguage()
   const d = t.backlog
@@ -34,7 +36,7 @@ export function BacklogViewControls({
     <section className="backlog-view-controls" aria-label={d.viewControlsLabel}>
       <div className="backlog-view-controls__row">
         <div className="backlog-view-chips" role="tablist">
-          {MODES.map((mode) => (
+          {modes.map((mode) => (
             <button
               key={mode}
               type="button"

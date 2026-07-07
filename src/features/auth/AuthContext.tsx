@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { User } from '../../types/auth'
-import { clearSession, getSession, setSession } from '../../utils/auth'
+import { clearSession, getValidSession, setSession } from '../../utils/auth'
 import { logAuthLogin, logAuthLogout } from '../../utils/activityLogActions'
 import { canAccessRoute, getDefaultRoute } from '../../utils/permissions'
 
@@ -24,7 +24,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => getSession()?.user ?? null)
+  const [user, setUser] = useState<User | null>(() => getValidSession()?.user ?? null)
 
   const login = useCallback((loggedInUser: User) => {
     setSession(loggedInUser)
