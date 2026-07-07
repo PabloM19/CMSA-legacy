@@ -18,6 +18,7 @@ interface ProductionOrdersPanelProps {
   onViewDetail: (order: BacklogOrder) => void
   onPrepare?: (order: BacklogOrder) => void
   onWithdraw?: (order: BacklogOrder) => void
+  onDelete?: (order: BacklogOrder) => void
 }
 
 interface KanbanColumnProps {
@@ -36,6 +37,7 @@ interface KanbanColumnProps {
   onViewDetail: (order: BacklogOrder) => void
   onPrepare?: (order: BacklogOrder) => void
   onWithdraw?: (order: BacklogOrder) => void
+  onDelete?: (order: BacklogOrder) => void
 }
 
 function ProductionKanbanColumn({
@@ -54,6 +56,7 @@ function ProductionKanbanColumn({
   onViewDetail,
   onPrepare,
   onWithdraw,
+  onDelete,
 }: KanbanColumnProps) {
   const { t } = useLanguage()
   const d = t.backlog
@@ -93,6 +96,7 @@ function ProductionKanbanColumn({
             onViewDetail={onViewDetail}
             onPrepare={onPrepare}
             onWithdraw={onWithdraw}
+            onDelete={onDelete}
           />
         ))}
 
@@ -122,6 +126,7 @@ export function ProductionOrdersPanel({
   onViewDetail,
   onPrepare,
   onWithdraw,
+  onDelete,
 }: ProductionOrdersPanelProps) {
   const { t } = useLanguage()
   const d = t.backlog
@@ -206,6 +211,7 @@ export function ProductionOrdersPanel({
               }
               onViewDetail={onViewDetail}
               onPrepare={onPrepare}
+              onDelete={onDelete}
             />
 
             <ProductionKanbanColumn
@@ -227,6 +233,7 @@ export function ProductionOrdersPanel({
               }
               onViewDetail={onViewDetail}
               onWithdraw={onWithdraw}
+              onDelete={onDelete}
             />
           </div>
         </div>
@@ -240,6 +247,7 @@ export function ProductionOrdersPanel({
           onViewDetail={onViewDetail}
           onPrepare={onPrepare}
           onWithdraw={onWithdraw}
+          onDelete={onDelete}
         />
       )}
     </section>

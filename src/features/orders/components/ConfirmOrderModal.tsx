@@ -65,6 +65,14 @@ export function ConfirmOrderModal({ form, onModify, onAccept }: ConfirmOrderModa
               <dt>{d.boxFormat}</dt>
               <dd>{form.boxFormat || '—'}</dd>
             </div>
+            <div className="order-modal__grid-item order-modal__grid-item--full">
+              <dt>{d.totalBoxesToProduce}</dt>
+              <dd>
+                {form.boxes.trim() && Number(form.boxes) > 0
+                  ? Number(form.boxes).toLocaleString()
+                  : '—'}
+              </dd>
+            </div>
           </dl>
         </div>
 

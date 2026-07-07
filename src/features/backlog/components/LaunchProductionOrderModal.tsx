@@ -44,7 +44,9 @@ export function LaunchProductionOrderModal({
     [daily.referencia],
   )
 
-  const [boxes, setBoxes] = useState('10000')
+  const [boxes, setBoxes] = useState(() =>
+    daily.cajasRestantes > 0 ? String(daily.cajasRestantes) : '',
+  )
   const [boxesPerHour, setBoxesPerHour] = useState('2400')
   const [justification, setJustification] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -62,6 +64,8 @@ export function LaunchProductionOrderModal({
   const exceedsRemaining = boxesNum > daily.cajasRestantes
   const needsJustification = exceedsRemaining && isSupervisor(user)
   const blocked =
+    !boxes.trim() ||
+    boxesNum <= 0 ||
     referenceMissing ||
     validation.boxCheck.blocked ||
     validation.rateCheck.blocked ||
@@ -139,10 +143,18 @@ export function LaunchProductionOrderModal({
           />
         </div>
 
-        <dl className="order-modal__dl">
+        <dl className="order-modal__dl launch-order-modal__totals">
+          <div className="order-modal__row">
+            <dt>{d.colTotalDay}</dt>
+            <dd>{daily.totalCajasDia.toLocaleString(lang === 'es' ? 'es-ES' : 'en-GB')}</dd>
+          </div>
+          <div className="order-modal__row">
+            <dt>{d.colAssigned}</dt>
+            <dd>{daily.cajasAsignadas.toLocaleString(lang === 'es' ? 'es-ES' : 'en-GB')}</dd>
+          </div>
           <div className="order-modal__row">
             <dt>{d.colRemaining}</dt>
-            <dd>{daily.cajasRestantes.toLocaleString('es-ES')}</dd>
+            <dd>{daily.cajasRestantes.toLocaleString(lang === 'es' ? 'es-ES' : 'en-GB')}</dd>
           </div>
         </dl>
 

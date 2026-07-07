@@ -62,6 +62,14 @@ export function NewOrderLiveSummary({ form }: NewOrderLiveSummaryProps) {
             <dd>{form.boxFormat}</dd>
           </div>
         )}
+        <div>
+          <dt>{d.totalBoxesToProduce}</dt>
+          <dd>
+            {form.boxes.trim() && Number(form.boxes) > 0
+              ? Number(form.boxes).toLocaleString()
+              : '—'}
+          </dd>
+        </div>
       </dl>
     </aside>
   )

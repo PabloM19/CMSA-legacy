@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ListOrdered, RefreshCw } from 'lucide-react'
 import { PageHeader } from '../../components/ui/PageHeader'
@@ -9,13 +9,18 @@ import type { DailyOrder } from '../../types/dailyOrder'
 import type { PlantTable } from '../../types/plant'
 import { getState, saveOrdersAndPlant } from '../../utils/backlogStorage'
 import { applyWithdrawToDailyOrder } from '../../utils/dailyOrderOperations'
-import { canWithdrawProduction } from '../../utils/permissions'
-import { logOrderWithdrawn } from '../../utils/activityLogActions'
+import { canDeleteProductionOrder, canWithdrawProduction } from '../../utils/permissions'
+import { logOrderDeleted, logOrderWithdrawn } from '../../utils/activityLogActions'
 import { withdrawOrderFromProduction, type WithdrawReason } from '../../utils/withdrawProduction'
+import {
+  deleteProductionOrder,
+  type DeleteProductionReason,
+} from '../../utils/deleteProductionOrder'
 import { ProductionOrdersPanel } from './components/ProductionOrdersPanel'
 import { BacklogToast } from './components/BacklogToast'
 import { OrderDetailModal } from './components/OrderDetailModal'
 import { WithdrawProductionModal } from './components/WithdrawProductionModal'
+import { DeleteProductionOrderModal } from './components/DeleteProductionOrderModal'
 import { PrepareObjectiveModal } from './components/PrepareObjectiveModal'
 import '../dashboard/dashboard.css'
 import './backlog.css'
@@ -32,11 +37,19 @@ export function ProductionOrdersPage() {
   const [plantTables, setPlantTables] = useState<PlantTable[]>(() => getState().plantTables)
   const [detailOrder, setDetailOrder] = useState<BacklogOrder | null>(null)
   const [withdrawOrder, setWithdrawOrder] = useState<BacklogOrder | null>(null)
+  const [deleteOrder, setDeleteOrder] = useState<BacklogOrder | null>(null)
   const [prepareOrder, setPrepareOrder] = useState<BacklogOrder | null>(null)
   const [toast, setToast] = useState<{
     message: string
     type: 'error' | 'success' | 'info'
   } | null>(null)
+
+  useEffect(() => {
+    const state = getState()
+    setDailyOrders(state.dailyOrders)
+    setOrders(state.orders)
+    setPlantTables(state.plantTables)
+  }, [])
 
   const persist = useCallback(
     (nextOrders: BacklogOrder[], nextPlant: PlantTable[], nextDaily?: DailyOrder[]) => {
@@ -98,6 +111,40 @@ export function ProductionOrdersPage() {
     showToast(b.withdrawSuccess, 'success')
   }
 
+  function handleDeleteConfirm(reason: DeleteProductionReason, comment: string) {
+    if (!user || !deleteOrder) return
+
+    const REASON_LABELS_ES: Record<DeleteProductionReason, string> = {
+      incident: 'Incidencia operativa',
+      reference_error: 'Error de referencia',
+      supervisor_decision: 'Decisión de supervisor',
+      other: 'Otro',
+    }
+    const REASON_LABELS_EN: Record<DeleteProductionReason, string> = {
+      incident: 'Operational incident',
+      reference_error: 'Reference error',
+      supervisor_decision: 'Supervisor decision',
+      other: 'Other',
+    }
+    const labels = lang === 'es' ? REASON_LABELS_ES : REASON_LABELS_EN
+    const fullReason = `${labels[reason]} — ${comment}`
+
+    const result = deleteProductionOrder(
+      orders,
+      plantTables,
+      dailyOrders,
+      deleteOrder.id,
+      fullReason,
+      user.name,
+    )
+
+    persist(result.orders, result.plantTables, result.dailyOrders)
+    logOrderDeleted(user, deleteOrder.reference, fullReason)
+    setDeleteOrder(null)
+    setDetailOrder(null)
+    showToast(b.deleteOrderSuccess, 'success')
+  }
+
   function handlePrepareConfirm(nextOrder: BacklogOrder, nextPlant: PlantTable[]) {
     const nextOrders = orders.map((o) => (o.id === nextOrder.id ? nextOrder : o))
     persist(nextOrders, nextPlant)
@@ -154,6 +201,13 @@ export function ProductionOrdersPage() {
           }
           setWithdrawOrder(order)
         }}
+        onDelete={(order) => {
+          if (!user || !canDeleteProductionOrder(user)) {
+            showToast(b.noPermission, 'error')
+            return
+          }
+          setDeleteOrder(order)
+        }}
       />
 
       <BacklogToast
@@ -180,6 +234,14 @@ export function ProductionOrdersPage() {
           onClose={() => setWithdrawOrder(null)}
           onConfirm={handleWithdrawConfirm}
           commentRequired
+        />
+      )}
+
+      {deleteOrder && (
+        <DeleteProductionOrderModal
+          order={deleteOrder}
+          onClose={() => setDeleteOrder(null)}
+          onConfirm={handleDeleteConfirm}
         />
       )}
 

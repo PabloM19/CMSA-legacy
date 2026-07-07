@@ -4,17 +4,12 @@ import { PlusCircle } from 'lucide-react'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { useAuth } from '../../features/auth/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
-import type {
-  NewOrderFormData,
-  NewOrderFormErrors,
-  OrderCalculation,
-  OrderCompany,
-} from '../../types/newOrder'
+import type { NewOrderFormData, NewOrderFormErrors, OrderCompany } from '../../types/newOrder'
 import type { User } from '../../types/auth'
 import { hasFormErrors } from '../../utils/orderCalculation'
-import { getStepHint, validateStep1 } from '../../utils/newOrderViewHelpers'
-import { generateOrderId, generateOrderReference, saveCreatedOrder } from '../../utils/orderStorage'
-import { mergeCreatedOrder } from '../../utils/backlogStorage'
+import { getStepHint, validateBeforeConfirm } from '../../utils/newOrderViewHelpers'
+import { getState, appendDailyOrderAndSave } from '../../utils/backlogStorage'
+import { createDailyOrder } from '../../utils/dailyOrderOperations'
 import { logOrderCreated, logReferenceCreated } from '../../utils/activityLogActions'
 import { BacklogToast } from '../backlog/components/BacklogToast'
 import { isSupervisor } from '../../utils/permissions'
@@ -48,17 +43,6 @@ function emptyForm(company: OrderCompany): NewOrderFormData {
     boxes: '',
     boxesPerHour: '',
     barcode: '',
-  }
-}
-
-function createStubCalculation(): OrderCalculation {
-  return {
-    requiredTables: 2,
-    etc: '—',
-    estimatedEnd: '—',
-    capacityConsumed: 0,
-    alerts: [],
-    blocked: false,
   }
 }
 
@@ -156,7 +140,7 @@ export function NewOrderPage() {
   }
 
   function handleReviewConfirm() {
-    const validation = validateStep1(form, lang)
+    const validation = validateBeforeConfirm(form, lang)
     setErrors(validation)
     if (hasFormErrors(validation)) {
       setStepHint(getStepHint(form, lang))
@@ -184,38 +168,40 @@ export function NewOrderPage() {
   async function handleAcceptFinal() {
     if (submitting || !user) return
 
+    const validation = validateBeforeConfirm(form, lang)
+    setErrors(validation)
+    if (hasFormErrors(validation)) {
+      setShowFinalModal(false)
+      setShowSummaryModal(false)
+      setStepHint(getStepHint(form, lang))
+      return
+    }
+
     setSubmitting(true)
     await new Promise((resolve) => setTimeout(resolve, 400))
 
-    const reference = generateOrderReference()
-    const calculation = createStubCalculation()
+    const boxes = Number(form.boxes)
+    const state = getState()
+    const result = createDailyOrder(
+      state.dailyOrders,
+      {
+        estilo: form.boxFormat.trim() || form.type.trim() || '—',
+        referencia: form.productReference.trim(),
+        barcode: form.barcode.trim(),
+        variedad: form.variety.trim(),
+        producto: form.product.trim(),
+        empresa: form.company,
+        totalCajasDia: boxes,
+      },
+      user,
+    )
 
-    const created = {
-      ...form,
-      reference,
-      boxes: 0,
-      boxesPerHour: 0,
-      id: generateOrderId(),
-      createdAt: new Date().toISOString(),
-      status: 'pending' as const,
-      calculation,
-      ...(form.barcode.trim() ? { barcode: form.barcode.trim() } : {}),
-      ...(form.productId
-        ? {
-            productId: form.productId,
-            productReference: form.productReference,
-            productName: form.productName,
-          }
-        : {}),
-    }
-
-    saveCreatedOrder(created)
-    mergeCreatedOrder(created)
-    logOrderCreated(user, created.reference, created.company)
+    appendDailyOrderAndSave(result.dailyOrders, state.orders, state.plantTables)
+    logOrderCreated(user, result.order.referencia, result.order.empresa)
 
     setShowFinalModal(false)
     setShowSummaryModal(false)
-    setAcceptedReference(reference)
+    setAcceptedReference(result.order.referencia)
     setShowSuccessModal(true)
     setSubmitting(false)
     setStepHint(null)

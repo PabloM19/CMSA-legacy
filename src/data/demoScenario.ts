@@ -497,7 +497,8 @@ export function isLegacyScenarioState(dailyOrders: DailyOrder[] | undefined): bo
   return dailyOrders.some((d) => /^pd-\d+$/i.test(d.id))
 }
 
+/** Detecta IDs de órdenes del wireframe antiguo (no confundir con `po-{pedidoDiaId}-…`). */
 export function hasLegacyProductionOrderIds(orders: BacklogOrder[] | undefined): boolean {
   if (!orders?.length) return false
-  return orders.some((o) => /^(po-|bk-alm|bk-\d)/i.test(o.id))
+  return orders.some((o) => /^(bk-alm|bk-\d|po-\d+)$/i.test(o.id))
 }

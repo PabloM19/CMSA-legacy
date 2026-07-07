@@ -50,6 +50,10 @@ export function logOrderWithdrawn(actor: User, reference: string, detail: string
   logActivity(actor, 'Objetivo retirado de producción', 'pedido', `${reference} · ${detail}`)
 }
 
+export function logOrderDeleted(actor: User, reference: string, detail: string): void {
+  logActivity(actor, 'Orden de producción eliminada', 'pedido', `${reference} · ${detail}`)
+}
+
 export function logRecipeConfirmed(actor: User, reference: string): void {
   logActivity(actor, 'Receta confirmada', 'pedido', reference)
 }

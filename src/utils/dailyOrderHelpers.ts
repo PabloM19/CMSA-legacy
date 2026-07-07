@@ -83,19 +83,20 @@ export function syncDailyOrderFromProduction(
   productionOrders: BacklogOrder[],
 ): DailyOrder {
   const linked = productionOrders.filter((o) => o.pedidoDiaId === daily.id)
-  const active = linked.filter((o) => o.column !== 'finalizado' || o.productionState !== 'withdrawn')
-  const completed = linked.filter(
-    (o) => o.column === 'finalizado' && o.productionState === 'completed',
-  )
-  const withdrawn = linked.filter((o) => o.productionState === 'withdrawn')
 
-  const cajasAsignadas = active.reduce((s, o) => s + o.boxes, 0)
-    + completed.reduce((s, o) => s + o.boxes, 0)
-    + withdrawn.reduce((s, o) => s + o.boxes, 0)
+  const cajasAsignadas = linked
+    .filter((o) => o.productionState !== 'withdrawn')
+    .reduce((sum, o) => sum + o.boxes, 0)
 
-  const cajasCompletadas =
-    completed.reduce((s, o) => s + (o.boxesProduced ?? o.boxes), 0)
-    + withdrawn.reduce((s, o) => s + (o.boxesProduced ?? 0), 0)
+  const cajasCompletadas = linked.reduce((sum, o) => {
+    if (o.productionState === 'withdrawn') {
+      return sum + (o.boxesProduced ?? 0)
+    }
+    if (o.column === 'finalizado' && o.productionState === 'completed') {
+      return sum + (o.boxesProduced ?? o.boxes)
+    }
+    return sum
+  }, 0)
 
   return recalcDailyOrder({
     ...daily,

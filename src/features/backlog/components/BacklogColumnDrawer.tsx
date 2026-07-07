@@ -13,6 +13,7 @@ interface BacklogColumnDrawerProps {
   onPrepare?: (order: BacklogOrder) => void
   onConfirmRecipe?: (order: BacklogOrder) => void
   onWithdraw?: (order: BacklogOrder) => void
+  onDelete?: (order: BacklogOrder) => void
   completed?: boolean
 }
 
@@ -26,6 +27,7 @@ export function BacklogColumnDrawer({
   onPrepare,
   onConfirmRecipe,
   onWithdraw,
+  onDelete,
   completed = false,
 }: BacklogColumnDrawerProps) {
   const { t } = useLanguage()
@@ -69,6 +71,7 @@ export function BacklogColumnDrawer({
                 onPrepare={onPrepare}
                 onConfirmRecipe={onConfirmRecipe}
                 onWithdraw={onWithdraw}
+                onDelete={onDelete}
               />
             ))
           )}

@@ -137,6 +137,27 @@ export function NewOrderStep1({
             onChange={(e) => onChange('boxFormat', e.target.value)}
           />
         </FormField>
+
+        <div className="new-order-step__quantity">
+          <FormField
+            label={`${d.totalBoxesToProduce} *`}
+            htmlFor="totalBoxes"
+            hint={d.totalBoxesHint}
+            error={errors.boxes}
+          >
+            <Input
+              id="totalBoxes"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              step={1}
+              hasError={Boolean(errors.boxes)}
+              value={form.boxes}
+              placeholder={d.boxesExample}
+              onChange={(e) => onChange('boxes', e.target.value)}
+            />
+          </FormField>
+        </div>
       </div>
     </section>
   )

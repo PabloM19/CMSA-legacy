@@ -7,7 +7,7 @@ import { useAuth } from '../../../features/auth/AuthContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../../types/backlog'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
-import { canWithdrawProduction, isSupervisor } from '../../../utils/permissions'
+import { canDeleteProductionOrder, canWithdrawProduction, isSupervisor } from '../../../utils/permissions'
 import { formatTableList, resolveAssignedTableIds } from '../../../utils/backlogStorage'
 import { canConfirmCellReady, isPendingAcceptanceColumn, orderEtc } from '../../../utils/dailyOrderHelpers'
 import { getOrderStatusBadge } from '../../../utils/statusBadge'
@@ -21,6 +21,7 @@ interface BacklogOrderCardProps {
   onPrepare?: (order: BacklogOrder) => void
   onConfirmRecipe?: (order: BacklogOrder) => void
   onWithdraw?: (order: BacklogOrder) => void
+  onDelete?: (order: BacklogOrder) => void
 }
 
 export function BacklogOrderCard(props: BacklogOrderCardProps) {
@@ -40,6 +41,7 @@ function BacklogOrderCardContent({
   onPrepare,
   onConfirmRecipe,
   onWithdraw,
+  onDelete,
 }: {
   order: BacklogOrder
   compact?: boolean
@@ -49,6 +51,7 @@ function BacklogOrderCardContent({
   onPrepare?: (order: BacklogOrder) => void
   onConfirmRecipe?: (order: BacklogOrder) => void
   onWithdraw?: (order: BacklogOrder) => void
+  onDelete?: (order: BacklogOrder) => void
 }) {
   const { user } = useAuth()
   const { t, lang } = useLanguage()
@@ -162,6 +165,15 @@ function BacklogOrderCardContent({
         <button type="button" className="backlog-card__btn" onClick={() => onViewDetail(order)}>
           {d.viewDetail}
         </button>
+        {!completed && onDelete && user && canDeleteProductionOrder(user) && (
+          <button
+            type="button"
+            className="backlog-card__btn backlog-card__btn--danger"
+            onClick={() => onDelete(order)}
+          >
+            {d.deleteOrderAction}
+          </button>
+        )}
       </div>
     </article>
   )
@@ -218,6 +230,7 @@ function StaticBacklogOrderCard({
   onPrepare,
   onConfirmRecipe,
   onWithdraw,
+  onDelete,
 }: Omit<BacklogOrderCardProps, 'sortable'>) {
   return (
     <BacklogOrderCardContent
@@ -229,6 +242,7 @@ function StaticBacklogOrderCard({
       onPrepare={onPrepare}
       onConfirmRecipe={onConfirmRecipe}
       onWithdraw={onWithdraw}
+      onDelete={onDelete}
     />
   )
 }

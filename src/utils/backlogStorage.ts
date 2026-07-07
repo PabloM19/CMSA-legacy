@@ -7,7 +7,7 @@ import {
   isLegacyScenarioState,
   hasLegacyProductionOrderIds,
 } from '../data/demoScenario'
-import { buildSyncedDailyOrders, applyDailyOrderSeedLabels } from './dailyOrderHelpers'
+import { buildSyncedDailyOrders, applyDailyOrderSeedLabels, syncAllDailyOrders } from './dailyOrderHelpers'
 import type { DailyOrder } from '../types/dailyOrder'
 import { createCleanPalletizers, createCleanPlantTables, createSeedPalletizers, createSeedPlantTables } from '../data/mockPlantTables'
 import type { BacklogOrder } from '../types/backlog'
@@ -233,8 +233,19 @@ export function saveOrdersAndPlant(
   dailyOrders?: DailyOrder[],
 ): void {
   const current = getState()
-  const nextDaily = dailyOrders ?? buildSyncedDailyOrders(orders)
+  const baseDaily = dailyOrders ?? current.dailyOrders
+  const nextDaily = syncAllDailyOrders(baseDaily, orders)
   saveState({ ...current, orders, plantTables, dailyOrders: nextDaily })
+}
+
+export function appendDailyOrderAndSave(
+  dailyOrders: DailyOrder[],
+  orders: BacklogOrder[],
+  plantTables: PlantTable[],
+): DailyOrder[] {
+  const synced = syncAllDailyOrders(dailyOrders, orders)
+  saveState({ ...getState(), orders, plantTables, dailyOrders: synced })
+  return synced
 }
 
 export function mergeOrder(order: BacklogOrder): BacklogOrder[] {

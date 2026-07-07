@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Map, Plus, RefreshCw, Factory } from 'lucide-react'
 import { PageHeader } from '../../components/ui/PageHeader'
@@ -38,6 +38,13 @@ export function DailyOrdersPage() {
     message: string
     type: 'error' | 'success' | 'info'
   } | null>(null)
+
+  useEffect(() => {
+    const state = getState()
+    setDailyOrders(state.dailyOrders)
+    setOrders(state.orders)
+    setPlantTables(state.plantTables)
+  }, [])
 
   const persist = useCallback(
     (nextOrders: BacklogOrder[], nextPlant: PlantTable[], nextDaily?: DailyOrder[]) => {

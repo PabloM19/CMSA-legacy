@@ -118,17 +118,6 @@
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.performance-summary__card--primary {
-  align-items: flex-start;
-  padding-inline: var(--space-4);
-}
-
-.performance-summary__card--primary .circular-metric {
-  align-items: flex-start;
-  text-align: left;
-  width: 100%;
-}
-
 .performance-summary__card:hover .circular-metric__ring {
   transform: translateY(-2px) scale(1.03);
 }

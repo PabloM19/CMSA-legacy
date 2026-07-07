@@ -12,7 +12,7 @@ export function PerformanceSummary({ summary }: PerformanceSummaryProps) {
 
   return (
     <section className="performance-summary" aria-label={d.summaryTitle}>
-      <article className="performance-summary__card performance-summary__card--primary">
+      <article className="performance-summary__card">
         <CircularMetric
           value={summary.globalEfficiency}
           display={`${summary.globalEfficiency}%`}

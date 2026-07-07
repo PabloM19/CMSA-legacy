@@ -39,7 +39,8 @@ export function launchProductionOrder(
 ): { dailyOrders: DailyOrder[]; productionOrders: BacklogOrder[]; order: BacklogOrder } {
   const { etc, endTime } = formatMockEtc(input.boxes, input.boxesPerHour)
   const seq = productionOrders.filter((o) => o.pedidoDiaId === daily.id).length + 1
-  const id = `po-${daily.id}-${Date.now().toString(36).slice(2, 6)}`
+  const refSlug = daily.referencia.replace(/^REF-/, '')
+  const id = `ORD-${refSlug}-${String(seq).padStart(2, '0')}-${Date.now().toString(36).slice(2, 6)}`
 
   const order: BacklogOrder = {
     id,
@@ -77,17 +78,11 @@ export function launchProductionOrder(
   }
 
   let nextDaily = appendDailyOrderEvent(
-    {
-      ...daily,
-      cajasAsignadas: daily.cajasAsignadas + input.boxes,
-      cajasRestantes: Math.max(0, daily.cajasRestantes - input.boxes),
-      ordenesProduccionIds: [...daily.ordenesProduccionIds, id],
-    },
+    daily,
     'Orden de producción lanzada',
     user.name,
     `${input.boxes.toLocaleString('es-ES')} cajas`,
   )
-  nextDaily = recalcDailyOrder(nextDaily)
 
   const nextProduction = [...productionOrders, order]
   const syncedDaily = syncAllDailyOrders(
@@ -115,7 +110,6 @@ export function expandDailyOrder(
       {
         ...d,
         totalCajasDia: d.totalCajasDia + input.additionalBoxes,
-        cajasRestantes: d.cajasRestantes + input.additionalBoxes,
         estado: 'ampliado',
       },
       'Pedido del día ampliado',
@@ -136,22 +130,19 @@ export function applyWithdrawToDailyOrder(
   const order = productionOrders.find((o) => o.id === orderId)
   if (!order?.pedidoDiaId) return dailyOrders
 
-  return dailyOrders.map((d) => {
-    if (d.id !== order.pedidoDiaId) return d
-    const unproduced = Math.max(0, order.boxes - producedBoxes)
-    const next = appendDailyOrderEvent(
-      {
-        ...d,
-        cajasAsignadas: Math.max(0, d.cajasAsignadas - unproduced),
-        cajasCompletadas: d.cajasCompletadas + producedBoxes,
-        cajasRestantes: d.cajasRestantes + unproduced,
-      },
-      'Orden retirada de producción',
-      user.name,
-      `${producedBoxes.toLocaleString('es-ES')} cajas producidas; ${unproduced.toLocaleString('es-ES')} devueltas a restante`,
-    )
-    return recalcDailyOrder(next)
-  })
+  return syncAllDailyOrders(
+    dailyOrders.map((d) => {
+      if (d.id !== order.pedidoDiaId) return d
+      const unproduced = Math.max(0, order.boxes - producedBoxes)
+      return appendDailyOrderEvent(
+        d,
+        'Orden retirada de producción',
+        user.name,
+        `${producedBoxes.toLocaleString('es-ES')} cajas producidas; ${unproduced.toLocaleString('es-ES')} devueltas a restante`,
+      )
+    }),
+    productionOrders,
+  )
 }
 
 export function canLaunchOverRemaining(user: User, boxes: number, remaining: number): boolean {
@@ -168,6 +159,7 @@ export interface CreateDailyOrderInput {
   empresa: DailyOrder['empresa']
   fecha?: string
   observaciones?: string
+  totalCajasDia: number
 }
 
 export function createDailyOrder(
@@ -177,7 +169,9 @@ export function createDailyOrder(
 ): { dailyOrders: DailyOrder[]; order: DailyOrder } {
   const id = `pd-${Date.now().toString(36).slice(2, 8)}`
   const fecha = input.fecha?.trim() || new Date().toISOString().slice(0, 10)
+  const totalCajas = Math.max(0, input.totalCajasDia)
   const detailParts = [input.variedad.trim(), input.observaciones?.trim()].filter(Boolean)
+  const totalLabel = `${totalCajas.toLocaleString('es-ES')} cajas`
 
   const order: DailyOrder = recalcDailyOrder({
     id,
@@ -188,7 +182,7 @@ export function createDailyOrder(
     empresa: input.empresa,
     producto: input.producto?.trim() || 'Naranja',
     variedad: input.variedad.trim(),
-    totalCajasDia: 0,
+    totalCajasDia: totalCajas,
     cajasAsignadas: 0,
     cajasCompletadas: 0,
     cajasRestantes: 0,
@@ -203,7 +197,7 @@ export function createDailyOrder(
         at: new Date().toISOString(),
         action: 'Pedido del día creado',
         user: user.name,
-        detail: detailParts.join(' · ') || input.estilo.trim(),
+        detail: [totalLabel, ...detailParts].filter(Boolean).join(' · ') || input.estilo.trim(),
       },
     ],
   })

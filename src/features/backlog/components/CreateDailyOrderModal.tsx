@@ -75,6 +75,7 @@ export function CreateDailyOrderModal({
         empresa,
         fecha,
         observaciones: observaciones.trim() || undefined,
+        totalCajasDia: 0,
       },
       user,
     )

@@ -163,6 +163,10 @@ export function canWithdrawProduction(user: User): boolean {
   return isSupervisor(user)
 }
 
+export function canDeleteProductionOrder(user: User): boolean {
+  return isSupervisor(user)
+}
+
 export function getMobileNavItems(user: User) {
   let items = getVisibleNavItems(user).filter(
     (item) => item.key !== 'tablet' && item.key !== 'mobile',
