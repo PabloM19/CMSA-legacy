@@ -1,4 +1,5 @@
 import { DEMO_LIMITS } from '../config/demoLimits'
+import type { Lang } from '../i18n/translations'
 import type { BacklogOrder } from '../types/backlog'
 import { formatTableList, resolveAssignedTableIds } from './tableAssignment'
 import type { LimitCheck } from '../config/demoLimits'
