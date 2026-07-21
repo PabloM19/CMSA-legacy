@@ -18,6 +18,7 @@ import type { OrderCompany } from '../types/newOrder'
 import type { PlantPalletizerElement, PlantTable, PlantTableStatus, PlantTableType } from '../types/plant'
 import { getState, saveState } from './backlogStorage'
 import { setAdminPlantOverride } from './adminPlantOverrides'
+import { resetLoginAttempts } from './loginAttemptsStorage'
 
 export const ADMIN_STORAGE_KEY = 'cmsa-admin-data'
 
@@ -331,6 +332,7 @@ export function resetAdminUserPassword(
   user.requiresPasswordSetup = true
   delete data.userPasswords[user.username]
   saveAdminData(data)
+  resetLoginAttempts(user.username)
   addAuditEvent(actor, 'Contraseña restablecida', 'usuario', user.username)
   return { ok: true, user }
 }

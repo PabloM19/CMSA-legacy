@@ -151,6 +151,7 @@ export function UsersTab({ refreshKey, onChanged }: UsersTabProps) {
     }
     setConfirmResetPassword(null)
     onChanged()
+    alert(d.resetPasswordSuccess)
   }
 
   return (

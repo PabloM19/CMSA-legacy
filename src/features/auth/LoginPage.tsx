@@ -1,4 +1,4 @@
-import { Eye, EyeOff } from 'lucide-react'
+import { AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -10,13 +10,21 @@ import type { User } from '../../types/auth'
 import {
   completePasswordSetup,
   getPostLoginPath,
-  resolveLogin,
 } from '../../utils/auth'
+import { attemptLogin } from '../../utils/loginAttemptFlow'
+import { isUserLoginLocked, resetLoginAttempts } from '../../utils/loginAttemptsStorage'
 import { readUserPreferences } from '../../utils/userPreferences'
 import { useAuth } from './AuthContext'
 import './login.css'
 
 const LOGIN_DELAY_MS = 600
+
+type LoginAlertType = 'user' | 'password' | 'locked'
+
+interface LoginAlert {
+  type: LoginAlertType
+  message: string
+}
 
 function UserIcon() {
   return (
@@ -84,10 +92,15 @@ export function LoginPage() {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState(false)
+  const [usernameError, setUsernameError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [alertError, setAlertError] = useState<LoginAlert | null>(null)
   const [loading, setLoading] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  const trimmedUsername = username.trim()
+  const isLockedUser = trimmedUsername !== '' && isUserLoginLocked(trimmedUsername)
 
   const [setupUser, setSetupUser] = useState<User | null>(null)
   const [newPassword, setNewPassword] = useState('')
@@ -106,18 +119,22 @@ export function LoginPage() {
     e.preventDefault()
     if (loading) return
 
-    setError(false)
+    setUsernameError(null)
+    setPasswordError(null)
+    setAlertError(null)
     setLoading(true)
 
     await new Promise((resolve) => setTimeout(resolve, LOGIN_DELAY_MS))
 
-    const result = resolveLogin(username.trim(), password)
+    const result = attemptLogin(username, password)
+
     if (result.type === 'success') {
-      finishLogin(result.user, login, setLang, navigate)
+      finishLogin(result.login.user, login, setLang, navigate)
       return
     }
+
     if (result.type === 'password_setup_required') {
-      setSetupUser(result.user)
+      setSetupUser(result.login.user)
       setNewPassword('')
       setConfirmPassword('')
       setSetupError(null)
@@ -125,7 +142,34 @@ export function LoginPage() {
       return
     }
 
-    setError(true)
+    if (result.error === 'user_not_found') {
+      setUsernameError(copy.errorUserNotFound)
+      setAlertError({ type: 'user', message: copy.errorUserNotFound })
+      setLoading(false)
+      return
+    }
+
+    if (result.error === 'locked') {
+      const message = copy.errorLocked
+      setPasswordError(message)
+      setAlertError({ type: 'locked', message })
+      setLoading(false)
+      return
+    }
+
+    if (result.error === 'wrong_password' && result.attempts) {
+      const message = copy.errorWrongPasswordAttempts.replace(
+        '{remaining}',
+        String(result.attempts.remainingAttempts),
+      )
+      setPasswordError(copy.errorWrongPassword)
+      setAlertError({ type: 'password', message })
+      setLoading(false)
+      return
+    }
+
+    setPasswordError(copy.errorWrongPassword)
+    setAlertError({ type: 'password', message: copy.errorWrongPassword })
     setLoading(false)
   }
 
@@ -152,6 +196,7 @@ export function LoginPage() {
     }
 
     finishLogin(result.user, login, setLang, navigate)
+    resetLoginAttempts(setupUser.username)
   }
 
   function handleBackToLogin() {
@@ -160,7 +205,30 @@ export function LoginPage() {
     setConfirmPassword('')
     setSetupError(null)
     setPassword('')
-    setError(false)
+    setUsernameError(null)
+    setPasswordError(null)
+    setAlertError(null)
+  }
+
+  function handleUsernameChange(value: string) {
+    setUsername(value)
+    setUsernameError(null)
+
+    const nextTrimmed = value.trim()
+    if (nextTrimmed && isUserLoginLocked(nextTrimmed)) {
+      setAlertError({ type: 'locked', message: copy.errorLocked })
+    } else {
+      setAlertError((current) => (current?.type === 'locked' ? null : current))
+      setPasswordError((current) =>
+        current === copy.errorLocked ? null : current,
+      )
+    }
+  }
+
+  function handlePasswordChange(value: string) {
+    setPassword(value)
+    setPasswordError(null)
+    setAlertError((current) => (current?.type === 'password' ? null : current))
   }
 
   return (
@@ -281,6 +349,13 @@ export function LoginPage() {
             </form>
           ) : (
             <form className="login-card__form" onSubmit={handleSubmit} noValidate>
+              {alertError && (
+                <div className="login-card__alert login-card__alert--error" role="alert">
+                  <AlertCircle size={18} aria-hidden="true" />
+                  <span>{alertError.message}</span>
+                </div>
+              )}
+
               <div className="login-card__field">
                 <label className="login-card__label" htmlFor="username">
                   {copy.username}
@@ -289,18 +364,22 @@ export function LoginPage() {
                   <UserIcon />
                   <input
                     id="username"
-                    className={`login-card__input${error ? ' login-card__input--error' : ''}`}
+                    className={`login-card__input${usernameError ? ' login-card__input--error' : ''}`}
                     type="text"
                     autoComplete="username"
                     placeholder={copy.usernamePlaceholder}
                     value={username}
-                    onChange={(e) => {
-                      setUsername(e.target.value)
-                      setError(false)
-                    }}
+                    onChange={(e) => handleUsernameChange(e.target.value)}
                     disabled={loading}
+                    aria-invalid={usernameError ? true : undefined}
+                    aria-describedby={usernameError ? 'username-error' : undefined}
                   />
                 </div>
+                {usernameError && (
+                  <p id="username-error" className="login-card__field-error" role="alert">
+                    {usernameError}
+                  </p>
+                )}
               </div>
 
               <div className="login-card__field">
@@ -311,16 +390,15 @@ export function LoginPage() {
                   <LockIcon />
                   <input
                     id="password"
-                    className={`login-card__input login-card__input--password${error ? ' login-card__input--error' : ''}`}
+                    className={`login-card__input login-card__input--password${passwordError ? ' login-card__input--error' : ''}`}
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     placeholder={copy.passwordPlaceholder}
                     value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value)
-                      setError(false)
-                    }}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
                     disabled={loading}
+                    aria-invalid={passwordError ? true : undefined}
+                    aria-describedby={passwordError ? 'password-error' : undefined}
                   />
                   <button
                     type="button"
@@ -336,15 +414,18 @@ export function LoginPage() {
                     )}
                   </button>
                 </div>
+                {passwordError && (
+                  <p id="password-error" className="login-card__field-error" role="alert">
+                    {passwordError}
+                  </p>
+                )}
               </div>
 
-              {error && (
-                <p className="login-card__error" role="alert">
-                  {copy.error}
-                </p>
-              )}
-
-              <button type="submit" className="login-card__submit" disabled={loading}>
+              <button
+                type="submit"
+                className="login-card__submit"
+                disabled={loading || isLockedUser}
+              >
                 {loading ? copy.loading : copy.submit}
               </button>
             </form>

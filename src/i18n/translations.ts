@@ -121,6 +121,11 @@ const translations = {
       submit: 'Acceder',
       loading: 'Accediendo…',
       error: 'Usuario o contraseña incorrectos.',
+      errorUserNotFound: 'Usuario no encontrado.',
+      errorWrongPassword: 'Contraseña incorrecta.',
+      errorWrongPasswordAttempts: 'Contraseña incorrecta. Te quedan {remaining} intentos.',
+      errorLocked:
+        'Has agotado los intentos disponibles. Contacta con un administrador para restablecer tu contraseña.',
       helpToggle: 'Ver usuarios demo',
       helpHide: 'Ocultar usuarios demo',
       helpTitle: 'Usuarios demo',
@@ -1159,6 +1164,8 @@ const translations = {
       confirmResetPassword: 'Restablecer contraseña',
       confirmResetPasswordMsg:
         'El usuario deberá crear una nueva contraseña en su próximo acceso. ¿Continuar?',
+      resetPasswordSuccess:
+        'Restablecimiento solicitado. El usuario podrá crear una nueva contraseña en su próximo acceso.',
       passwordSetupPending: 'Pendiente de crear contraseña',
       passwordSetupDone: 'Contraseña configurada',
       createCompany: 'Crear empresa',
@@ -1428,6 +1435,11 @@ const translations = {
       submit: 'Sign in',
       loading: 'Signing in…',
       error: 'Invalid username or password.',
+      errorUserNotFound: 'User not found.',
+      errorWrongPassword: 'Incorrect password.',
+      errorWrongPasswordAttempts: 'Incorrect password. You have {remaining} attempts left.',
+      errorLocked:
+        'You have used all available attempts. Contact an administrator to reset your password.',
       helpToggle: 'Show demo users',
       helpHide: 'Hide demo users',
       helpTitle: 'Demo users',
@@ -2463,6 +2475,8 @@ const translations = {
       confirmResetPassword: 'Reset password',
       confirmResetPasswordMsg:
         'The user will need to create a new password on their next sign-in. Continue?',
+      resetPasswordSuccess:
+        'Reset requested. The user will be able to create a new password on their next sign-in.',
       passwordSetupPending: 'Pending password setup',
       passwordSetupDone: 'Password configured',
       createCompany: 'Create company',
