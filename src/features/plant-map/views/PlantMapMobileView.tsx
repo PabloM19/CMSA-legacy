@@ -260,10 +260,6 @@ export function PlantMapMobileView() {
             <span className="mobile-summary-chip__label">{d.tablesOccupied}</span>
           </div>
           <div className="mobile-summary-chip">
-            <span className="mobile-summary-chip__value">{tableSummary.pendingValidation}</span>
-            <span className="mobile-summary-chip__label">{d.tablesPending}</span>
-          </div>
-          <div className="mobile-summary-chip">
             <span className="mobile-summary-chip__value">{tableSummary.blocked}</span>
             <span className="mobile-summary-chip__label">{d.tablesBlocked}</span>
           </div>

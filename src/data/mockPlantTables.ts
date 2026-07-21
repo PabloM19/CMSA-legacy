@@ -63,8 +63,8 @@ export function createCleanPlantTables(): PlantTable[] {
 /** Estado inicial legacy de planta (referencia histórica). */
 export function createSeedPlantTables(): PlantTable[] {
   return [
-    { id: 'R1', name: 'R1', type: 'automatic', status: 'pending_validation', company: 'SUMO', orderId: 'bk-3', speedStatus: 'normal', alert: null },
-    { id: 'R2', name: 'R2', type: 'automatic', status: 'pending_validation', company: 'SUMO', orderId: 'bk-3', speedStatus: 'normal', alert: null },
+    { id: 'R1', name: 'R1', type: 'automatic', status: 'waiting', company: 'SUMO', orderId: 'bk-3', speedStatus: 'normal', alert: null },
+    { id: 'R2', name: 'R2', type: 'automatic', status: 'waiting', company: 'SUMO', orderId: 'bk-3', speedStatus: 'normal', alert: null },
     { id: 'R3', name: 'R3', type: 'automatic', status: 'occupied', company: 'MAF', orderId: 'bk-4', speedStatus: 'fast', alert: null },
     { id: 'R4', name: 'R4', type: 'automatic', status: 'free', company: null, orderId: null, speedStatus: 'normal', alert: null },
     { id: 'R5', name: 'R5', type: 'automatic', status: 'waiting', company: null, orderId: null, speedStatus: 'slow', alert: 'Espera de material' },
@@ -72,7 +72,7 @@ export function createSeedPlantTables(): PlantTable[] {
     { id: 'R7', name: 'R7', type: 'automatic', status: 'free', company: null, orderId: null, speedStatus: 'normal', alert: null },
     { id: 'R8', name: 'R8', type: 'automatic', status: 'free', company: null, orderId: null, speedStatus: 'normal', alert: null },
     { id: 'R9', name: 'R9', type: 'automatic', status: 'free', company: null, orderId: null, speedStatus: 'normal', alert: null },
-    { id: 'M1', name: 'M1', type: 'manual', status: 'pending_validation', company: 'SUMO', orderId: 'bk-3', speedStatus: null, alert: null },
+    { id: 'M1', name: 'M1', type: 'manual', status: 'waiting', company: 'SUMO', orderId: 'bk-3', speedStatus: null, alert: null },
     { id: 'M2', name: 'M2', type: 'manual', status: 'free', company: null, orderId: null, speedStatus: null, alert: null },
     { id: 'M3', name: 'M3', type: 'manual', status: 'free', company: null, orderId: null, speedStatus: null, alert: null },
     { id: 'M4', name: 'M4', type: 'manual', status: 'free', company: null, orderId: null, speedStatus: null, alert: null },

@@ -1,7 +1,8 @@
+import { useId, useState, type ReactNode } from 'react'
 import {
   AlertTriangle,
-  Ban,
-  Bot,
+  ChevronDown,
+  ChevronUp,
   Lock,
   Package,
   PauseCircle,
@@ -10,22 +11,109 @@ import {
   UserRound,
 } from 'lucide-react'
 import { useLanguage } from '../../../i18n/LanguageContext'
+import {
+  PLANT_LEGEND_CLOSE_ARIA,
+  PLANT_LEGEND_COLLAPSED_SUMMARY,
+  PLANT_LEGEND_ICON_BLOCK,
+  PLANT_LEGEND_OPEN_ARIA,
+  PLANT_LEGEND_SECTION_COMPANY,
+  PLANT_LEGEND_SECTION_STATES,
+} from './plantLegendCopy'
+import { RobotArmIcon } from './RobotArmIcon'
 
-const ICON_SIZE = 14
+const ICON_SIZE = 16
+
+interface LegendChipItem {
+  key: string
+  label: string
+  swatchClassName?: string
+  icon?: ReactNode
+}
+
+interface LegendRowProps {
+  label: string
+  items: LegendChipItem[]
+  withDivider?: boolean
+}
+
+function LegendChip({ swatchClassName, icon, label }: Omit<LegendChipItem, 'key'>) {
+  return (
+    <span className={`plant-legend__chip${icon ? ' plant-legend__chip--icon' : ''}`}>
+      {swatchClassName ? <span className={swatchClassName} aria-hidden="true" /> : null}
+      {icon ? (
+        <span className="plant-legend__chip-icon" aria-hidden="true">
+          {icon}
+        </span>
+      ) : null}
+      {label}
+    </span>
+  )
+}
+
+function LegendRow({ label, items, withDivider }: LegendRowProps) {
+  return (
+    <div
+      className={`plant-legend__row${withDivider ? ' plant-legend__row--divider' : ''}`}
+    >
+      <span className="plant-legend__group-label">{label}</span>
+      {items.map((item) => (
+        <LegendChip
+          key={item.key}
+          swatchClassName={item.swatchClassName}
+          icon={item.icon}
+          label={item.label}
+        />
+      ))}
+    </div>
+  )
+}
 
 export function PlantLegend() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const d = t.plantMap
+  const [expanded, setExpanded] = useState(false)
+  const panelId = useId()
 
-  const companyItems = [
-    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--sumo', label: d.legendSumoStripe },
-    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--maf', label: d.legendMafStripe },
+  const stateItems: LegendChipItem[] = [
+    {
+      key: 'occupied',
+      swatchClassName: 'plant-legend__chip-swatch plant-legend__chip-swatch--occupied',
+      label: d.legendOccupied,
+    },
+    {
+      key: 'waiting',
+      swatchClassName: 'plant-legend__chip-swatch plant-legend__chip-swatch--waiting',
+      label: d.legendColorWaiting,
+    },
+    {
+      key: 'blocked',
+      swatchClassName: 'plant-legend__chip-swatch plant-legend__chip-swatch--blocked',
+      label: d.legendColorBlocked,
+    },
+    {
+      key: 'free',
+      swatchClassName: 'plant-legend__chip-swatch plant-legend__chip-swatch--free',
+      label: d.legendFree,
+    },
   ]
 
-  const typeItems = [
+  const companyItems: LegendChipItem[] = [
+    {
+      key: 'sumo',
+      swatchClassName: 'plant-legend__chip-swatch plant-legend__chip-swatch--sumo',
+      label: d.legendSumoStripe,
+    },
+    {
+      key: 'maf',
+      swatchClassName: 'plant-legend__chip-swatch plant-legend__chip-swatch--maf',
+      label: d.legendMafStripe,
+    },
+  ]
+
+  const typeItems: LegendChipItem[] = [
     {
       key: 'robot',
-      icon: <Bot size={ICON_SIZE} aria-hidden="true" />,
+      icon: <RobotArmIcon size={ICON_SIZE} aria-hidden="true" />,
       label: d.legendTypeRobot,
     },
     {
@@ -40,20 +128,7 @@ export function PlantLegend() {
     },
   ]
 
-  const colorItems = [
-    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--occupied', label: d.legendOccupied },
-    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--waiting', label: d.legendColorWaiting },
-    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--blocked', label: d.legendColorBlocked },
-    {
-      className: 'plant-legend__chip-swatch plant-legend__chip-swatch--critical',
-      label: d.legendColorCriticalBlink,
-    },
-    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--preparing', label: d.legendColorPreparing },
-    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--disabled', label: d.legendDisabled },
-    { className: 'plant-legend__chip-swatch plant-legend__chip-swatch--free', label: d.legendFree },
-  ]
-
-  const topIcons = [
+  const topIconItems: LegendChipItem[] = [
     {
       key: 'slow',
       icon: <TrendingDown size={ICON_SIZE} aria-hidden="true" />,
@@ -66,7 +141,7 @@ export function PlantLegend() {
     },
   ]
 
-  const bottomIcons = [
+  const bottomIconItems: LegendChipItem[] = [
     {
       key: 'event',
       icon: <AlertTriangle size={ICON_SIZE} aria-hidden="true" />,
@@ -78,74 +153,46 @@ export function PlantLegend() {
       label: d.legendIconPause,
     },
     {
-      key: 'lock',
-      icon: <Lock size={ICON_SIZE} aria-hidden="true" />,
-      label: d.legendIconLock,
-    },
-    {
       key: 'block',
-      icon: <Ban size={ICON_SIZE} aria-hidden="true" />,
-      label: d.legendIconSafety,
+      icon: <Lock size={ICON_SIZE} aria-hidden="true" />,
+      label: PLANT_LEGEND_ICON_BLOCK[lang],
     },
   ]
 
   return (
-    <section className="plant-legend plant-legend--compact dash-card" aria-label={d.legendTitle}>
-      <h2 className="plant-legend__compact-title">{d.legendTitle}</h2>
-      <p className="plant-legend__placement-note">{d.legendIconPlacementNote}</p>
-
-      <div className="plant-legend__compact-row">
-        <span className="plant-legend__icon-group-label">{d.legendTypesLabel}</span>
-        {typeItems.map((item) => (
-          <span key={item.key} className="plant-legend__chip plant-legend__chip--icon">
-            <span className="plant-legend__chip-icon" aria-hidden="true">
-              {item.icon}
-            </span>
-            {item.label}
-          </span>
-        ))}
+    <section
+      className={`plant-legend plant-legend--collapsible dash-card${expanded ? ' plant-legend--expanded' : ' plant-legend--collapsed'}`}
+      aria-label={d.legendTitle}
+    >
+      <div className="plant-legend__header">
+        <div className="plant-legend__header-text">
+          <h2 className="plant-legend__title">{d.legendTitle}</h2>
+          <p className="plant-legend__summary">{PLANT_LEGEND_COLLAPSED_SUMMARY[lang]}</p>
+        </div>
+        <button
+          type="button"
+          className="plant-legend__toggle"
+          aria-expanded={expanded}
+          aria-controls={panelId}
+          aria-label={expanded ? PLANT_LEGEND_CLOSE_ARIA[lang] : PLANT_LEGEND_OPEN_ARIA[lang]}
+          onClick={() => setExpanded((open) => !open)}
+        >
+          {expanded ? (
+            <ChevronUp size={20} strokeWidth={2} aria-hidden="true" />
+          ) : (
+            <ChevronDown size={20} strokeWidth={2} aria-hidden="true" />
+          )}
+        </button>
       </div>
 
-      <div className="plant-legend__compact-row">
-        {companyItems.map((item) => (
-          <span key={item.label} className="plant-legend__chip">
-            <span className={item.className} aria-hidden="true" />
-            {item.label}
-          </span>
-        ))}
-      </div>
-
-      <div className="plant-legend__compact-row">
-        {colorItems.map((item) => (
-          <span key={item.label} className="plant-legend__chip">
-            <span className={item.className} aria-hidden="true" />
-            {item.label}
-          </span>
-        ))}
-      </div>
-
-      <div className="plant-legend__compact-row plant-legend__compact-row--icons">
-        <span className="plant-legend__icon-group-label">{d.legendIconsTopLabel}</span>
-        {topIcons.map((item) => (
-          <span key={item.key} className="plant-legend__chip plant-legend__chip--icon">
-            <span className="plant-legend__chip-icon" aria-hidden="true">
-              {item.icon}
-            </span>
-            {item.label}
-          </span>
-        ))}
-      </div>
-
-      <div className="plant-legend__compact-row plant-legend__compact-row--icons">
-        <span className="plant-legend__icon-group-label">{d.legendIconsBottomLabel}</span>
-        {bottomIcons.map((item) => (
-          <span key={item.key} className="plant-legend__chip plant-legend__chip--icon">
-            <span className="plant-legend__chip-icon" aria-hidden="true">
-              {item.icon}
-            </span>
-            {item.label}
-          </span>
-        ))}
+      <div id={panelId} className="plant-legend__panel" hidden={!expanded}>
+        <div className="plant-legend__body">
+          <LegendRow label={PLANT_LEGEND_SECTION_STATES[lang]} items={stateItems} />
+          <LegendRow label={PLANT_LEGEND_SECTION_COMPANY[lang]} items={companyItems} />
+          <LegendRow label={d.legendTypesLabel} items={typeItems} />
+          <LegendRow label={d.legendIconsTopLabel} items={topIconItems} withDivider />
+          <LegendRow label={d.legendIconsBottomLabel} items={bottomIconItems} withDivider />
+        </div>
       </div>
     </section>
   )

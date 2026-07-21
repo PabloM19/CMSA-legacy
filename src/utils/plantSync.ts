@@ -4,6 +4,21 @@ import { applyUnassignedTableDemos } from '../data/mockPlantTables'
 
 const FREE: PlantTableStatus = 'free'
 
+const REMOVED_PLANT_STATUSES = new Set(['reserved', 'preparing', 'pending_validation'])
+
+/** Migra estados de celda eliminados (preparación / confirmación) a espera temporal. */
+export function normalizePlantTableStatus(status: PlantTableStatus | string): PlantTableStatus {
+  if (REMOVED_PLANT_STATUSES.has(status)) return 'waiting'
+  return status as PlantTableStatus
+}
+
+export function normalizePlantTables(plantTables: PlantTable[]): PlantTable[] {
+  return plantTables.map((table) => ({
+    ...table,
+    status: normalizePlantTableStatus(table.status),
+  }))
+}
+
 export function releaseTablesForOrder(orderId: string, plantTables: PlantTable[]): PlantTable[] {
   return plantTables.map((table) =>
     table.orderId === orderId
@@ -39,7 +54,7 @@ export function mapValidationStatusToPlant(
     case 'parada':
       return 'waiting'
     default:
-      return 'pending_validation'
+      return 'waiting'
   }
 }
 
@@ -104,7 +119,7 @@ export function rebuildPlantTablesFromOrders(
           ...table,
           company: order.company,
           orderId: order.id,
-          status: vt ? mapValidationStatusToPlant(vt.status) : 'preparing',
+          status: vt ? mapValidationStatusToPlant(vt.status) : 'waiting',
         }
       })
     } else if (order.column === 'en_produccion') {
@@ -134,5 +149,5 @@ export function rebuildPlantTablesFromOrders(
     }
   })
 
-  return applyUnassignedTableDemos(next)
+  return normalizePlantTables(applyUnassignedTableDemos(next))
 }

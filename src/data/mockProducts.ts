@@ -13,6 +13,10 @@ export interface MockProduct {
   tipo: string
   cajasHoraSugeridas?: number
   descripcion?: string
+  /** Tipo de palé asociado a la referencia (mock). */
+  tipoPalet?: string
+  /** Número de alturas del palé (mock). */
+  alturas?: string
   activo: boolean
 }
 
@@ -48,6 +52,8 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     calibre: 'S',
     formatoCaja: 'Caja estándar 15 kg',
     uso: 'Mesa',
+    tipoPalet: 'Palé azul',
+    alturas: '8',
     cajasHoraSugeridas: 520,
     descripcion: 'Naranja Navelina de mesa, calibre pequeño.',
   }),
@@ -100,6 +106,36 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     descripcion: 'Naranja Newhall calibre grande, uso mixto.',
   }),
   product({
+    id: 'orange-006a',
+    referenciaProducto: 'REF-WASHINGTON-A',
+    barcode: '8437001000999',
+    nombre: 'Naranja Washington Navel calibre M · Palé azul',
+    variedad: 'Washington Navel',
+    grupo: 'Navel',
+    calibre: 'M',
+    formatoCaja: 'Caja estándar 15 kg',
+    uso: 'Mesa',
+    tipoPalet: 'Palé azul',
+    alturas: '8',
+    cajasHoraSugeridas: 505,
+    descripcion: 'Washington Navel con palé azul, 8 alturas.',
+  }),
+  product({
+    id: 'orange-006b',
+    referenciaProducto: 'REF-WASHINGTON-B',
+    barcode: '8437001000999',
+    nombre: 'Naranja Washington Navel calibre M · Palé rojo',
+    variedad: 'Washington Navel',
+    grupo: 'Navel',
+    calibre: 'M',
+    formatoCaja: 'Caja estándar 15 kg',
+    uso: 'Mesa',
+    tipoPalet: 'Palé rojo',
+    alturas: '10',
+    cajasHoraSugeridas: 505,
+    descripcion: 'Washington Navel con palé rojo, 10 alturas.',
+  }),
+  product({
     id: 'orange-006',
     referenciaProducto: 'REF-WASHINGTON-NAVEL',
     nombre: 'Naranja Washington Navel calibre M',
@@ -144,6 +180,8 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     calibre: 'M',
     formatoCaja: 'Caja premium 10 kg',
     uso: 'Mesa',
+    tipoPalet: 'Palé europeo',
+    alturas: '7',
     cajasHoraSugeridas: 460,
     descripcion: 'Naranja Cara Cara de mesa, pulpa rosada.',
   }),
@@ -168,6 +206,8 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     calibre: 'M',
     formatoCaja: 'Caja estándar 15 kg',
     uso: 'Mesa',
+    tipoPalet: 'Palé azul',
+    alturas: '8',
     cajasHoraSugeridas: 495,
     descripcion: 'Naranja Lane Late tardía, calibre medio.',
   }),
@@ -264,6 +304,8 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     calibre: 'M',
     formatoCaja: 'Caja zumo 15 kg',
     uso: 'Zumo',
+    tipoPalet: 'Palé estándar',
+    alturas: '9',
     cajasHoraSugeridas: 530,
     descripcion: 'Naranja Salustiana para industria de zumo.',
   }),
@@ -288,6 +330,8 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     calibre: 'L',
     formatoCaja: 'Caja estándar 15 kg',
     uso: 'Mixta',
+    tipoPalet: 'Palé rojo',
+    alturas: '10',
     cajasHoraSugeridas: 510,
     descripcion: 'Naranja Valencia Late calibre grande, uso mixto.',
   }),

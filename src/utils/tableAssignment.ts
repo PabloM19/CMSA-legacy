@@ -138,7 +138,7 @@ export function assignTablesToOrder(
     if (!selectedIds.has(table.id)) return table
     return {
       ...table,
-      status: 'pending_validation' as const,
+      status: 'waiting' as const,
       company: order.company,
       orderId: order.id,
       alert: null,

@@ -64,7 +64,11 @@ function tableToView(table: PlantTable, order: BacklogOrder | null, lang: Lang):
   }
 }
 
-function palletizerToView(p: PlantPalletizerElement): PlantElementView {
+function palletizerToView(
+  p: PlantPalletizerElement,
+  order: BacklogOrder | null,
+  lang: Lang,
+): PlantElementView {
   const disabled = isElementDisabled(p.id, 'palletizer')
   return {
     id: p.id,
@@ -73,22 +77,23 @@ function palletizerToView(p: PlantPalletizerElement): PlantElementView {
     status: disabled ? 'idle' : p.status,
     company: disabled ? null : p.company,
     orderId: disabled ? null : p.orderId,
-    orderReference: null,
-    product: null,
-    variety: null,
-    boxes: null,
-    boxesPerHour: null,
-    eta: null,
-    endTime: null,
-    remainingTime: null,
+    orderReference: disabled ? null : (order?.reference ?? null),
+    product: disabled ? null : (order?.product ?? null),
+    variety: disabled ? null : (order?.variety ?? null),
+    boxes: disabled ? null : (order?.boxes ?? null),
+    boxesPerHour: disabled ? null : (order?.boxesPerHour ?? null),
+    eta: disabled ? null : (order?.etc ?? order?.eta ?? null),
+    endTime: disabled ? null : (order?.endTime ?? null),
+    remainingTime: disabled ? null : mockRemainingTime(order?.endTime ?? null, lang),
     speedStatus: null,
     occupancyPercent: disabled
       ? null
-      : p.status === 'active'
-        ? 68
-        : p.status === 'waiting'
-          ? 22
-          : null,
+      : order?.occupancyPercent ??
+        (p.status === 'active'
+          ? 68
+          : p.status === 'waiting'
+            ? 22
+            : null),
     alert: disabled ? null : p.alert,
     isClickable: !disabled,
     isDisabled: disabled,
@@ -111,7 +116,8 @@ export function buildPlantElementMap(
   })
 
   palletizers.forEach((p) => {
-    map.set(p.id, palletizerToView(p))
+    const order = p.orderId ? orderMap.get(p.orderId) ?? null : null
+    map.set(p.id, palletizerToView(p, order, lang))
   })
 
   return map
@@ -123,9 +129,6 @@ export function getStatusLabel(
 ): string {
   const es: Record<string, string> = {
     free: 'Libre',
-    reserved: 'Reservada',
-    preparing: 'Pendiente de preparación',
-    pending_validation: 'Esperando confirmación de celda',
     validated: 'Validada',
     occupied: 'En producción',
     waiting: 'En espera temporal',
@@ -136,9 +139,6 @@ export function getStatusLabel(
   }
   const en: Record<string, string> = {
     free: 'Free',
-    reserved: 'Reserved',
-    preparing: 'Pending preparation',
-    pending_validation: 'Awaiting cell confirmation',
     validated: 'Validated',
     occupied: 'In production',
     waiting: 'Temporary wait',
@@ -175,8 +175,6 @@ export function statusCssClass(
   isDisabled?: boolean,
 ): string {
   if (isDisabled) return 'disabled'
-  if (status === 'preparing') return 'preparing'
-  if (status === 'pending_validation' || status === 'reserved') return 'preparing'
   if (status === 'active') return 'occupied'
   if (status === 'idle') return 'free'
   if (status === 'conflict') return 'blocked-critical'

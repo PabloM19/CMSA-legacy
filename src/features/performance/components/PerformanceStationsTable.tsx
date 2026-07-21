@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { Eye, X } from 'lucide-react'
 import { CircularMetric } from '../../../components/ui/CircularMetric'
 import { useLanguage } from '../../../i18n/LanguageContext'
@@ -12,16 +12,28 @@ function typeLabel(type: StationPerformanceRow['type'], d: ReturnType<typeof use
   return d.typePalletizer
 }
 
+function statusLabel(status: StationPerformanceRow['status'], d: ReturnType<typeof useLanguage>['t']['performance']) {
+  if (status === 'producing') return d.statusProducing
+  if (status === 'waiting') return d.statusWaiting
+  if (status === 'blocked') return d.statusBlocked
+  return d.statusIdle
+}
+
+function fmtRate(n: number, lang: 'es' | 'en') {
+  return n.toLocaleString(lang === 'es' ? 'es-ES' : 'en-GB')
+}
+
 interface StationPerformanceDrawerProps {
   station: StationPerformanceRow
   onClose: () => void
 }
 
 export function StationPerformanceDrawer({ station, onClose }: StationPerformanceDrawerProps) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const d = t.performance
   const typeName = typeLabel(station.type, d)
   const trendUp = station.vsYesterday >= 0
+  const capacityLabel = `${fmtRate(station.currentBoxesPerHour, lang)} / ${fmtRate(station.maxBoxesPerHour, lang)} ${d.boxesPerHourShort}`
 
   return (
     <div className="performance-drawer-overlay" role="presentation" onClick={onClose}>
@@ -47,31 +59,29 @@ export function StationPerformanceDrawer({ station, onClose }: StationPerformanc
           <CompanyPill company={station.company} />
         </div>
 
-        <div className="performance-drawer__metrics">
-          <div className="performance-drawer__metric">
-            <CircularMetric
-              value={station.efficiency}
-              display={`${station.efficiency}%`}
-              label={d.colEfficiency}
-              size="sm"
-              tone="brand"
-            />
-          </div>
-          <div className="performance-drawer__metric">
-            <CircularMetric
-              value={station.occupancyPercent}
-              display={`${station.occupancyPercent}%`}
-              label={d.colOccupancy}
-              size="sm"
-              tone="sumo"
-            />
-          </div>
+        <div className="performance-drawer__hero">
+          <CircularMetric
+            value={station.efficiency}
+            display={`${station.efficiency}%`}
+            label={d.colEfficiency}
+            tone="brand"
+          />
+          <p className="performance-drawer__help">{d.efficiencyHelp}</p>
+        </div>
+
+        <div className="performance-drawer__capacity">
+          <span className="performance-drawer__capacity-label">{d.capacityUsed}</span>
+          <strong className="performance-drawer__capacity-value">{capacityLabel}</strong>
         </div>
 
         <dl className="performance-drawer__dl">
           <div className="performance-drawer__row">
-            <dt>{d.colOrders}</dt>
-            <dd>{station.ordersProcessed}</dd>
+            <dt>{d.colStatus}</dt>
+            <dd>{statusLabel(station.status, d)}</dd>
+          </div>
+          <div className="performance-drawer__row">
+            <dt>{d.colCompany}</dt>
+            <dd>{station.company ?? '—'}</dd>
           </div>
           <div className="performance-drawer__row">
             <dt>{d.colEvents}</dt>
@@ -83,6 +93,16 @@ export function StationPerformanceDrawer({ station, onClose }: StationPerformanc
               )}
             </dd>
           </div>
+          <div className="performance-drawer__row">
+            <dt>{d.colOrders}</dt>
+            <dd>{station.ordersProcessed}</dd>
+          </div>
+          {station.associatedOrders && station.associatedOrders.length > 0 && (
+            <div className="performance-drawer__row">
+              <dt>{d.colAssociatedOrders}</dt>
+              <dd>{station.associatedOrders.join(', ')}</dd>
+            </div>
+          )}
           <div className="performance-drawer__row">
             <dt>{d.vsYesterday}</dt>
             <dd className={trendUp ? 'performance-drawer__delta--up' : 'performance-drawer__delta--down'}>
@@ -120,7 +140,7 @@ function sortRowsByCompany(rows: StationPerformanceRow[]): StationPerformanceRow
 }
 
 export function PerformanceStationsTable({ rows, onSelect }: PerformanceStationsTableProps) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const d = t.performance
   const [companyFilter, setCompanyFilter] = useState<CompanyFilter>('all')
 
@@ -135,16 +155,22 @@ export function PerformanceStationsTable({ rows, onSelect }: PerformanceStations
     { id: 'MAF', label: 'MAF' },
   ]
 
+  const columnCount = 8
+
   return (
     <section className="performance-stations dash-card">
       <div className="performance-stations__head">
         <h2 className="performance-stations__title">{d.stationsTitle}</h2>
-        <div className="admin-filter-bar performance-stations__filters" role="group" aria-label={d.filterCompanyLabel}>
+        <div
+          className="performance-stations__filters"
+          role="group"
+          aria-label={d.filterCompanyLabel}
+        >
           {companyOptions.map((opt) => (
             <button
               key={opt.id}
               type="button"
-              className={`admin-filter-bar__btn performance-stations__filter-btn performance-stations__filter-btn--${opt.id.toLowerCase()}${companyFilter === opt.id ? ' admin-filter-bar__btn--active' : ''}`}
+              className={`performance-stations__chip performance-stations__chip--${opt.id.toLowerCase()}${companyFilter === opt.id ? ' performance-stations__chip--active' : ''}`}
               onClick={() => setCompanyFilter(opt.id)}
               aria-pressed={companyFilter === opt.id}
             >
@@ -160,72 +186,84 @@ export function PerformanceStationsTable({ rows, onSelect }: PerformanceStations
               <th>{d.colStation}</th>
               <th>{d.colType}</th>
               <th>{d.colCompany}</th>
-              <th>{d.colOccupancy}</th>
-              <th>{d.colOrders}</th>
-              <th>{d.colEvents}</th>
+              <th>{d.colStatus}</th>
               <th>{d.colEfficiency}</th>
+              <th>{d.capacityUsed}</th>
+              <th>{d.colEvents}</th>
               <th>{d.colAction}</th>
             </tr>
           </thead>
           <tbody>
-            {visibleRows.map((row) => {
+            {visibleRows.map((row, index) => {
               const typeName = typeLabel(row.type, d)
+              const showGroupHeader =
+                companyFilter === 'all' &&
+                row.company != null &&
+                (index === 0 || visibleRows[index - 1]?.company !== row.company)
+              const capacityLabel = `${fmtRate(row.currentBoxesPerHour, lang)} / ${fmtRate(row.maxBoxesPerHour, lang)} ${d.boxesPerHourShort}`
+
               return (
-                <tr
-                  key={row.id}
-                  className={`performance-stations__row performance-stations__row--${row.company?.toLowerCase() ?? 'none'}`}
-                >
-                  <td>
-                    <span className="performance-stations__station">
-                      <StationTypeIcon type={row.type} label={typeName} size={18} />
-                      <span className="admin-table__cell-ref">{row.name}</span>
-                    </span>
-                  </td>
-                  <td>{typeName}</td>
-                  <td>
-                    <CompanyPill company={row.company} />
-                  </td>
-                  <td>
-                    <div className="performance-mini-bar">
-                      <div className="performance-mini-bar__track">
-                        <span
-                          className="performance-mini-bar__fill"
-                          style={{ width: `${row.occupancyPercent}%` }}
-                        />
+                <Fragment key={row.id}>
+                  {showGroupHeader && (
+                    <tr className="performance-stations__group-row">
+                      <td colSpan={columnCount}>
+                        <CompanyPill company={row.company} />
+                      </td>
+                    </tr>
+                  )}
+                  <tr
+                    className={`performance-stations__row performance-stations__row--${row.company?.toLowerCase() ?? 'none'}`}
+                  >
+                    <td>
+                      <span className="performance-stations__station">
+                        <StationTypeIcon type={row.type} label={typeName} size={18} />
+                        <span className="admin-table__cell-ref">{row.name}</span>
+                      </span>
+                    </td>
+                    <td>{typeName}</td>
+                    <td>
+                      <CompanyPill company={row.company} />
+                    </td>
+                    <td>
+                      <span className={`performance-status-badge performance-status-badge--${row.status}`}>
+                        {statusLabel(row.status, d)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="performance-mini-bar performance-mini-bar--efficiency">
+                        <div className="performance-mini-bar__track">
+                          <span
+                            className="performance-mini-bar__fill performance-mini-bar__fill--efficiency"
+                            style={{ width: `${row.efficiency}%` }}
+                          />
+                        </div>
+                        <span className="performance-mini-bar__label performance-mini-bar__label--primary">
+                          {row.efficiency}%
+                        </span>
                       </div>
-                      <span className="performance-mini-bar__label">{row.occupancyPercent}%</span>
-                    </div>
-                  </td>
-                  <td>{row.ordersProcessed}</td>
-                  <td>
-                    {row.events > 0 ? (
-                      <span className="performance-events-badge">{row.events}</span>
-                    ) : (
-                      row.events
-                    )}
-                  </td>
-                  <td>
-                    <div className="performance-mini-bar performance-mini-bar--efficiency">
-                      <div className="performance-mini-bar__track">
-                        <span
-                          className="performance-mini-bar__fill performance-mini-bar__fill--efficiency"
-                          style={{ width: `${row.efficiency}%` }}
-                        />
-                      </div>
-                      <span className="performance-mini-bar__label">{row.efficiency}%</span>
-                    </div>
-                  </td>
-                  <td className="admin-table__actions">
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--ghost admin-btn--sm"
-                      onClick={() => onSelect(row)}
-                    >
-                      <Eye size={14} aria-hidden="true" />
-                      {d.viewDetail}
-                    </button>
-                  </td>
-                </tr>
+                    </td>
+                    <td>
+                      <span className="performance-stations__capacity">{capacityLabel}</span>
+                    </td>
+                    <td>
+                      {row.events > 0 ? (
+                        <span className="performance-events-badge">{row.events}</span>
+                      ) : (
+                        <span className="performance-stations__no-events">{d.noEvents}</span>
+                      )}
+                    </td>
+                    <td className="admin-table__actions">
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--ghost admin-btn--sm"
+                        onClick={() => onSelect(row)}
+                      >
+                        <Eye size={14} aria-hidden="true" />
+                        {d.viewDetail}
+                      </button>
+                    </td>
+                  </tr>
+                </Fragment>
               )
             })}
           </tbody>

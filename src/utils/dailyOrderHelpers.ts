@@ -88,15 +88,10 @@ export function syncDailyOrderFromProduction(
     .filter((o) => o.productionState !== 'withdrawn')
     .reduce((sum, o) => sum + o.boxes, 0)
 
-  const cajasCompletadas = linked.reduce((sum, o) => {
-    if (o.productionState === 'withdrawn') {
-      return sum + (o.boxesProduced ?? 0)
-    }
-    if (o.column === 'finalizado' && o.productionState === 'completed') {
-      return sum + (o.boxesProduced ?? o.boxes)
-    }
-    return sum
-  }, 0)
+  const cajasCompletadas = Math.min(
+    cajasAsignadas,
+    linked.reduce((sum, o) => sum + producedBoxesFromOrder(o), 0),
+  )
 
   return recalcDailyOrder({
     ...daily,
@@ -104,6 +99,30 @@ export function syncDailyOrderFromProduction(
     cajasCompletadas,
     ordenesProduccionIds: linked.map((o) => o.id),
   })
+}
+
+function producedBoxesFromOrder(order: BacklogOrder): number {
+  if (order.productionState === 'withdrawn') {
+    return order.boxesProduced ?? 0
+  }
+
+  if (order.column === 'finalizado') {
+    return order.boxesProduced ?? order.boxes
+  }
+
+  if (order.boxesProduced != null && order.boxesProduced > 0) {
+    return Math.min(order.boxes, order.boxesProduced)
+  }
+
+  if (
+    order.column === 'en_produccion' &&
+    order.occupancyPercent != null &&
+    order.occupancyPercent > 0
+  ) {
+    return Math.round(order.boxes * (order.occupancyPercent / 100))
+  }
+
+  return 0
 }
 
 export function syncAllDailyOrders(

@@ -8,7 +8,7 @@ import { useLanguage } from '../../../i18n/LanguageContext'
 import type { BacklogOrder } from '../../../types/backlog'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
 import { canDeleteProductionOrder, canWithdrawProduction, isSupervisor } from '../../../utils/permissions'
-import { formatTableList, resolveAssignedTableIds } from '../../../utils/backlogStorage'
+import { formatOrderStationList } from '../../../utils/productionOrderValidation'
 import { canConfirmCellReady, isPendingAcceptanceColumn, orderEtc } from '../../../utils/dailyOrderHelpers'
 import { getOrderStatusBadge } from '../../../utils/statusBadge'
 
@@ -60,11 +60,7 @@ function BacklogOrderCardContent({
   const canAct = user ? canActOnOrder(user, order.company) : false
   const statusBadge = getOrderStatusBadge(order, lang)
 
-  const tableIds = resolveAssignedTableIds(order)
-  const tablesLabel =
-    tableIds.length > 0
-      ? formatTableList(tableIds)
-      : `${order.requiredTables} ${d.tablesNeeded}`
+  const tablesLabel = formatOrderStationList(order)
 
   function renderPrimaryAction() {
     if (completed || !canAct) return null

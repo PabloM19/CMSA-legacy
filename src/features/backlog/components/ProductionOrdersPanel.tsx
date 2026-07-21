@@ -6,6 +6,8 @@ import type { BacklogOrder } from '../../../types/backlog'
 import { isInProductionColumn, isPendingAcceptanceColumn } from '../../../utils/dailyOrderHelpers'
 import { resolveVisibleLimit } from '../../../utils/backlogViewPrefs'
 import { useBacklogView } from '../hooks/useBacklogView'
+import { BacklogBoardScrollArea } from './BacklogBoardScrollArea'
+import { BacklogColumnScrollArea } from './BacklogColumnScrollArea'
 import { BacklogBoardSkeleton } from './BacklogBoardSkeleton'
 import { BacklogColumnDrawer } from './BacklogColumnDrawer'
 import { BacklogOrderCard } from './BacklogOrderCard'
@@ -87,30 +89,34 @@ function ProductionKanbanColumn({
       <div className="production-orders-column-body">
         {isEmpty && <p className="production-orders-column__empty">{emptyMessage}</p>}
 
-        {displayOrders.map((order) => (
-          <BacklogOrderCard
-            key={order.id}
-            order={order}
-            sortable={false}
-            compact={compactCards}
-            onViewDetail={onViewDetail}
-            onPrepare={onPrepare}
-            onWithdraw={onWithdraw}
-            onDelete={onDelete}
-          />
-        ))}
+        {!isEmpty && (
+          <BacklogColumnScrollArea>
+            {displayOrders.map((order) => (
+              <BacklogOrderCard
+                key={order.id}
+                order={order}
+                sortable={false}
+                compact={compactCards}
+                onViewDetail={onViewDetail}
+                onPrepare={onPrepare}
+                onWithdraw={onWithdraw}
+                onDelete={onDelete}
+              />
+            ))}
 
-        {showMoreFooter && (
-          <div
-            className={`backlog-column__more${summaryMode ? ' backlog-column__more--summary' : ''}`}
-          >
-            <p className="backlog-column__more-label">
-              {d.moreOrders.replace('{count}', String(hiddenCount))}
-            </p>
-            <button type="button" className="backlog-column__view-all" onClick={onViewAll}>
-              {d.viewAll}
-            </button>
-          </div>
+            {showMoreFooter && (
+              <div
+                className={`backlog-column__more${summaryMode ? ' backlog-column__more--summary' : ''}`}
+              >
+                <p className="backlog-column__more-label">
+                  {d.moreOrders.replace('{count}', String(hiddenCount))}
+                </p>
+                <button type="button" className="backlog-column__view-all" onClick={onViewAll}>
+                  {d.viewAll}
+                </button>
+              </div>
+            )}
+          </BacklogColumnScrollArea>
         )}
       </div>
     </section>
@@ -186,11 +192,11 @@ export function ProductionOrdersPanel({
       />
 
       {isLoading ? (
-        <div className="production-orders-board-wrap">
+        <BacklogBoardScrollArea showHint={false} className="production-orders-board-scroll">
           <BacklogBoardSkeleton columnCount={2} />
-        </div>
+        </BacklogBoardScrollArea>
       ) : (
-        <div className="production-orders-board-wrap">
+        <BacklogBoardScrollArea showHint={false} className="production-orders-board-scroll">
           <div className="production-orders-board">
             <ProductionKanbanColumn
               icon={ClipboardList}
@@ -236,7 +242,7 @@ export function ProductionOrdersPanel({
               onDelete={onDelete}
             />
           </div>
-        </div>
+        </BacklogBoardScrollArea>
       )}
 
       {drawerConfig && (

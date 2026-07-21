@@ -13,11 +13,18 @@ export interface StationPerformanceRow {
   name: string
   type: 'robot' | 'manual' | 'palletizer'
   company: 'SUMO' | 'MAF' | null
+  /** Dato secundario — ya no es métrica principal en la UI. */
   occupancyPercent: number
   ordersProcessed: number
   events: number
   efficiency: number
   vsYesterday: number
+  /** Producción estimada actual (cajas/h). */
+  currentBoxesPerHour: number
+  /** Capacidad máxima estimada (cajas/h). */
+  maxBoxesPerHour: number
+  status: 'producing' | 'waiting' | 'blocked' | 'idle'
+  associatedOrders?: string[]
 }
 
 export {

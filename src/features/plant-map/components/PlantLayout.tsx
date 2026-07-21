@@ -4,6 +4,7 @@ import type { PlantElementView } from '../../../types/plant'
 import type { PlantMapViewFilter } from '../../../utils/plantMapViewFilter'
 import { viewFilterClass } from '../../../utils/plantMapViewFilter'
 import { PlantElementCard } from './PlantElementCard'
+import { PlantMapBoardScrollArea } from './PlantMapBoardScrollArea'
 
 interface PlantLayoutProps {
   elements: Map<string, PlantElementView>
@@ -55,22 +56,24 @@ export function PlantLayout({
   const d = t.plantMap
 
   return (
-    <div className={`plant-map-board dash-card${boardClassName ? ` ${boardClassName}` : ''}`}>
-      <section className="plant-zone">
-        <p className="plant-zone__label">{d.upperZone}</p>
-        <div className="plant-zone__row">
-          {renderRow(PLANT_UPPER_ROW, elements, selectedId, onSelect, viewFilter, eventCellCodes)}
-        </div>
-      </section>
+    <PlantMapBoardScrollArea>
+      <div className={`plant-map-board dash-card${boardClassName ? ` ${boardClassName}` : ''}`}>
+        <section className="plant-zone">
+          <p className="plant-zone__label">{d.upperZone}</p>
+          <div className="plant-zone__row">
+            {renderRow(PLANT_UPPER_ROW, elements, selectedId, onSelect, viewFilter, eventCellCodes)}
+          </div>
+        </section>
 
-      <div className="plant-map-board__aisle" aria-hidden="true" />
+        <div className="plant-map-board__aisle" aria-hidden="true" />
 
-      <section className="plant-zone">
-        <p className="plant-zone__label">{d.lowerZone}</p>
-        <div className="plant-zone__row">
-          {renderRow(PLANT_LOWER_ROW, elements, selectedId, onSelect, viewFilter, eventCellCodes)}
-        </div>
-      </section>
-    </div>
+        <section className="plant-zone">
+          <p className="plant-zone__label">{d.lowerZone}</p>
+          <div className="plant-zone__row">
+            {renderRow(PLANT_LOWER_ROW, elements, selectedId, onSelect, viewFilter, eventCellCodes)}
+          </div>
+        </section>
+      </div>
+    </PlantMapBoardScrollArea>
   )
 }

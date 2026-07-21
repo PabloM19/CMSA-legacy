@@ -273,10 +273,6 @@ export function MobilePage() {
             <span className="mobile-v2-tables-chip__label">{d.tablesOccupied}</span>
           </div>
           <div className="mobile-v2-tables-chip">
-            <span className="mobile-v2-tables-chip__value">{tableSummary.pendingValidation}</span>
-            <span className="mobile-v2-tables-chip__label">{d.tablesPending}</span>
-          </div>
-          <div className="mobile-v2-tables-chip">
             <span className="mobile-v2-tables-chip__value">{tableSummary.blocked}</span>
             <span className="mobile-v2-tables-chip__label">{d.tablesBlockedConflict}</span>
           </div>

@@ -25,7 +25,7 @@ export function validateStep1(data: NewOrderFormData, lang: Lang): NewOrderFormE
   const errors: NewOrderFormErrors = {}
   const msg = validationMessages(lang)
 
-  if (!data.productReference.trim() && !data.productId.trim()) {
+  if (!data.productId.trim()) {
     errors.productId = msg.selectProduct
   }
   if (!data.product.trim()) errors.product = msg.required

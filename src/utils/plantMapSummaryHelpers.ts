@@ -4,6 +4,8 @@ import { countActiveAlarms } from '../data/mockCellAlarms'
 
 export interface PlantMapSummaryStats {
   freeTables: number
+  freeManual: number
+  freeRobot: number
   occupiedTables: number
   occupiedSumo: number
   occupiedMaf: number
@@ -19,9 +21,13 @@ function isTable(element: PlantElementView): boolean {
 
 export function computePlantMapSummaryStats(
   elements: Map<string, PlantElementView>,
-  _orders: BacklogOrder[],
+  orders: BacklogOrder[],
 ): PlantMapSummaryStats {
+  const orderMap = new Map(orders.map((order) => [order.id, order]))
+
   let freeTables = 0
+  let freeManual = 0
+  let freeRobot = 0
   let occupiedTables = 0
   let occupiedSumo = 0
   let occupiedMaf = 0
@@ -30,21 +36,29 @@ export function computePlantMapSummaryStats(
   let blockedOrConflict = 0
 
   elements.forEach((element) => {
+    if (element.isDisabled) return
+
+    const order = element.orderId ? orderMap.get(element.orderId) ?? null : null
+    const isPreparation = order?.column === 'en_preparacion'
+
     if (isTable(element)) {
+      if (isPreparation) {
+        preparing += 1
+        return
+      }
+
       switch (element.status) {
         case 'free':
+        case 'idle':
           freeTables += 1
+          if (element.type === 'manual') freeManual += 1
+          if (element.type === 'automatic') freeRobot += 1
           break
         case 'occupied':
         case 'validated':
           occupiedTables += 1
           if (element.company === 'SUMO') occupiedSumo += 1
           if (element.company === 'MAF') occupiedMaf += 1
-          break
-        case 'preparing':
-        case 'reserved':
-        case 'pending_validation':
-          preparing += 1
           break
         case 'waiting':
           waiting += 1
@@ -59,6 +73,11 @@ export function computePlantMapSummaryStats(
       return
     }
 
+    if (isPreparation) {
+      preparing += 1
+      return
+    }
+
     if (element.status === 'waiting') waiting += 1
     if (element.status === 'blocked' || element.status === 'conflict') blockedOrConflict += 1
   })
@@ -67,6 +86,8 @@ export function computePlantMapSummaryStats(
 
   return {
     freeTables,
+    freeManual,
+    freeRobot,
     occupiedTables,
     occupiedSumo,
     occupiedMaf,
@@ -80,7 +101,6 @@ export function computePlantMapSummaryStats(
 export function mockOccupancyPercent(table: PlantTable): number | null {
   if (table.status === 'free') return null
   const seed = table.id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
-  if (table.status === 'preparing' || table.status === 'reserved') return 12 + (seed % 18)
   if (table.status === 'waiting') return 28 + (seed % 25)
   if (table.status === 'blocked' || table.status === 'conflict') return 45 + (seed % 30)
   return 55 + (seed % 40)

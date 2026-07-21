@@ -26,9 +26,6 @@ interface TablesTabProps {
 
 const TABLE_STATUSES: PlantTableStatus[] = [
   'free',
-  'reserved',
-  'preparing',
-  'pending_validation',
   'validated',
   'occupied',
   'waiting',

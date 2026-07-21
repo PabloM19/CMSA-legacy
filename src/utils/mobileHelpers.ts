@@ -11,13 +11,7 @@ import { formatTableList, resolveAssignedTableIds } from './tableAssignment'
 
 export type { TabletGeneralStatus as MobileGeneralStatus }
 
-const OCCUPIED = new Set([
-  'occupied',
-  'pending_validation',
-  'validated',
-  'reserved',
-  'waiting',
-])
+const OCCUPIED = new Set(['occupied', 'validated', 'waiting'])
 
 export interface MobileCompanyStats {
   company: 'SUMO' | 'MAF'
@@ -58,7 +52,6 @@ export interface MobileAlertItem extends TabletAlert {
 export interface MobileTableSummary {
   free: number
   occupied: number
-  pendingValidation: number
   blocked: number
   manualInUse: number
   automaticInUse: number
@@ -247,15 +240,12 @@ export function getMobileAlerts(state: CmsaPersistedState, lang: Lang): MobileAl
 export function computeMobileTableSummary(state: CmsaPersistedState): MobileTableSummary {
   const tables = state.plantTables
   const inUse = (t: PlantTable) =>
-    ['occupied', 'validated', 'waiting', 'pending_validation', 'reserved'].includes(t.status)
+    ['occupied', 'validated', 'waiting'].includes(t.status)
 
   return {
     free: tables.filter((t) => t.status === 'free').length,
     occupied: tables.filter((t) =>
       ['occupied', 'validated', 'waiting'].includes(t.status),
-    ).length,
-    pendingValidation: tables.filter(
-      (t) => t.status === 'pending_validation' || t.status === 'reserved',
     ).length,
     blocked: tables.filter((t) => t.status === 'blocked' || t.status === 'conflict').length,
     manualInUse: tables.filter((t) => t.type === 'manual' && inUse(t)).length,

@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { AuthProvider } from '../features/auth/AuthContext'
+import { SessionGuard } from '../features/auth/SessionGuard'
 import { LanguageProvider } from '../i18n/LanguageContext'
 import { ThemeProvider } from '../theme/ThemeContext'
 
@@ -9,6 +10,7 @@ export function AppProviders() {
     <AuthProvider>
       <LanguageProvider>
         <ThemeProvider>
+          <SessionGuard />
           <Outlet />
         </ThemeProvider>
       </LanguageProvider>

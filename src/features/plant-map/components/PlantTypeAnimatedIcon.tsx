@@ -1,6 +1,7 @@
 import { memo } from 'react'
-import { Bot, Package, UserRound } from 'lucide-react'
+import { Package, UserRound } from 'lucide-react'
 import type { PlantElementView } from '../../../types/plant'
+import { RobotArmIcon } from './RobotArmIcon'
 
 const TYPE_ICON_SIZE = 15
 
@@ -9,11 +10,18 @@ interface PlantTypeAnimatedIconProps {
 }
 
 function PlantTypeAnimatedIconInner({ type }: PlantTypeAnimatedIconProps) {
-  const Icon =
-    type === 'automatic' ? Bot : type === 'palletizer' ? Package : UserRound
+  if (type === 'automatic') {
+    return (
+      <span className="plant-type-icon__motion" aria-hidden="true">
+        <RobotArmIcon size={TYPE_ICON_SIZE} strokeWidth={2} className="plant-type-icon__lucide" />
+      </span>
+    )
+  }
+
+  const Icon = type === 'palletizer' ? Package : UserRound
 
   return (
-    <span className={`plant-type-icon__motion plant-type-icon__motion--${type}`} aria-hidden="true">
+    <span className="plant-type-icon__motion" aria-hidden="true">
       <Icon size={TYPE_ICON_SIZE} strokeWidth={2} className="plant-type-icon__lucide" />
     </span>
   )

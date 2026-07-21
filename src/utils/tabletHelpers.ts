@@ -34,13 +34,7 @@ export interface TabletActiveOrder {
   alert: string | null
 }
 
-const OCCUPIED_STATUSES = new Set([
-  'occupied',
-  'pending_validation',
-  'validated',
-  'reserved',
-  'waiting',
-])
+const OCCUPIED_STATUSES = new Set(['occupied', 'validated', 'waiting'])
 
 function isTableOccupied(table: PlantTable): boolean {
   return OCCUPIED_STATUSES.has(table.status)
@@ -99,7 +93,7 @@ export function computeGeneralStatus(state: CmsaPersistedState): TabletGeneralSt
 
   const hasWarning =
     state.orders.some((o) => o.column === 'en_preparacion') ||
-    state.plantTables.some((t) => t.status === 'waiting' || t.status === 'pending_validation') ||
+    state.plantTables.some((t) => t.status === 'waiting') ||
     state.orders.some((o) => o.alerts.length > 0)
 
   if (hasWarning) return 'warning'

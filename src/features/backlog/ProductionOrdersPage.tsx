@@ -10,7 +10,7 @@ import type { PlantTable } from '../../types/plant'
 import { getState, saveOrdersAndPlant } from '../../utils/backlogStorage'
 import { applyWithdrawToDailyOrder } from '../../utils/dailyOrderOperations'
 import { canDeleteProductionOrder, canWithdrawProduction } from '../../utils/permissions'
-import { logOrderDeleted, logOrderWithdrawn } from '../../utils/activityLogActions'
+import { logOrderAccepted, logOrderDeleted, logOrderWithdrawn } from '../../utils/activityLogActions'
 import { withdrawOrderFromProduction, type WithdrawReason } from '../../utils/withdrawProduction'
 import {
   deleteProductionOrder,
@@ -146,6 +146,9 @@ export function ProductionOrdersPage() {
   }
 
   function handlePrepareConfirm(nextOrder: BacklogOrder, nextPlant: PlantTable[]) {
+    if (user) {
+      logOrderAccepted(user, nextOrder.reference)
+    }
     const nextOrders = orders.map((o) => (o.id === nextOrder.id ? nextOrder : o))
     persist(nextOrders, nextPlant)
     setPrepareOrder(null)

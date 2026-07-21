@@ -2,6 +2,10 @@ import { CompanyBadge } from '../../../components/ui/StatusBadge'
 import { FormField, Input, Select } from '../../../components/ui/FormField'
 import { findProductById } from '../../../utils/productSearch'
 import { useLanguage } from '../../../i18n/LanguageContext'
+import {
+  getReferenceHeights,
+  getReferencePalletType,
+} from '../../../utils/referenceDisplayHelpers'
 import type { MockProduct } from '../../../data/mockProducts'
 import type { NewOrderFormData, NewOrderFormErrors, OrderCompany } from '../../../types/newOrder'
 import { ProductSearchAutocomplete } from './ProductSearchAutocomplete'
@@ -27,7 +31,10 @@ export function NewOrderStep1({
   const d = t.newOrder
 
   const selectedProduct = form.productId ? findProductById(form.productId) ?? null : null
-  const fromCatalog = Boolean(form.productId)
+  const fromCatalog = Boolean(selectedProduct)
+  const catalogHint = fromCatalog ? d.catalogReadonlyHint : undefined
+  const palletType = selectedProduct ? getReferencePalletType(selectedProduct) : ''
+  const heights = selectedProduct ? getReferenceHeights(selectedProduct) : ''
 
   return (
     <section className="new-order-step dash-card">
@@ -66,75 +73,88 @@ export function NewOrderStep1({
         <FormField
           label={`${d.productReference} *`}
           htmlFor="productReference"
-          hint={fromCatalog ? d.autofilledHint : undefined}
+          hint={catalogHint}
           error={errors.productId}
         >
           <Input
             id="productReference"
-            readOnly={fromCatalog}
+            readOnly
             hasError={Boolean(errors.productId)}
-            className={fromCatalog ? 'order-field__input--catalog' : ''}
+            className="order-field__input--catalog"
             value={form.productReference}
             placeholder={d.productReferencePlaceholder}
-            onChange={(e) => onChange('productReference', e.target.value)}
           />
         </FormField>
 
         <FormField
           label={`${d.product} *`}
           htmlFor="product"
-          hint={fromCatalog ? d.autofilledHint : undefined}
+          hint={catalogHint}
           error={errors.product}
         >
           <Input
             id="product"
+            readOnly
             hasError={Boolean(errors.product)}
-            className={fromCatalog ? 'order-field__input--catalog' : ''}
+            className="order-field__input--catalog"
             value={form.product}
-            onChange={(e) => onChange('product', e.target.value)}
+            placeholder={d.productReferencePlaceholder}
           />
         </FormField>
 
         <FormField
           label={`${d.variety} *`}
           htmlFor="variety"
-          hint={fromCatalog ? d.autofilledHint : undefined}
+          hint={catalogHint}
           error={errors.variety}
         >
           <Input
             id="variety"
+            readOnly
             hasError={Boolean(errors.variety)}
-            className={fromCatalog ? 'order-field__input--catalog' : ''}
+            className="order-field__input--catalog"
             value={form.variety}
-            onChange={(e) => onChange('variety', e.target.value)}
+            placeholder={d.productReferencePlaceholder}
           />
         </FormField>
 
-        <FormField
-          label={d.barcode}
-          htmlFor="barcode"
-          hint={fromCatalog ? d.autofilledHint : undefined}
-        >
+        <FormField label={d.barcode} htmlFor="barcode" hint={catalogHint}>
           <Input
             id="barcode"
-            readOnly={fromCatalog}
-            className={fromCatalog ? 'order-field__input--catalog' : ''}
+            readOnly
+            className="order-field__input--catalog"
             value={form.barcode}
             placeholder={d.barcodePlaceholder}
-            onChange={(e) => onChange('barcode', e.target.value)}
           />
         </FormField>
 
-        <FormField
-          label={d.boxFormat}
-          htmlFor="boxFormat"
-          hint={fromCatalog ? d.autofilledHint : undefined}
-        >
+        <FormField label={d.boxFormat} htmlFor="boxFormat" hint={catalogHint}>
           <Input
             id="boxFormat"
-            className={fromCatalog ? 'order-field__input--catalog' : ''}
+            readOnly
+            className="order-field__input--catalog"
             value={form.boxFormat}
-            onChange={(e) => onChange('boxFormat', e.target.value)}
+            placeholder={d.productReferencePlaceholder}
+          />
+        </FormField>
+
+        <FormField label={d.palletType} htmlFor="palletType" hint={catalogHint}>
+          <Input
+            id="palletType"
+            readOnly
+            className="order-field__input--catalog"
+            value={palletType}
+            placeholder={d.productReferencePlaceholder}
+          />
+        </FormField>
+
+        <FormField label={d.heights} htmlFor="heights" hint={catalogHint}>
+          <Input
+            id="heights"
+            readOnly
+            className="order-field__input--catalog"
+            value={heights}
+            placeholder={d.productReferencePlaceholder}
           />
         </FormField>
 

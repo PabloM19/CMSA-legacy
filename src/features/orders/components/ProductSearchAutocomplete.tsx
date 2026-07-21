@@ -3,6 +3,10 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { FormField, Input } from '../../../components/ui/FormField'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { MockProduct } from '../../../data/mockProducts'
+import {
+  getReferenceHeights,
+  getReferencePalletType,
+} from '../../../utils/referenceDisplayHelpers'
 import { getDisplayProducts, isSearchActive } from '../../../utils/productSearch'
 
 interface ProductSearchAutocompleteProps {
@@ -10,6 +14,46 @@ interface ProductSearchAutocompleteProps {
   error?: string
   onSelect: (product: MockProduct) => void
   onClearSelection: () => void
+}
+
+function ProductSuggestionOption({
+  product,
+  active,
+  id,
+  onSelect,
+  onHighlight,
+}: {
+  product: MockProduct
+  active: boolean
+  id: string
+  onSelect: (product: MockProduct) => void
+  onHighlight: () => void
+}) {
+  const { t } = useLanguage()
+  const d = t.newOrder
+  const palletType = getReferencePalletType(product)
+  const heights = getReferenceHeights(product)
+
+  return (
+    <button
+      type="button"
+      role="option"
+      id={id}
+      aria-selected={active}
+      className={`product-search__option${active ? ' product-search__option--active' : ''}`}
+      onMouseEnter={onHighlight}
+      onClick={() => onSelect(product)}
+    >
+      <span className="product-search__option-ref">{product.referenciaProducto}</span>
+      <span className="product-search__option-line">
+        {product.producto} {product.variedad} · {product.barcode}
+      </span>
+      <span className="product-search__option-pallet">
+        <span className="product-search__option-dot product-search__option-dot--pallet" aria-hidden="true" />
+        {palletType} · {heights} {d.heightsUnit}
+      </span>
+    </button>
+  )
 }
 
 export function ProductSearchAutocomplete({
@@ -23,10 +67,12 @@ export function ProductSearchAutocomplete({
   const listboxId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const [pendingFocus, setPendingFocus] = useState(false)
+  const [showScrollHint, setShowScrollHint] = useState(false)
 
   const results = getDisplayProducts(query)
   const searching = isSearchActive(query)
@@ -57,6 +103,25 @@ export function ProductSearchAutocomplete({
   useEffect(() => {
     setHighlightedIndex(0)
   }, [query])
+
+  useEffect(() => {
+    const list = listRef.current
+    if (!list || !open) {
+      setShowScrollHint(false)
+      return
+    }
+
+    function updateScrollHint() {
+      if (!list) return
+      const overflow = list.scrollHeight - list.clientHeight > 8
+      const atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 4
+      setShowScrollHint(overflow && !atBottom)
+    }
+
+    updateScrollHint()
+    list.addEventListener('scroll', updateScrollHint, { passive: true })
+    return () => list.removeEventListener('scroll', updateScrollHint)
+  }, [open, results.length])
 
   function handleSelect(product: MockProduct) {
     onSelect(product)
@@ -95,6 +160,9 @@ export function ProductSearchAutocomplete({
   }
 
   if (selectedProduct) {
+    const palletType = getReferencePalletType(selectedProduct)
+    const heights = getReferenceHeights(selectedProduct)
+
     return (
       <div className="product-selected dash-card">
         <div className="product-selected__head">
@@ -120,6 +188,10 @@ export function ProductSearchAutocomplete({
         <p className="product-selected__meta">
           {selectedProduct.producto} · {selectedProduct.variedad} · {selectedProduct.calibre} ·{' '}
           {selectedProduct.uso} · {selectedProduct.formatoCaja}
+        </p>
+        <p className="product-selected__pallet">
+          <span className="product-search__option-dot product-search__option-dot--pallet" aria-hidden="true" />
+          {palletType} · {heights} {d.heightsUnit}
         </p>
       </div>
     )
@@ -177,33 +249,46 @@ export function ProductSearchAutocomplete({
       </FormField>
 
       {open && (
-        <div className="product-search__dropdown" role="listbox" id={listboxId}>
-          {!searching && (
-            <p className="product-search__dropdown-label">{d.featuredProducts}</p>
+        <section className="product-search__panel" aria-label={d.featuredProducts}>
+          <header className="product-search__panel-head">
+            <h3 className="product-search__panel-title">{d.featuredProducts}</h3>
+            <p className="product-search__panel-subtitle">
+              {searching ? d.suggestedProductsSearchHint : d.suggestedProductsSubtitle}
+            </p>
+          </header>
+
+          <div
+            className={`product-search__list-shell${showScrollHint ? ' product-search__list-shell--fade' : ''}`}
+          >
+            <div
+              ref={listRef}
+              className="product-search__list"
+              role="listbox"
+              id={listboxId}
+            >
+              {results.length === 0 ? (
+                <p className="product-search__empty">
+                  {searching ? d.noReferencesFound : d.searchToSeeSuggestions}
+                </p>
+              ) : (
+                results.map((product, index) => (
+                  <ProductSuggestionOption
+                    key={product.id}
+                    product={product}
+                    active={highlightedIndex === index}
+                    id={`${listboxId}-option-${index}`}
+                    onSelect={handleSelect}
+                    onHighlight={() => setHighlightedIndex(index)}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+
+          {showScrollHint && (
+            <p className="product-search__scroll-hint">{d.scrollMoreHint}</p>
           )}
-          {results.length === 0 ? (
-            <p className="product-search__empty">{d.noProductsFound}</p>
-          ) : (
-            results.map((product, index) => (
-              <button
-                key={product.id}
-                type="button"
-                role="option"
-                id={`${listboxId}-option-${index}`}
-                aria-selected={highlightedIndex === index}
-                className={`product-search__option${highlightedIndex === index ? ' product-search__option--active' : ''}`}
-                onMouseEnter={() => setHighlightedIndex(index)}
-                onClick={() => handleSelect(product)}
-              >
-                <span className="product-search__option-ref">{product.referenciaProducto}</span>
-                <span className="product-search__option-name">{product.nombre}</span>
-                <span className="product-search__option-meta">
-                  {product.variedad} · {product.calibre} · {product.uso} · {product.formatoCaja}
-                </span>
-              </button>
-            ))
-          )}
-        </div>
+        </section>
       )}
     </div>
   )

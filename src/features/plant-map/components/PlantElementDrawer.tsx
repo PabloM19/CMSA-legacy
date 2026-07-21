@@ -1,10 +1,17 @@
-import type { ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
+import { findProductById } from '../../../data/mockProducts'
 import { getAlarmsForCell } from '../../../data/mockCellAlarms'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { PlantElementView } from '../../../types/plant'
+import { getState } from '../../../utils/backlogStorage'
 import { getDrawerSpeedMessage, getDrawerStateNotice } from '../../../utils/plantMapCopyHelpers'
 import { getStatusLabel, getTypeLabel } from '../../../utils/plantMapHelpers'
+import {
+  getReferenceHeights,
+  getReferencePalletType,
+} from '../../../utils/referenceDisplayHelpers'
 
 interface PlantElementDrawerProps {
   element: PlantElementView | null
@@ -12,6 +19,32 @@ interface PlantElementDrawerProps {
   variant?: 'side' | 'bottom'
   footer?: ReactNode
   cellCode?: string | null
+}
+
+function resolveOrderProgressPercent(
+  boxes: number | null | undefined,
+  boxesProduced: number | null | undefined,
+  occupancyPercent: number | null | undefined,
+): number | null {
+  if (boxes != null && boxes > 0 && boxesProduced != null) {
+    return Math.min(100, Math.round((boxesProduced / boxes) * 100))
+  }
+  if (occupancyPercent != null) {
+    return Math.min(100, Math.round(occupancyPercent))
+  }
+  return null
+}
+
+function resolveBoxesProduced(
+  boxes: number,
+  boxesProduced: number | null | undefined,
+  occupancyPercent: number | null | undefined,
+): number {
+  if (boxesProduced != null) return boxesProduced
+  if (boxes > 0 && occupancyPercent != null) {
+    return Math.round((boxes * occupancyPercent) / 100)
+  }
+  return 0
 }
 
 export function PlantElementDrawer({
@@ -23,6 +56,28 @@ export function PlantElementDrawer({
 }: PlantElementDrawerProps) {
   const { t, lang } = useLanguage()
   const d = t.plantMap
+
+  const orderContext = useMemo(() => {
+    if (!element?.orderId) return null
+    const state = getState()
+    const order = state.orders.find((item) => item.id === element.orderId) ?? null
+    const dailyOrder = order?.pedidoDiaId
+      ? state.dailyOrders.find((item) => item.id === order.pedidoDiaId) ?? null
+      : null
+    const catalogProduct = order?.productId ? findProductById(order.productId) : undefined
+    const progressPercent = order
+      ? resolveOrderProgressPercent(order.boxes, order.boxesProduced, order.occupancyPercent)
+      : resolveOrderProgressPercent(element.boxes, null, element.occupancyPercent)
+
+    return {
+      order,
+      dailyOrder,
+      palletType: catalogProduct ? getReferencePalletType(catalogProduct) : null,
+      heights: catalogProduct ? getReferenceHeights(catalogProduct) : null,
+      barcode: order?.barcode ?? dailyOrder?.barcode ?? null,
+      progressPercent,
+    }
+  }, [element])
 
   if (!element) return null
 
@@ -38,14 +93,23 @@ export function PlantElementDrawer({
   const cellAlarms = getAlarmsForCell(cellCode ?? element.name)
   const activeAlarm = cellAlarms.find((alarm) => alarm.status === 'active') ?? cellAlarms[0]
 
-  const etaDisplay = element.eta
+  const etaDisplay = element.eta ?? orderContext?.order?.etc ?? orderContext?.order?.endTime ?? null
   const occupancyDisplay = isFree
     ? d.available
     : element.occupancyPercent != null
       ? `${element.occupancyPercent}% ${d.occupancyLabel}`
       : d.zeroOccupancy
 
-  return (
+  const hasOrderDetails = Boolean(
+    !isFree &&
+      (element.orderId ||
+        element.orderReference ||
+        element.product ||
+        element.variety ||
+        orderContext?.dailyOrder),
+  )
+
+  return createPortal(
     <div className="plant-drawer-overlay" role="presentation" onClick={onClose}>
       <aside
         className={`plant-drawer${variant === 'bottom' ? ' plant-drawer--bottom' : ''}`}
@@ -87,10 +151,28 @@ export function PlantElementDrawer({
               <dd>{etaDisplay}</dd>
             </div>
           )}
-          <div>
-            <dt>{d.drawerOccupancy}</dt>
-            <dd>{occupancyDisplay}</dd>
-          </div>
+          {!isFree && (
+            <div>
+              <dt>{d.drawerOccupancy}</dt>
+              <dd>{occupancyDisplay}</dd>
+            </div>
+          )}
+          {orderContext?.progressPercent != null && (
+            <div>
+              <dt>{d.drawerProgress}</dt>
+              <dd>
+                <div className="plant-drawer__progress">
+                  <div className="plant-drawer__progress-bar">
+                    <span
+                      className="plant-drawer__progress-fill"
+                      style={{ width: `${orderContext.progressPercent}%` }}
+                    />
+                  </div>
+                  <span className="plant-drawer__progress-label">{orderContext.progressPercent}%</span>
+                </div>
+              </dd>
+            </div>
+          )}
         </dl>
 
         {isPalletizer && (
@@ -111,14 +193,28 @@ export function PlantElementDrawer({
           </div>
         )}
 
-        {element.orderReference && (
+        {hasOrderDetails && (
           <section className="plant-drawer__section">
             <h3 className="plant-drawer__section-title">{d.drawerOrder}</h3>
             <dl className="plant-drawer__dl">
-              <div>
-                <dt>{d.drawerReference}</dt>
-                <dd>{element.orderReference}</dd>
-              </div>
+              {element.orderId && (
+                <div>
+                  <dt>{d.drawerProductionOrder}</dt>
+                  <dd>{element.orderId}</dd>
+                </div>
+              )}
+              {orderContext?.dailyOrder && (
+                <div>
+                  <dt>{d.drawerDailyOrder}</dt>
+                  <dd>{orderContext.dailyOrder.id}</dd>
+                </div>
+              )}
+              {element.orderReference && (
+                <div>
+                  <dt>{d.drawerReference}</dt>
+                  <dd>{element.orderReference}</dd>
+                </div>
+              )}
               {element.product && (
                 <div>
                   <dt>{d.drawerProduct}</dt>
@@ -134,13 +230,45 @@ export function PlantElementDrawer({
               {element.boxes != null && (
                 <div>
                   <dt>{d.drawerBoxes}</dt>
-                  <dd>{element.boxes}</dd>
+                  <dd>{element.boxes.toLocaleString(lang === 'es' ? 'es-ES' : 'en-GB')}</dd>
+                </div>
+              )}
+              {orderContext?.order && (
+                <div>
+                  <dt>{d.drawerBoxesProduced}</dt>
+                  <dd>
+                    {resolveBoxesProduced(
+                      orderContext.order.boxes,
+                      orderContext.order.boxesProduced,
+                      orderContext.order.occupancyPercent,
+                    ).toLocaleString(lang === 'es' ? 'es-ES' : 'en-GB')}
+                    {' / '}
+                    {orderContext.order.boxes.toLocaleString(lang === 'es' ? 'es-ES' : 'en-GB')}
+                  </dd>
                 </div>
               )}
               {element.boxesPerHour != null && (
                 <div>
                   <dt>{d.drawerBoxesPerHour}</dt>
                   <dd>{element.boxesPerHour}</dd>
+                </div>
+              )}
+              {orderContext?.palletType && (
+                <div>
+                  <dt>{d.drawerPalletType}</dt>
+                  <dd>{orderContext.palletType}</dd>
+                </div>
+              )}
+              {orderContext?.heights && (
+                <div>
+                  <dt>{d.drawerHeights}</dt>
+                  <dd>{orderContext.heights}</dd>
+                </div>
+              )}
+              {orderContext?.barcode && (
+                <div>
+                  <dt>{d.drawerBarcode}</dt>
+                  <dd>{orderContext.barcode}</dd>
                 </div>
               )}
               {element.remainingTime && (
@@ -194,6 +322,7 @@ export function PlantElementDrawer({
 
         {footer && <footer className="plant-drawer__footer">{footer}</footer>}
       </aside>
-    </div>
+    </div>,
+    document.body,
   )
 }

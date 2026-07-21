@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import {
   AlertTriangle,
   Ban,
-  CheckCircle2,
   Lock,
   PauseCircle,
   TrendingDown,
@@ -65,8 +64,6 @@ export function PlantElementCard({
   company,
   orderReference,
   speedStatus,
-  occupancyPercent,
-  eta,
   alert,
   isClickable,
   isDisabled = false,
@@ -89,28 +86,23 @@ export function PlantElementCard({
   const isConflict = status === 'conflict'
   const isBlocked = status === 'blocked'
   const isWaiting = status === 'waiting'
-  const isValidated = status === 'validated'
-  const isPreparing =
-    status === 'preparing' || status === 'pending_validation' || status === 'reserved'
   const hasActiveAlert = Boolean(alert) && !isConflict && !isBlocked
   const criticalBlink = hasCriticalBlink(status)
   const statusLabel = isDisabled ? d.legendDisabled : getStatusLabel(status, lang)
   const speedTooltip = getSpeedTooltip(speedStatus, d)
-  const showSpeed = !isDisabled && Boolean(speedTooltip && speedStatus && speedStatus !== 'normal')
-  const showOccupancy = isOccupied && occupancyPercent != null
-  const showReference = isOccupied && Boolean(orderReference)
+  const showSpeed = isOccupied && (speedStatus === 'slow' || speedStatus === 'fast')
 
   const hasFooterIcons =
-    !isDisabled &&
-    (isPreparing || isBlocked || isWaiting || isConflict || hasActiveAlert || isValidated)
+    !isDisabled && (isBlocked || isWaiting || isConflict || hasActiveAlert)
 
   const Tag = isClickable ? 'button' : 'div'
 
   return (
     <Tag
       type={isClickable ? 'button' : undefined}
-      className={`plant-element plant-element--${type} plant-element--${statusClass} ${companyClass}${selected ? ' plant-element--selected' : ''}${!isClickable ? ' plant-element--static' : ''}${criticalBlink ? ' plant-element--critical-blink' : ''}${hasActiveAlert ? ' plant-element--has-alert' : ''}${isFree ? ' plant-element--free-slot' : ''}${isDisabled ? ' plant-element--disabled' : ''}${isCritical ? ' plant-element--situation-critical' : ''}${extraClassName ?? ''}`}
+      className={`plant-element plant-element--compact plant-element--${type} plant-element--${statusClass} ${companyClass}${selected ? ' plant-element--selected' : ''}${!isClickable ? ' plant-element--static' : ''}${criticalBlink ? ' plant-element--critical-blink' : ''}${hasActiveAlert ? ' plant-element--has-alert' : ''}${isFree ? ' plant-element--free-slot' : ''}${isDisabled ? ' plant-element--disabled' : ''}${isCritical ? ' plant-element--situation-critical' : ''}${extraClassName ?? ''}`}
       onClick={isClickable ? onClick : undefined}
+      data-no-board-drag=""
       aria-label={`${name} — ${statusLabel}${orderReference ? ` — ${orderReference}` : ''}`}
     >
       <div className="plant-element__head">
@@ -133,7 +125,7 @@ export function PlantElementCard({
         {showSpeed && (
           <div className="plant-element__head-right">
             <StatusIcon
-              className={`plant-status-icon plant-status-icon--speed plant-status-icon--head plant-status-icon--${speedStatus}`}
+              className={`plant-status-icon plant-status-icon--speed plant-status-icon--head plant-status-icon--speed--${speedStatus}`}
               title={speedTooltip ?? ''}
             >
               <SpeedIcon speed={speedStatus} />
@@ -142,34 +134,14 @@ export function PlantElementCard({
         )}
       </div>
 
+      <div className="plant-element__compact-spacer" aria-hidden="true" />
+
       {isDisabled && (
         <span className="plant-element__disabled-label">{d.legendDisabled}</span>
       )}
 
-      {isFree && <span className="plant-element__free-label">{d.legendFree}</span>}
-
-      {isOccupied && (
-        <div className="plant-element__body">
-          {showReference && (
-            <p className="plant-element__order" title={orderReference ?? undefined}>
-              {orderReference}
-            </p>
-          )}
-          <div className="plant-element__metrics">
-            {eta && (
-              <div className="plant-element__etc">
-                <span className="plant-element__etc-label">{d.drawerEtc}</span>
-                <span className="plant-element__etc-value">{eta}</span>
-              </div>
-            )}
-            {showOccupancy && (
-              <div className="plant-element__occupancy">
-                <span className="plant-element__occupancy-value">{occupancyPercent}%</span>
-                <span className="plant-element__occupancy-label">{d.occupancyLabel}</span>
-              </div>
-            )}
-          </div>
-        </div>
+      {isFree && (
+        <span className="plant-element__free-label">{d.legendFree}</span>
       )}
 
       {hasFooterIcons && (
@@ -190,14 +162,6 @@ export function PlantElementCard({
               <PauseCircle size={ICON_SIZE} aria-hidden="true" />
             </StatusIcon>
           )}
-          {isPreparing && (
-            <StatusIcon
-              className="plant-status-icon plant-status-icon--preparing plant-status-icon--foot"
-              title={d.legendPreparing}
-            >
-              <PauseCircle size={ICON_SIZE} aria-hidden="true" />
-            </StatusIcon>
-          )}
           {isBlocked && (
             <StatusIcon
               className="plant-status-icon plant-status-icon--blocked plant-status-icon--foot"
@@ -214,19 +178,7 @@ export function PlantElementCard({
               <Ban size={ICON_SIZE} aria-hidden="true" />
             </StatusIcon>
           )}
-          {isValidated && (
-            <StatusIcon
-              className="plant-status-icon plant-status-icon--ok plant-status-icon--foot"
-              title={d.iconValidatedLong}
-            >
-              <CheckCircle2 size={ICON_SIZE} aria-hidden="true" />
-            </StatusIcon>
-          )}
         </div>
-      )}
-
-      {type === 'palletizer' && !isDisabled && (
-        <span className="plant-element__tag">{d.palletizerTag}</span>
       )}
     </Tag>
   )

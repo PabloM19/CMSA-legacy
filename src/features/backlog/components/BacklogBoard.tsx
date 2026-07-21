@@ -19,6 +19,7 @@ import type { PlantTable } from '../../../types/plant'
 import { canActOnOrder } from '../../../utils/dashboardPermissions'
 import { evaluateMove, MAIN_BOARD_COLUMNS } from '../../../utils/backlogRules'
 import { executeColumnMove } from '../../../utils/backlogMove'
+import { logOrderAccepted } from '../../../utils/activityLogActions'
 import { filterOrdersForView } from '../../../utils/backlogViewFilters'
 import {
   resolveVisibleLimit,
@@ -215,6 +216,9 @@ export function BacklogBoard({
   }
 
   function handlePrepareConfirm(nextOrder: BacklogOrder, nextPlant: PlantTable[]) {
+    if (user) {
+      logOrderAccepted(user, nextOrder.reference)
+    }
     const nextOrders = orders.map((o) => (o.id === nextOrder.id ? nextOrder : o))
     onOrdersChange(nextOrders, nextPlant)
     setPrepareOrder(null)

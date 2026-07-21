@@ -19,6 +19,7 @@ import {
   getSafetyAlarmActivatedAt,
   isSafetyAlarmActive,
 } from '../../../utils/safetyAlarmMock'
+import { PlantMapActiveOrders } from '../components/PlantMapActiveOrders'
 import { PlantAlarmDrawer } from '../components/PlantAlarmDrawer'
 import { PlantElementDrawer } from '../components/PlantElementDrawer'
 import { PlantLayout } from '../components/PlantLayout'
@@ -130,6 +131,12 @@ export function PlantMapDesktopView() {
         onSelect={handleSelectElement}
         viewFilter={viewFilter}
         eventCellCodes={eventCellCodes}
+      />
+
+      <PlantMapActiveOrders
+        elements={elements}
+        orders={state.orders}
+        onViewElement={handleSelectElement}
       />
 
       <PlantMapAlerts

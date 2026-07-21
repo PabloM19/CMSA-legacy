@@ -3,12 +3,14 @@ import type { CellAlarm } from '../types/cellAlarm'
 import type { DailyOrder } from '../types/dailyOrder'
 import type { PlantPalletizerElement, PlantTable } from '../types/plant'
 import { rebuildPlantTablesFromOrders } from '../utils/plantSync'
+import { recommendedStationCodes } from '../utils/productionOrderValidation'
+import { isPlantTableId } from '../utils/tableAssignment'
 import { createCleanPalletizers, createCleanPlantTables } from './mockPlantTables'
 
-export const DEMO_SCENARIO_VERSION = '1'
+export const DEMO_SCENARIO_VERSION = '2'
 
 /** Total cajas del día en el escenario demo. */
-export const DEMO_DAILY_ORDERS_TOTAL = 114_016
+export const DEMO_DAILY_ORDERS_TOTAL = 116_516
 
 function audit(action: string, user = 'Sistema'): BacklogOrder['auditTrail'][0] {
   return {
@@ -24,6 +26,16 @@ const emptyAssignment = {
   assignedTables: [] as string[],
   assignmentMode: 'none' as const,
   validationTables: [] as ValidationTable[],
+}
+
+function plannedStations(boxes: number) {
+  const codes = recommendedStationCodes(boxes).map((station) => station.code)
+  return {
+    assignedTableIds: codes.filter(isPlantTableId),
+    assignedTables: codes,
+    assignmentMode: 'automatic' as const,
+    validationTables: [] as ValidationTable[],
+  }
 }
 
 function po(
@@ -94,7 +106,8 @@ export const DEMO_DAILY_ORDER_TEMPLATES: DailyOrder[] = [
   dailyTemplate('DO-SAN-001', 'Naranja Sanguinelli', 'Euro 2 piece', 'REF-SANGUINELLI', '8437001000081', 'MAF', 740),
   dailyTemplate('DO-TAR-001', 'Naranja Tarocco Rosso', '1/2 Carton', 'REF-TAROCCO-ROSSO', '8437001000098', 'SUMO', 1_956),
   dailyTemplate('DO-MOR-001', 'Naranja Moro', '6423 RPC', 'REF-MORO', '8437001000104', 'MAF', 396),
-  dailyTemplate('DO-WAS-001', 'Naranja Washington Navel', '6419 RPC', 'REF-WASHINGTON-NAVEL', '8437001000111', 'SUMO', 200),
+  dailyTemplate('DO-WAS-001', 'Naranja Washington Navel', '6419 RPC', 'REF-WASHINGTON-A', '8437001000999', 'SUMO', 1_500),
+  dailyTemplate('DO-WAS-002', 'Naranja Washington Navel', '6419 RPC', 'REF-WASHINGTON-B', '8437001000999', 'SUMO', 1_200),
 ]
 
 /** Órdenes de producción del escenario demo coherente. */
@@ -139,7 +152,7 @@ export const DEMO_PRODUCTION_ORDERS: BacklogOrder[] = [
     etc: '15:00',
     endTime: '19:00',
     requiredTables: 2,
-    ...emptyAssignment,
+    ...plannedStations(8_000),
     alerts: ['Pendiente de aceptación por operario'],
     audit: ['Orden lanzada', 'Pendiente de aceptación'],
     priority: 2,
@@ -252,10 +265,35 @@ export const DEMO_PRODUCTION_ORDERS: BacklogOrder[] = [
     etc: '14:00',
     endTime: '15:15',
     requiredTables: 2,
-    ...emptyAssignment,
+    ...plannedStations(1_000),
     alerts: ['Pendiente de aceptación por operario'],
     audit: ['Orden lanzada'],
     priority: 3,
+  }),
+  po({
+    id: 'ORD-WAS-A',
+    pedidoDiaId: 'DO-WAS-001',
+    estilo: '6419 RPC',
+    barcode: '8437001000999',
+    company: 'SUMO',
+    reference: 'REF-WASHINGTON-A',
+    product: 'Naranja',
+    variety: 'Naranja Washington Navel',
+    boxes: 500,
+    boxesPerHour: 900,
+    column: 'en_produccion',
+    productionState: 'producing',
+    etc: '11:30',
+    endTime: '12:03',
+    occupancyPercent: 18,
+    requiredTables: 2,
+    assignedTableIds: ['M2', 'R3'],
+    assignedTables: ['M2', 'R3'],
+    assignmentMode: 'automatic',
+    validationTables: [],
+    alerts: [],
+    audit: ['Orden lanzada', 'Aceptada por operario', 'En producción'],
+    priority: 4,
   }),
 ]
 
@@ -351,6 +389,10 @@ export const DEMO_STATION_PERFORMANCE = [
     events: 1,
     efficiency: 87,
     vsYesterday: 5,
+    currentBoxesPerHour: 1_044,
+    maxBoxesPerHour: 1_200,
+    status: 'producing' as const,
+    associatedOrders: ['REF-NAVELINA'],
   },
   {
     id: 'R3',
@@ -362,6 +404,10 @@ export const DEMO_STATION_PERFORMANCE = [
     events: 0,
     efficiency: 91,
     vsYesterday: 4,
+    currentBoxesPerHour: 1_092,
+    maxBoxesPerHour: 1_200,
+    status: 'producing' as const,
+    associatedOrders: ['REF-NAVELINA'],
   },
   {
     id: 'R6',
@@ -371,8 +417,12 @@ export const DEMO_STATION_PERFORMANCE = [
     occupancyPercent: 39,
     ordersProcessed: 1,
     events: 1,
-    efficiency: 72,
+    efficiency: 58,
     vsYesterday: -2,
+    currentBoxesPerHour: 700,
+    maxBoxesPerHour: 1_200,
+    status: 'waiting' as const,
+    associatedOrders: ['REF-VALENCIA-LATE'],
   },
   {
     id: 'M2',
@@ -384,6 +434,10 @@ export const DEMO_STATION_PERFORMANCE = [
     events: 1,
     efficiency: 48,
     vsYesterday: -1,
+    currentBoxesPerHour: 384,
+    maxBoxesPerHour: 800,
+    status: 'blocked' as const,
+    associatedOrders: ['REF-LANE-LATE'],
   },
   {
     id: 'P5',
@@ -395,6 +449,10 @@ export const DEMO_STATION_PERFORMANCE = [
     events: 0,
     efficiency: 65,
     vsYesterday: 2,
+    currentBoxesPerHour: 390,
+    maxBoxesPerHour: 600,
+    status: 'waiting' as const,
+    associatedOrders: ['REF-SALUSTIANA'],
   },
   {
     id: 'R1',
@@ -406,6 +464,10 @@ export const DEMO_STATION_PERFORMANCE = [
     events: 1,
     efficiency: 84,
     vsYesterday: 1,
+    currentBoxesPerHour: 1_008,
+    maxBoxesPerHour: 1_200,
+    status: 'producing' as const,
+    associatedOrders: ['REF-NAVELINA'],
   },
   {
     id: 'R2',
@@ -417,6 +479,10 @@ export const DEMO_STATION_PERFORMANCE = [
     events: 0,
     efficiency: 82,
     vsYesterday: 0,
+    currentBoxesPerHour: 984,
+    maxBoxesPerHour: 1_200,
+    status: 'idle' as const,
+    associatedOrders: ['REF-NAVELINA'],
   },
 ]
 

@@ -23,6 +23,8 @@ interface OperationalAlarmsTableProps {
   hideResolved?: boolean
   /** Título de sección opcional encima del buscador. */
   sectionTitle?: string
+  /** Layout compacto alineado con el panel de producción del mapa. */
+  variant?: 'default' | 'plantMap'
 }
 
 export function OperationalAlarmsTable({
@@ -31,6 +33,7 @@ export function OperationalAlarmsTable({
   onMarkReviewed,
   hideResolved = true,
   sectionTitle,
+  variant = 'default',
 }: OperationalAlarmsTableProps) {
   const { user, isAuthenticated } = useAuth()
   const { t, lang } = useLanguage()
@@ -66,6 +69,217 @@ export function OperationalAlarmsTable({
     { id: 'reviewed', label: d.filterReviewed },
   ]
 
+  const isPlantMap = variant === 'plantMap'
+  const resultsLabel = admin.resultsCount.replace('{count}', String(filtered.length))
+
+  const filterBar = (
+    <div
+      className={`admin-filter-bar${isPlantMap ? ' plant-map-events-panel__filters' : ' operational-alarms__filters'}`}
+      role="group"
+      aria-label={d.title}
+    >
+      {filterOptions.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          className={`admin-filter-bar__btn${filter === opt.id ? ' admin-filter-bar__btn--active' : ''}${isPlantMap ? ` plant-map-events-panel__filter-btn plant-map-events-panel__filter-btn--${opt.id}` : ''}`}
+          onClick={() => setFilter(opt.id)}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+
+  const tableBody =
+    filtered.length === 0 ? (
+      <p className="admin-empty">{d.noResults}</p>
+    ) : (
+      <div
+        className={`admin-table-wrap${isPlantMap ? ' plant-map-events-table-wrap' : ''}`}
+        role="region"
+        aria-label={sectionTitle ?? d.title}
+      >
+        <table className={`admin-table operational-alarms-table${isPlantMap ? ' plant-map-events-table' : ''}`}>
+          <thead>
+            <tr>
+              <th>{pm.alarmTableTime}</th>
+              <th>{pm.alarmTableObjective}</th>
+              <th>{pm.alarmTableCompany}</th>
+              <th>{pm.alarmTableCell}</th>
+              <th>{pm.alarmTableType}</th>
+              <th>{pm.alarmTableStatus}</th>
+              <th>{pm.alarmTableAction}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((alarm) => (
+              <tr
+                key={alarm.id}
+                className={`operational-alarms-table__row operational-alarms-table__row--${alarm.status}${
+                  alarm.isCritical ? ' operational-alarms-table__row--critical' : ''
+                }${isPlantMap ? ` plant-map-events-table__row plant-map-events-table__row--${alarm.company.toLowerCase()}` : ''}`}
+              >
+                <td className="admin-table__cell-mono">{alarm.time}</td>
+                <td className="admin-table__cell-ref">
+                  <div className="operational-alarms-table__order-cell">
+                    {alarm.isCritical && (
+                      <span className="operational-alarms-table__critical-badge" title={pm.criticalSituationHint}>
+                        {pm.criticalSituationBadge}
+                      </span>
+                    )}
+                    <span>{alarm.orderReference}</span>
+                  </div>
+                </td>
+                <td>
+                  <span className={`admin-badge admin-badge--${alarm.company.toLowerCase()}`}>
+                    {alarm.company}
+                  </span>
+                </td>
+                <td>{alarm.cellCode}</td>
+                <td>{alarm.type}</td>
+                <td>
+                  <span
+                    className={`admin-badge admin-badge--${
+                      alarm.status === 'active' ? 'warn' : alarm.status === 'reviewed' ? 'ok' : 'off'
+                    }`}
+                  >
+                    {alarmStatusLabel(alarm.status, lang)}
+                  </span>
+                </td>
+                <td className="admin-table__actions">
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--ghost admin-btn--sm"
+                    onClick={() => handleViewDetail(alarm)}
+                  >
+                    <Eye size={14} aria-hidden="true" />
+                    {d.viewDetail}
+                  </button>
+                  {alarm.status === 'active' && isAuthenticated && user && isSupervisor(user) && onMarkReviewed && (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--sm"
+                      onClick={() => onMarkReviewed(alarm)}
+                    >
+                      {d.markReviewed}
+                    </button>
+                  )}
+                  {alarm.status === 'active' && isAuthenticated && user && isOperator(user) && (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--ghost admin-btn--sm"
+                      disabled
+                      title={pm.markReviewedDisabledTooltip}
+                    >
+                      {d.markReviewed}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+
+  if (isPlantMap) {
+    return (
+      <>
+        <header className="plant-map-events-panel__head">
+          <div className="plant-map-events-panel__head-text">
+            {sectionTitle ? (
+              <h2 id="plant-map-events-title" className="operational-data-panel__title">
+                {sectionTitle}
+              </h2>
+            ) : null}
+          </div>
+          {filterBar}
+        </header>
+
+        <div className="plant-map-events-panel__search-row">
+          <AdminSearchBar
+            value={query}
+            onChange={setQuery}
+            placeholder={d.searchPlaceholder}
+            resultCount={filtered.length}
+          />
+          <span className="plant-map-events-panel__results">{resultsLabel}</span>
+        </div>
+
+        {tableBody}
+
+        {detail && !onViewDetail && (
+          <div className="order-modal-overlay" role="presentation" onClick={() => setDetail(null)}>
+            <div
+              className="order-modal order-modal--neutral"
+              role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <header className="order-modal__head">
+                <h2 className="order-modal__title">{d.detailTitle}</h2>
+                <p className="order-modal__subtitle">{detail.type}</p>
+              </header>
+              <dl className="order-modal__dl">
+                <div className="order-modal__row">
+                  <dt>{d.orderLabel}</dt>
+                  <dd>{detail.orderReference}</dd>
+                </div>
+                <div className="order-modal__row">
+                  <dt>{d.companyLabel}</dt>
+                  <dd>{detail.company}</dd>
+                </div>
+                <div className="order-modal__row">
+                  <dt>{d.cellLabel}</dt>
+                  <dd>{detail.cellCode}</dd>
+                </div>
+                <div className="order-modal__row">
+                  <dt>{d.typeLabel}</dt>
+                  <dd>{detail.type}</dd>
+                </div>
+                <div className="order-modal__row">
+                  <dt>{d.timeLabel}</dt>
+                  <dd>{detail.time}</dd>
+                </div>
+                <div className="order-modal__row">
+                  <dt>{d.statusLabel}</dt>
+                  <dd>{alarmStatusLabel(detail.status, lang)}</dd>
+                </div>
+                <div className="order-modal__row">
+                  <dt>{d.summaryLabel}</dt>
+                  <dd>{detail.summary}</dd>
+                </div>
+                <div className="order-modal__row">
+                  <dt>{d.messageLabel}</dt>
+                  <dd>{detail.message}</dd>
+                </div>
+              </dl>
+              <p className="operational-alarms__reassign-note">{d.reassignDisabled}</p>
+              <div className="order-modal__actions">
+                {detail.status === 'active' && user && isSupervisor(user) && onMarkReviewed && (
+                  <button
+                    type="button"
+                    className="order-btn order-btn--primary"
+                    onClick={() => {
+                      onMarkReviewed(detail)
+                      setDetail(null)
+                    }}
+                  >
+                    {d.markReviewed}
+                  </button>
+                )}
+                <button type="button" className="order-btn order-btn--ghost" onClick={() => setDetail(null)}>
+                  {d.close}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }
+
   return (
     <>
       {sectionTitle && <h2 className="operational-alarms__section-title">{sectionTitle}</h2>}
@@ -78,111 +292,13 @@ export function OperationalAlarmsTable({
             placeholder={d.searchPlaceholder}
             resultCount={filtered.length}
           />
-          <span className="operational-data-panel__results">
-            {admin.resultsCount.replace('{count}', String(filtered.length))}
-          </span>
+          <span className="operational-data-panel__results">{resultsLabel}</span>
         </div>
 
-        <div className="admin-filter-bar operational-alarms__filters">
-          {filterOptions.map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              className={`admin-filter-bar__btn${filter === opt.id ? ' admin-filter-bar__btn--active' : ''}`}
-              onClick={() => setFilter(opt.id)}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        {filterBar}
       </div>
 
-      {filtered.length === 0 ? (
-        <p className="admin-empty">{d.noResults}</p>
-      ) : (
-        <div className="admin-table-wrap" role="region" aria-label={d.title}>
-          <table className="admin-table operational-alarms-table">
-            <thead>
-              <tr>
-                <th>{pm.alarmTableTime}</th>
-                <th>{pm.alarmTableObjective}</th>
-                <th>{pm.alarmTableCompany}</th>
-                <th>{pm.alarmTableCell}</th>
-                <th>{pm.alarmTableType}</th>
-                <th>{pm.alarmTableStatus}</th>
-                <th>{pm.alarmTableAction}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((alarm) => (
-                <tr
-                  key={alarm.id}
-                  className={`operational-alarms-table__row operational-alarms-table__row--${alarm.status}${
-                    alarm.isCritical ? ' operational-alarms-table__row--critical' : ''
-                  }`}
-                >
-                  <td className="admin-table__cell-mono">{alarm.time}</td>
-                  <td className="admin-table__cell-ref">
-                    <div className="operational-alarms-table__order-cell">
-                      {alarm.isCritical && (
-                        <span className="operational-alarms-table__critical-badge" title={pm.criticalSituationHint}>
-                          {pm.criticalSituationBadge}
-                        </span>
-                      )}
-                      <span>{alarm.orderReference}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`admin-badge admin-badge--${alarm.company.toLowerCase()}`}>
-                      {alarm.company}
-                    </span>
-                  </td>
-                  <td>{alarm.cellCode}</td>
-                  <td>{alarm.type}</td>
-                  <td>
-                    <span
-                      className={`admin-badge admin-badge--${
-                        alarm.status === 'active' ? 'warn' : alarm.status === 'reviewed' ? 'ok' : 'off'
-                      }`}
-                    >
-                      {alarmStatusLabel(alarm.status, lang)}
-                    </span>
-                  </td>
-                  <td className="admin-table__actions">
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--ghost admin-btn--sm"
-                      onClick={() => handleViewDetail(alarm)}
-                    >
-                      <Eye size={14} aria-hidden="true" />
-                      {d.viewDetail}
-                    </button>
-                    {alarm.status === 'active' && isAuthenticated && user && isSupervisor(user) && onMarkReviewed && (
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn--sm"
-                        onClick={() => onMarkReviewed(alarm)}
-                      >
-                        {d.markReviewed}
-                      </button>
-                    )}
-                    {alarm.status === 'active' && isAuthenticated && user && isOperator(user) && (
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn--ghost admin-btn--sm"
-                        disabled
-                        title={pm.markReviewedDisabledTooltip}
-                      >
-                        {d.markReviewed}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {tableBody}
 
       {detail && !onViewDetail && (
         <div className="order-modal-overlay" role="presentation" onClick={() => setDetail(null)}>

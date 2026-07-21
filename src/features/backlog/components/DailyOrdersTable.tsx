@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Eye, Rocket, TrendingUp } from 'lucide-react'
 import { AdminSearchBar } from '../../admin/components/AdminSearchBar'
+import { BacklogBoardScrollArea } from './BacklogBoardScrollArea'
+import { DailyOrderProgressCell, DailyOrderProgressHeader } from './DailyOrderProgressCell'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { DailyOrder } from '../../../types/dailyOrder'
 import { isSupervisor } from '../../../utils/permissions'
@@ -162,8 +164,9 @@ export function DailyOrdersTable({ orders, onLaunch, onExpand, onViewDetail }: D
         </div>
       </div>
 
-      <div className="admin-table-wrap" role="region" aria-label={d.dailyOrdersTitle}>
-        <table className="admin-table daily-orders-table">
+      <BacklogBoardScrollArea showHint={false} className="daily-orders-table-scroll">
+        <div className="admin-table-wrap daily-orders-table-wrap" role="region" aria-label={d.dailyOrdersTitle}>
+          <table className="admin-table daily-orders-table">
           <thead>
             <tr>
               <th>{d.colVariety}</th>
@@ -173,7 +176,9 @@ export function DailyOrdersTable({ orders, onLaunch, onExpand, onViewDetail }: D
               <th>{d.colAssigned}</th>
               <th>{d.colCompleted}</th>
               <th>{d.colRemaining}</th>
-              <th>{d.colProgress}</th>
+              <th>
+                <DailyOrderProgressHeader />
+              </th>
               <th>{d.colAction}</th>
             </tr>
           </thead>
@@ -204,24 +209,7 @@ export function DailyOrdersTable({ orders, onLaunch, onExpand, onViewDetail }: D
                     <td>{fmt(order.cajasCompletadas, lang)}</td>
                     <td>{fmt(order.cajasRestantes, lang)}</td>
                     <td>
-                      <div className="daily-orders-table__progress">
-                        {overassigned && (
-                          <span className="daily-orders-table__over-badge">{d.overassignedBadge}</span>
-                        )}
-                        <div className="daily-orders-table__progress-bar">
-                          <span
-                            className="daily-orders-table__progress-fill daily-orders-table__progress-fill--assigned"
-                            style={{ width: `${Math.min(100, order.porcentajeAsignado)}%` }}
-                          />
-                          <span
-                            className="daily-orders-table__progress-fill daily-orders-table__progress-fill--done"
-                            style={{ width: `${Math.min(100, order.porcentajeCompletado)}%` }}
-                          />
-                        </div>
-                        <span className="daily-orders-table__progress-label">
-                          {order.porcentajeAsignado}% / {order.porcentajeCompletado}%
-                        </span>
-                      </div>
+                      <DailyOrderProgressCell order={order} overassigned={overassigned} />
                     </td>
                     <td className="admin-table__actions">
                       {user && canActOnOrder(user, order.empresa) && (
@@ -258,8 +246,9 @@ export function DailyOrdersTable({ orders, onLaunch, onExpand, onViewDetail }: D
               })
             )}
           </tbody>
-        </table>
-      </div>
+          </table>
+        </div>
+      </BacklogBoardScrollArea>
     </section>
   )
 }

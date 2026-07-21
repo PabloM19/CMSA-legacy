@@ -86,7 +86,7 @@ export function computeMobileHeroStats(state: CmsaPersistedState, user: User): M
     inProduction: scoped.orders.filter((o) => o.column === 'en_produccion').length,
     activeAlerts: alerts.length,
     occupiedTables: state.plantTables.filter((t) =>
-      ['occupied', 'validated', 'waiting', 'pending_validation', 'reserved'].includes(t.status),
+      ['occupied', 'validated', 'waiting'].includes(t.status),
     ).length,
     finishingSoon: getMobileFinishingSoon(scoped.orders, 'es').length,
   }

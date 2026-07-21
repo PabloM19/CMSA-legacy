@@ -47,8 +47,8 @@ const map1 = buildPlantElementMap(initial.plantTables, initial.plantPalletizers,
 
 assert(map1.get('R3')?.status === 'occupied', 'R3 ocupada (MAF en ejecución)')
 assert(map1.get('R3')?.company === 'MAF', 'R3 borde MAF')
-assert(map1.get('R1')?.status === 'pending_validation', 'R1 pendiente validación')
-assert(map1.get('M1')?.status === 'pending_validation', 'M1 manual pendiente validación')
+assert(map1.get('R1')?.status === 'waiting', 'R1 en espera temporal')
+assert(map1.get('M1')?.status === 'waiting', 'M1 manual en espera temporal')
 assert(map1.get('M5')?.status === 'blocked', 'M5 bloqueada')
 assert(map1.get('R5')?.status === 'waiting', 'R5 en espera (demo estable)')
 assert(map1.get('P5')?.status === 'waiting', 'P5 paletizador en espera')
@@ -71,7 +71,7 @@ const assigned = move.movedOrder!.assignedTableIds
 const synced = getState()
 assigned.forEach((id) => {
   const table = synced.plantTables.find((t) => t.id === id)!
-  assert(table.status === 'pending_validation', `${id} pendiente validación en mapa`)
+  assert(table.status === 'waiting', `${id} en espera temporal en mapa`)
   assert(table.company === 'SUMO', `${id} empresa SUMO`)
 })
 log(`Test K — backlog → mapa (${assigned.join(', ')})`)

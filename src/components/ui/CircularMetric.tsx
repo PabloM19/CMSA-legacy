@@ -7,7 +7,7 @@ interface CircularMetricProps {
   label?: string
   hint?: string
   size?: 'md' | 'sm'
-  tone?: 'brand' | 'sumo' | 'maf' | 'success' | 'warning'
+  tone?: 'brand' | 'sumo' | 'maf' | 'success' | 'warning' | 'danger'
   className?: string
 }
 
@@ -17,6 +17,7 @@ const TONE_COLORS: Record<NonNullable<CircularMetricProps['tone']>, string> = {
   maf: 'var(--color-maf)',
   success: 'var(--color-success, #15803d)',
   warning: 'var(--color-warning, #b45309)',
+  danger: '#dc2626',
 }
 
 export function CircularMetric({

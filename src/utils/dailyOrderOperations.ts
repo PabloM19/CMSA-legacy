@@ -7,11 +7,18 @@ import {
   recalcDailyOrder,
   syncAllDailyOrders,
 } from './dailyOrderHelpers'
+import { findProductByReference } from './productSearch'
+import {
+  findBarcodeProductionConflict,
+  getConfigFromDailyOrder,
+} from './referenceProductionValidation'
 import {
   formatMockEtc,
   mockOccupancyPercent,
+  recommendedStationCodes,
   recommendedStations,
 } from './productionOrderValidation'
+import { isPlantTableId } from './tableAssignment'
 
 function audit(action: string, user = 'Sistema'): BacklogOrder['auditTrail'][0] {
   return {
@@ -36,8 +43,18 @@ export function launchProductionOrder(
   daily: DailyOrder,
   input: LaunchProductionOrderInput,
   user: User,
-): { dailyOrders: DailyOrder[]; productionOrders: BacklogOrder[]; order: BacklogOrder } {
+): { dailyOrders: DailyOrder[]; productionOrders: BacklogOrder[]; order: BacklogOrder | null } {
+  const catalogProduct = findProductByReference(daily.referencia)
+  const barcodeConflict = findBarcodeProductionConflict(
+    getConfigFromDailyOrder(daily, catalogProduct),
+    productionOrders,
+  )
+  if (barcodeConflict) {
+    return { dailyOrders, productionOrders, order: null }
+  }
+
   const { etc, endTime } = formatMockEtc(input.boxes, input.boxesPerHour)
+  const stationCodes = recommendedStationCodes(input.boxes).map((station) => station.code)
   const seq = productionOrders.filter((o) => o.pedidoDiaId === daily.id).length + 1
   const refSlug = daily.referencia.replace(/^REF-/, '')
   const id = `ORD-${refSlug}-${String(seq).padStart(2, '0')}-${Date.now().toString(36).slice(2, 6)}`
@@ -61,9 +78,9 @@ export function launchProductionOrder(
     createdBy: user.name,
     createdAt: new Date().toISOString(),
     requiredTables: recommendedStations(input.boxes),
-    assignedTableIds: [],
-    assignedTables: [],
-    assignmentMode: 'none',
+    assignedTableIds: stationCodes.filter(isPlantTableId),
+    assignedTables: stationCodes,
+    assignmentMode: stationCodes.length > 0 ? 'automatic' : 'none',
     validationTables: [],
     tablesValidated: false,
     alerts: input.supervisorOverride && input.overrideJustification

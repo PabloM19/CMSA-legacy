@@ -1,10 +1,10 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { DashboardRedirect, ValidationRedirect } from './RouteRedirects'
 import { RootRedirect } from './RootRedirect'
+import { AppProviders } from './AppProviders'
 import { AppLayout } from '../components/layout/AppLayout'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ProtectedRoute } from '../features/auth/ProtectedRoute'
-import { SessionGuard } from '../features/auth/SessionGuard'
 import { DailyOrdersPage } from '../features/backlog/DailyOrdersPage'
 import { ProductionOrdersPage } from '../features/backlog/ProductionOrdersPage'
 import { PlantMapPage } from '../features/plant-map/PlantMapPage'
@@ -19,51 +19,51 @@ import { NewOrderPage } from '../features/orders/NewOrderPage'
 
 export const router = createBrowserRouter([
   {
-    element: (
-      <>
-        <SessionGuard />
-        <Outlet />
-      </>
-    ),
+    element: <AppProviders />,
     children: [
       {
-        path: '/login',
-        element: <LoginPage />,
-      },
-      {
-        path: '/plant-map',
-        element: <AppLayout />,
-        children: [{ index: true, element: <PlantMapPage /> }],
-      },
-      {
-        path: '/performance',
-        element: <AppLayout />,
-        children: [{ index: true, element: <PerformancePage /> }],
-      },
-      {
-        element: <ProtectedRoute />,
+        element: <Outlet />,
         children: [
           {
+            path: '/login',
+            element: <LoginPage />,
+          },
+          {
+            path: '/plant-map',
             element: <AppLayout />,
+            children: [{ index: true, element: <PlantMapPage /> }],
+          },
+          {
+            path: '/performance',
+            element: <AppLayout />,
+            children: [{ index: true, element: <PerformancePage /> }],
+          },
+          {
+            element: <ProtectedRoute />,
             children: [
-              { path: '/dashboard', element: <DashboardRedirect /> },
-              { path: '/validation', element: <ValidationRedirect /> },
-              { path: '/orders/new', element: <NewOrderPage /> },
-              { path: '/daily-orders', element: <DailyOrdersPage /> },
-              { path: '/production-orders', element: <ProductionOrdersPage /> },
-              { path: '/backlog', element: <Navigate to="/daily-orders" replace /> },
-              { path: '/tablet', element: <TabletPage /> },
-              { path: '/mobile', element: <MobilePage /> },
-              { path: '/admin', element: <AdminPage /> },
-              { path: '/alarms', element: <AlarmsPage /> },
-              { path: '/references', element: <ReferencesPage /> },
-              { path: '/profile', element: <ProfilePage /> },
+              {
+                element: <AppLayout />,
+                children: [
+                  { path: '/dashboard', element: <DashboardRedirect /> },
+                  { path: '/validation', element: <ValidationRedirect /> },
+                  { path: '/orders/new', element: <NewOrderPage /> },
+                  { path: '/daily-orders', element: <DailyOrdersPage /> },
+                  { path: '/production-orders', element: <ProductionOrdersPage /> },
+                  { path: '/backlog', element: <Navigate to="/daily-orders" replace /> },
+                  { path: '/tablet', element: <TabletPage /> },
+                  { path: '/mobile', element: <MobilePage /> },
+                  { path: '/admin', element: <AdminPage /> },
+                  { path: '/alarms', element: <AlarmsPage /> },
+                  { path: '/references', element: <ReferencesPage /> },
+                  { path: '/profile', element: <ProfilePage /> },
+                ],
+              },
             ],
           },
+          { index: true, element: <RootRedirect /> },
+          { path: '*', element: <Navigate to="/plant-map" replace /> },
         ],
       },
-      { index: true, element: <RootRedirect /> },
-      { path: '*', element: <Navigate to="/plant-map" replace /> },
     ],
   },
 ])

@@ -16,7 +16,7 @@ import { readTabletOverrides } from './tabletStorage'
 import { applyAdminPlantOverrides } from './adminPlantOverrides'
 import type { CreatedOrder } from '../types/newOrder'
 import { getCreatedOrders } from './orderStorage'
-import { rebuildPlantTablesFromOrders } from './plantSync'
+import { rebuildPlantTablesFromOrders, normalizePlantTables } from './plantSync'
 import { isPlantTableId, formatTableLabel, resolveAssignedTableIds } from './tableAssignment'
 import { migrateBacklogOrders } from './backlogMigration'
 
@@ -152,7 +152,7 @@ function hydrateState(state: CmsaPersistedState): CmsaPersistedState {
           state.plantPalletizers?.length > 0 ? state.plantPalletizers : createSeedPalletizers(),
       }
 
-  const plantTables = applyAdminPlantOverrides(plantVisuals.plantTables)
+  const plantTables = normalizePlantTables(applyAdminPlantOverrides(plantVisuals.plantTables))
   const plantPalletizers = plantVisuals.plantPalletizers
   return {
     scenarioVersion: DEMO_SCENARIO_VERSION,

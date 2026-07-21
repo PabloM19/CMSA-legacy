@@ -17,6 +17,20 @@ const COLUMN_ACTION_EN: Record<BacklogColumnId, string> = {
   finalizado: 'Objective completed',
 }
 
+const OPERATIONAL_ROLE_ES: Record<User['role'], string> = {
+  user: 'Operario',
+  supervisor: 'Supervisor',
+  superadmin: 'SuperMaster',
+}
+
+function formatOperationalActor(actor: User): string {
+  const roleLabel = OPERATIONAL_ROLE_ES[actor.role] ?? actor.name
+  if (actor.company === 'SUMO' || actor.company === 'MAF') {
+    return `${roleLabel} ${actor.company}`
+  }
+  return roleLabel
+}
+
 export function logOrderColumnMove(
   actor: User,
   orderReference: string,
@@ -42,12 +56,65 @@ export function logReferenceCreated(actor: User, reference: string): void {
   logActivity(actor, 'Referencia creada', 'configuracion', reference)
 }
 
-export function logAlarmReviewed(actor: User, alarmId: string): void {
-  logActivity(actor, 'Alarma marcada como revisada', 'sistema', alarmId)
+export function logOrderLaunched(
+  actor: User,
+  orderReference: string,
+  dailyOrderId: string,
+): void {
+  const actorLabel = formatOperationalActor(actor)
+  logActivity(
+    actor,
+    'Orden lanzada',
+    'pedido',
+    `${actorLabel} lanzó ${orderReference} desde el pedido ${dailyOrderId}.`,
+  )
 }
 
-export function logOrderWithdrawn(actor: User, reference: string, detail: string): void {
-  logActivity(actor, 'Objetivo retirado de producción', 'pedido', `${reference} · ${detail}`)
+export function logLaunchCancelled(actor: User, reference: string): void {
+  const actorLabel = formatOperationalActor(actor)
+  logActivity(
+    actor,
+    'Lanzamiento cancelado',
+    'pedido',
+    `${actorLabel} canceló el lanzamiento de ${reference}.`,
+  )
+}
+
+export function logLaunchBlocked(actor: User): void {
+  logActivity(
+    actor,
+    'Lanzamiento bloqueado',
+    'pedido',
+    'Conflicto por mismo código de barras con distinta configuración de palé/alturas.',
+  )
+}
+
+export function logOrderAccepted(actor: User, orderReference: string): void {
+  logActivity(
+    actor,
+    'Orden aceptada',
+    'pedido',
+    `${orderReference} aceptada y movida a En producción.`,
+  )
+}
+
+export function logAlarmReviewed(actor: User, alarmId: string): void {
+  logActivity(
+    actor,
+    'Evento revisado',
+    'sistema',
+    `Evento ${alarmId} marcado como revisado.`,
+  )
+}
+
+export function logOrderWithdrawn(actor: User, reference: string, reason: string): void {
+  const actorLabel = formatOperationalActor(actor)
+  logActivity(
+    actor,
+    'Orden retirada',
+    'pedido',
+    `${actorLabel} retiró ${reference}. Motivo: ${reason}.`,
+  )
 }
 
 export function logOrderDeleted(actor: User, reference: string, detail: string): void {

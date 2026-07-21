@@ -1,4 +1,6 @@
 import type { BacklogColumnId, BacklogOrder, PreparationStatus, ProductionVisualState } from '../types/backlog'
+import { recommendedStationCodes } from './productionOrderValidation'
+import { isPlantTableId } from './tableAssignment'
 
 const LEGACY_COLUMNS = new Set<string>([
   'pendiente_lanzamiento',
@@ -29,6 +31,12 @@ export function migrateBacklogOrder(order: BacklogOrder): BacklogOrder {
     productionState = 'completed'
   }
 
+  const hasAssigned =
+    (order.assignedTableIds?.length ?? 0) > 0 || (order.assignedTables?.length ?? 0) > 0
+  const stationCodes = hasAssigned
+    ? []
+    : recommendedStationCodes(order.boxes).map((station) => station.code)
+
   return {
     ...order,
     column,
@@ -37,6 +45,13 @@ export function migrateBacklogOrder(order: BacklogOrder): BacklogOrder {
     etc: order.etc ?? order.eta ?? '—',
     eta: order.eta ?? order.etc,
     requiredTables: Math.max(2, order.requiredTables),
+    ...(stationCodes.length > 0
+      ? {
+          assignedTables: stationCodes,
+          assignedTableIds: stationCodes.filter(isPlantTableId),
+          assignmentMode: 'automatic' as const,
+        }
+      : {}),
   }
 }
 

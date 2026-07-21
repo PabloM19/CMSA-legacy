@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReferenceAutofillFields,
   ReferenceSelectField,
@@ -6,17 +6,25 @@ import {
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { DailyOrder } from '../../../types/dailyOrder'
 import type { User } from '../../../types/auth'
+import {
+  logLaunchBlocked,
+  logLaunchCancelled,
+  logOrderLaunched,
+} from '../../../utils/activityLogActions'
 import { launchProductionOrder } from '../../../utils/dailyOrderOperations'
 import {
   formatMockEtc,
   mockOccupancyPercent,
-  recommendedStations,
+  recommendedStationCodes,
   validateBoxesPerHour,
   validateProductionOrderBoxes,
 } from '../../../utils/productionOrderValidation'
 import { findProductByReference } from '../../../utils/productSearch'
+import { getBarcodeProductionConflict } from '../../../utils/referenceProductionValidation'
 import type { BacklogOrder } from '../../../types/backlog'
 import { isSupervisor } from '../../../utils/permissions'
+import { LaunchBarcodeConflictBlock } from './LaunchBarcodeConflictBlock'
+import { LaunchOrderSummaryBlock } from './LaunchOrderSummaryBlock'
 
 interface LaunchProductionOrderModalProps {
   dailyOrders: DailyOrder[]
@@ -50,6 +58,8 @@ export function LaunchProductionOrderModal({
   const [boxesPerHour, setBoxesPerHour] = useState('2400')
   const [justification, setJustification] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const launchedRef = useRef(false)
+  const conflictLoggedRef = useRef(false)
 
   const boxesNum = Number(boxes)
   const rateNum = Number(boxesPerHour)
@@ -61,12 +71,25 @@ export function LaunchProductionOrderModal({
     return { boxCheck, rateCheck, warnings: [...boxCheck.warnings, ...rateCheck.warnings] }
   }, [boxesNum, rateNum, lang])
 
+  const barcodeConflict = useMemo(
+    () => getBarcodeProductionConflict(daily, productionOrders, catalogProduct),
+    [daily, productionOrders, catalogProduct],
+  )
+
+  useEffect(() => {
+    if (barcodeConflict && !conflictLoggedRef.current) {
+      logLaunchBlocked(user)
+      conflictLoggedRef.current = true
+    }
+  }, [barcodeConflict, user])
+
   const exceedsRemaining = boxesNum > daily.cajasRestantes
   const needsJustification = exceedsRemaining && isSupervisor(user)
   const blocked =
     !boxes.trim() ||
     boxesNum <= 0 ||
     referenceMissing ||
+    Boolean(barcodeConflict) ||
     validation.boxCheck.blocked ||
     validation.rateCheck.blocked ||
     (exceedsRemaining && !isSupervisor(user)) ||
@@ -78,15 +101,26 @@ export function LaunchProductionOrderModal({
     return {
       etc,
       endTime,
-      stations: recommendedStations(boxesNum),
+      stations: recommendedStationCodes(boxesNum),
       occupancy: mockOccupancyPercent(boxesNum),
     }
   }, [boxesNum, rateNum])
+
+  function handleCancel() {
+    if (!launchedRef.current) {
+      logLaunchCancelled(user, daily.referencia)
+    }
+    onClose()
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (referenceMissing) {
       setError(page.createReferenceRequired)
+      return
+    }
+    if (barcodeConflict) {
+      setError(d.launchBlockedMessage)
       return
     }
     if (blocked) {
@@ -110,12 +144,22 @@ export function LaunchProductionOrderModal({
       },
       user,
     )
+    if (!result.order) {
+      if (!conflictLoggedRef.current) {
+        logLaunchBlocked(user)
+        conflictLoggedRef.current = true
+      }
+      setError(d.launchBlockedMessage)
+      return
+    }
+    logOrderLaunched(user, result.order.reference, daily.id)
+    launchedRef.current = true
     onLaunched(result.dailyOrders, result.productionOrders)
     onClose()
   }
 
   return (
-    <div className="order-modal-overlay" role="presentation" onClick={onClose}>
+    <div className="order-modal-overlay" role="presentation" onClick={handleCancel}>
       <form
         className="order-modal order-modal--neutral launch-order-modal"
         role="dialog"
@@ -204,21 +248,21 @@ export function LaunchProductionOrderModal({
           </>
         )}
 
-        {preview && (
-          <div className="launch-order-modal__preview">
-            <p>
-              {d.etc}: <strong>{preview.etc}</strong> · {d.endTime}: {preview.endTime}
-            </p>
-            <p>
-              {d.launchStations}: {preview.stations} · {d.launchOccupancy}: {preview.occupancy}%
-            </p>
-          </div>
+        {barcodeConflict && <LaunchBarcodeConflictBlock conflict={barcodeConflict} />}
+
+        {preview && !barcodeConflict && (
+          <LaunchOrderSummaryBlock
+            etc={preview.etc}
+            endTime={preview.endTime}
+            stations={preview.stations}
+            occupancy={preview.occupancy}
+          />
         )}
 
         {error && <p className="launch-order-modal__error">{error}</p>}
 
         <div className="order-modal__actions">
-          <button type="button" className="order-btn order-btn--ghost" onClick={onClose}>
+          <button type="button" className="order-btn order-btn--ghost" onClick={handleCancel}>
             {d.cancel}
           </button>
           <button type="submit" className="order-btn order-btn--primary" disabled={blocked}>

@@ -1,5 +1,6 @@
 import { DEMO_LIMITS } from '../config/demoLimits'
-import type { Lang } from '../i18n/translations'
+import type { BacklogOrder } from '../types/backlog'
+import { formatTableList, resolveAssignedTableIds } from './tableAssignment'
 import type { LimitCheck } from '../config/demoLimits'
 
 function layerWarning(lang: Lang, boxes: number): string | null {
@@ -113,6 +114,48 @@ export function formatMockEtc(boxes: number, boxesPerHour: number): { etc: strin
 
 export function recommendedStations(boxes: number): number {
   return Math.max(2, Math.ceil(boxes / 4000))
+}
+
+export type RecommendedStationCode = {
+  code: string
+  type: 'manual' | 'automatic' | 'palletizer'
+}
+
+/** Estaciones concretas mock para el preview de lanzamiento (solo visualización). */
+export function recommendedStationCodes(boxes: number): RecommendedStationCode[] {
+  const count = recommendedStations(boxes)
+  const result: RecommendedStationCode[] = [{ code: 'M2', type: 'manual' }]
+  const automatic = ['R3', 'R4', 'R5', 'R6', 'R7', 'R8']
+  const palletizers = ['P5', 'P4', 'P6', 'P3']
+
+  if (count <= 1) return result.slice(0, count)
+
+  if (count === 2) {
+    result.push({ code: automatic[0], type: 'automatic' })
+    return result
+  }
+
+  const automaticCount = count >= 4 ? count - 2 : count - 1
+  for (let i = 0; i < automaticCount && i < automatic.length; i += 1) {
+    result.push({ code: automatic[i], type: 'automatic' })
+  }
+
+  if (count >= 4) {
+    result.push({ code: palletizers[0], type: 'palletizer' })
+  }
+
+  return result.slice(0, count)
+}
+
+/** Mesas concretas de la orden: asignadas o, si aún no hay, las recomendadas al lanzar. */
+export function resolveOrderStationCodes(order: BacklogOrder): string[] {
+  const assigned = resolveAssignedTableIds(order)
+  if (assigned.length > 0) return assigned
+  return recommendedStationCodes(order.boxes).map((station) => station.code)
+}
+
+export function formatOrderStationList(order: BacklogOrder): string {
+  return formatTableList(resolveOrderStationCodes(order))
 }
 
 export function mockOccupancyPercent(boxes: number): number {

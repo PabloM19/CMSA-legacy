@@ -1,6 +1,11 @@
 import { CompanyBadge } from '../../../components/ui/StatusBadge'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { NewOrderFormData } from '../../../types/newOrder'
+import { findProductById } from '../../../utils/productSearch'
+import {
+  getReferenceHeights,
+  getReferencePalletType,
+} from '../../../utils/referenceDisplayHelpers'
 import { getSummaryStatus, type OrderSummaryStatus } from '../../../utils/newOrderViewHelpers'
 import { BarcodeDisplay } from './BarcodeDisplay'
 
@@ -17,6 +22,9 @@ export function NewOrderLiveSummary({ form }: NewOrderLiveSummaryProps) {
   const { t } = useLanguage()
   const d = t.newOrder
   const status = getSummaryStatus(form)
+  const selectedProduct = form.productId ? findProductById(form.productId) : null
+  const palletType = selectedProduct ? getReferencePalletType(selectedProduct) : '—'
+  const heights = selectedProduct ? getReferenceHeights(selectedProduct) : '—'
 
   return (
     <aside className={`new-order-summary order-card--${form.company.toLowerCase()} dash-card`}>
@@ -38,22 +46,28 @@ export function NewOrderLiveSummary({ form }: NewOrderLiveSummaryProps) {
           <dt>{d.productReference}</dt>
           <dd>{form.productReference.trim() || '—'}</dd>
         </div>
+        <div>
+          <dt>{d.product}</dt>
+          <dd>{form.productName.trim() || form.product.trim() || '—'}</dd>
+        </div>
+        <div>
+          <dt>{d.variety}</dt>
+          <dd>{form.variety.trim() || '—'}</dd>
+        </div>
+        <div>
+          <dt>{d.palletType}</dt>
+          <dd>{palletType}</dd>
+        </div>
+        <div>
+          <dt>{d.heights}</dt>
+          <dd>{heights}</dd>
+        </div>
         {form.barcode.trim() && (
           <div className="new-order-summary__barcode">
             <dt>{d.barcode}</dt>
             <dd>
               <BarcodeDisplay value={form.barcode} />
             </dd>
-          </div>
-        )}
-        <div>
-          <dt>{d.product}</dt>
-          <dd>{form.productName.trim() || form.product.trim() || '—'}</dd>
-        </div>
-        {form.variety.trim() && (
-          <div>
-            <dt>{d.variety}</dt>
-            <dd>{form.variety}</dd>
           </div>
         )}
         {form.boxFormat.trim() && (

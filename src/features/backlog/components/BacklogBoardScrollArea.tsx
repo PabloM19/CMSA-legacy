@@ -7,9 +7,16 @@ const SCROLL_STEP = 420
 interface BacklogBoardScrollAreaProps {
   children: ReactNode
   hidden?: boolean
+  showHint?: boolean
+  className?: string
 }
 
-export function BacklogBoardScrollArea({ children, hidden = false }: BacklogBoardScrollAreaProps) {
+export function BacklogBoardScrollArea({
+  children,
+  hidden = false,
+  showHint = true,
+  className = '',
+}: BacklogBoardScrollAreaProps) {
   const { t } = useLanguage()
   const d = t.backlog
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -48,8 +55,8 @@ export function BacklogBoardScrollArea({ children, hidden = false }: BacklogBoar
   }
 
   return (
-    <div className={`backlog-board-scroll${hidden ? ' backlog-board-scroll--hidden' : ''}`}>
-      <p className="backlog-board-scroll__hint">{d.scrollHint}</p>
+    <div className={`backlog-board-scroll${hidden ? ' backlog-board-scroll--hidden' : ''}${className ? ` ${className}` : ''}`}>
+      {showHint && <p className="backlog-board-scroll__hint">{d.scrollHint}</p>}
 
       <div className="backlog-board-scroll__wrap">
         {canScrollLeft && (

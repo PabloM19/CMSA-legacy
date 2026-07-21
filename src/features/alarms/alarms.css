@@ -279,37 +279,184 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 108px;
+  min-width: 128px;
+}
+
+.daily-orders-table__progress-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daily-orders-table__progress-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-gray-400);
+  cursor: help;
+}
+
+.daily-orders-table__progress-help:focus-visible {
+  outline: 2px solid var(--color-brand-light);
+  outline-offset: 2px;
+  border-radius: var(--radius-full);
+}
+
+.daily-orders-table__progress-trigger {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: help;
+}
+
+.daily-orders-table__progress-trigger:focus-visible {
+  outline: 2px solid var(--color-brand-light);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.daily-orders-table__progress-trigger--overassigned .daily-orders-table__progress-bar {
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.35);
+}
+
+.daily-orders-table__progress-trigger--open {
+  z-index: 1;
 }
 
 .daily-orders-table__progress-bar {
   position: relative;
-  height: 6px;
+  height: 8px;
   border-radius: 999px;
-  background: var(--color-gray-100);
+  background: var(--color-gray-200);
   overflow: hidden;
 }
 
-.daily-orders-table__progress-fill {
+.daily-orders-table__progress-segment {
   position: absolute;
-  inset: 0 auto 0 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
   height: 100%;
 }
 
-.daily-orders-table__progress-fill--assigned {
-  background: rgba(0, 160, 210, 0.45);
-  z-index: 1;
-}
-
-.daily-orders-table__progress-fill--done {
-  background: rgba(34, 197, 94, 0.65);
+.daily-orders-table__progress-segment--completed {
   z-index: 2;
+  background: #22c55e;
 }
 
-.daily-orders-table__progress-label {
-  font-size: 0.625rem;
-  color: var(--text-muted);
-  line-height: 1.2;
+.daily-orders-table__progress-segment--in-progress {
+  z-index: 1;
+  background: rgba(0, 160, 210, 0.72);
+}
+
+.daily-orders-table__progress-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.daily-orders-table__progress-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.daily-orders-table__progress-chip--completed {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.daily-orders-table__progress-chip--assigned {
+  background: rgba(0, 160, 210, 0.1);
+  color: var(--color-brand-dark);
+}
+
+.daily-orders-table__progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.daily-orders-table__progress-dot--completed {
+  background: #22c55e;
+}
+
+.daily-orders-table__progress-dot--in-progress {
+  background: #00a0d2;
+}
+
+.daily-orders-table__progress-dot--unassigned {
+  background: #cbd5e1;
+}
+
+.daily-orders-table__progress-dot--total {
+  background: #64748b;
+}
+
+.daily-orders-table__progress-popover {
+  width: max-content;
+  max-width: min(280px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  box-shadow:
+    0 12px 32px rgba(15, 23, 42, 0.16),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-gray-800);
+  pointer-events: none;
+}
+
+.daily-orders-table__progress-popover-title {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.daily-orders-table__progress-popover-intro {
+  margin: 0 0 8px;
+  font-size: 0.6875rem;
+  color: var(--color-gray-600);
+}
+
+.daily-orders-table__progress-popover-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.daily-orders-table__progress-popover-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.daily-orders-table__progress-popover-list li span:last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.daily-orders-table__progress-popover-summary {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-gray-100);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-gray-700);
 }
 
 .daily-orders-table__over-badge {

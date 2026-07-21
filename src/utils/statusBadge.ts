@@ -109,9 +109,6 @@ export function getColumnStatusBadge(column: BacklogColumnId, lang: Lang): Statu
 
 const PLANT_STATUS_ES: Record<string, { label: string; variant: StatusBadgeVariant }> = {
   free: { label: 'Libre', variant: 'free' },
-  reserved: { label: 'Reservada', variant: 'pending' },
-  preparing: { label: 'Pendiente de preparación', variant: 'preparing' },
-  pending_validation: { label: 'Pendiente de celda', variant: 'info' },
   validated: { label: 'Validado', variant: 'validated' },
   occupied: { label: 'En producción', variant: 'executing' },
   waiting: { label: 'En espera temporal', variant: 'waiting' },
@@ -123,9 +120,6 @@ const PLANT_STATUS_ES: Record<string, { label: string; variant: StatusBadgeVaria
 
 const PLANT_STATUS_EN: Record<string, { label: string; variant: StatusBadgeVariant }> = {
   free: { label: 'Free', variant: 'free' },
-  reserved: { label: 'Reserved', variant: 'pending' },
-  preparing: { label: 'Pending preparation', variant: 'preparing' },
-  pending_validation: { label: 'Pending cell', variant: 'info' },
   validated: { label: 'Validated', variant: 'validated' },
   occupied: { label: 'In production', variant: 'executing' },
   waiting: { label: 'Temporary hold', variant: 'waiting' },

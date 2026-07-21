@@ -64,9 +64,6 @@ export function getCardStatusSoftLabel(
     blocked: d.iconBlockedShort,
     conflict: d.legendConflict,
     validated: d.iconValidatedShort,
-    preparing: d.legendPreparing,
-    pending_validation: d.legendPending,
-    reserved: d.legendPreparing,
   }
   return map[status] ?? ''
 }

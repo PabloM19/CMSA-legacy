@@ -1,7 +1,6 @@
-import { CompanyBadge } from '../../../components/ui/StatusBadge'
 import { useLanguage } from '../../../i18n/LanguageContext'
 import type { NewOrderFormData } from '../../../types/newOrder'
-import { BarcodeDisplay } from './BarcodeDisplay'
+import { NewOrderConfirmSummary } from './NewOrderConfirmSummary'
 
 interface ConfirmOrderModalProps {
   form: NewOrderFormData
@@ -12,10 +11,6 @@ interface ConfirmOrderModalProps {
 export function ConfirmOrderModal({ form, onModify, onAccept }: ConfirmOrderModalProps) {
   const { t } = useLanguage()
   const d = t.newOrder
-
-  const productLine =
-    form.productName.trim() ||
-    (form.product.trim() && form.variety.trim() ? `${form.product} · ${form.variety}` : '—')
 
   return (
     <div className="order-modal-overlay" role="presentation" onClick={onModify}>
@@ -34,46 +29,7 @@ export function ConfirmOrderModal({ form, onModify, onAccept }: ConfirmOrderModa
         </header>
 
         <div className="order-modal__body order-modal__body--compact">
-          <dl className="order-modal__grid-compact">
-            <div className="order-modal__grid-item">
-              <dt>{d.productReference}</dt>
-              <dd>{form.productReference || '—'}</dd>
-            </div>
-            <div className="order-modal__grid-item">
-              <dt>{d.company}</dt>
-              <dd>
-                <CompanyBadge company={form.company} />
-              </dd>
-            </div>
-            <div className="order-modal__grid-item order-modal__grid-item--full">
-              <dt>{d.barcode}</dt>
-              <dd>{form.barcode ? <BarcodeDisplay value={form.barcode} /> : '—'}</dd>
-            </div>
-            <div className="order-modal__grid-item order-modal__grid-item--full">
-              <dt>{d.product}</dt>
-              <dd>{productLine}</dd>
-            </div>
-            <div className="order-modal__grid-item">
-              <dt>{d.variety}</dt>
-              <dd>{form.variety || '—'}</dd>
-            </div>
-            <div className="order-modal__grid-item">
-              <dt>{d.type}</dt>
-              <dd>{form.type || '—'}</dd>
-            </div>
-            <div className="order-modal__grid-item order-modal__grid-item--full">
-              <dt>{d.boxFormat}</dt>
-              <dd>{form.boxFormat || '—'}</dd>
-            </div>
-            <div className="order-modal__grid-item order-modal__grid-item--full">
-              <dt>{d.totalBoxesToProduce}</dt>
-              <dd>
-                {form.boxes.trim() && Number(form.boxes) > 0
-                  ? Number(form.boxes).toLocaleString()
-                  : '—'}
-              </dd>
-            </div>
-          </dl>
+          <NewOrderConfirmSummary form={form} />
         </div>
 
         <div className="order-modal__actions order-modal__actions--sticky">
